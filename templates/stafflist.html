@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Assessment</title>
+    <title>Faculty Assessment</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -72,8 +72,19 @@
 
     <!-- Content Section -->
     <div class="content">
-        <h3>Staff Assessment</h3>
+        <h3>Faculty Assessment</h3>
         <h1>Department: {{ department }}</h1>
+
+        <!-- Academic Year Filter Dropdown -->
+        <form id="yearFilterForm" method="get" action="/stafflist" class="form-inline mb-3" style="justify-content: center;">
+            <input type="hidden" name="department" value="{{ department }}">
+            <label for="yearFilter" style="margin-right: 8px; font-weight: bold;">Academic Year:</label>
+            <select name="year" id="yearFilter" class="form-control" style="width: 180px;" onchange="document.getElementById('yearFilterForm').submit();">
+                {% for year in acad_year_options %}
+                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
 
         <!-- Table Section -->
         <table class="table">
@@ -82,24 +93,30 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>User ID</th>
+                    <th>Status</th>
                 </tr>
             </thead>
-            <tbody id="staffTable">
-                {% if users %}
-                    {% for user in users %}
+            <tbody id="facultyTable">
+                {% if user_statuses %}
+                    {% for user, status in user_statuses %}
                     <tr>
                         <td>{{ user[0] }}</td> <!-- Name -->
                         <td>{{ user[1] }}</td> <!-- Email -->
                         <td>
                             <a href="/hodpastform?userid={{ user[2] }}&name={{ user[0] }}" style="text-decoration: none; color: blue;">{{ user[2] }}</a>
                         </td>
-                        
-                        
+                        <td>
+                            {% if status == "Completed" %}
+                                <span style="color: green; font-weight: bold;">Completed</span>
+                            {% else %}
+                                <span style="color: red; font-weight: bold;">Pending</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                 <tr>
-                    <td colspan="3" class="text-center">No users found.</td>
+                    <td colspan="4" class="text-center">No users found.</td>
                 </tr>
                 {% endif %}
             </tbody>

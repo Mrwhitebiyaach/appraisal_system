@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Past Forms</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
     <style>
         body {
             background: url('/static/bg.jpg') no-repeat center center fixed;
@@ -61,8 +62,24 @@
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 8px;
-            width: 80%;
-            margin: 0 auto;
+            width: 95%;
+            margin: 20px auto;
+        }
+        /* Fix for table cell truncation */
+        .table {
+            table-layout: auto;
+            width: 100%;
+        }
+        .table th, .table td {
+            word-break: normal;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            min-width: 100px;
+        }
+        /* Ensure Resource Person column has enough width */
+        .table th:first-child, .table td:first-child {
+            min-width: 200px;
         }
     </style>
 </head>
@@ -168,7 +185,7 @@
                     <td>{{ row[1] }}</td> <!-- Course Code/Name -->
                     <td>{{ row[2] }}</td> <!-- Classes Scheduled (S) -->
                     <td>{{ row[3] }}</td> <!-- Classes Held (H) -->
-                    <td>{{ row[4] }}</td> <!-- Points (H/S) * 5 -->
+                    <td>{{ row[4]|round(1) if row[4] is not none else '0.0' }}</td> <!-- Points (H/S) * 5 -->
                 </tr>
                 {% else %}
                 <tr>
@@ -176,6 +193,13 @@
                 </tr>
                 {% endfor %}
             </tbody>
+            <tfoot>
+                <tr style="background-color: #ffffff; font-weight: bold;">
+                    <td colspan="5" class="text-end" style="padding-right: 20px;">
+                        Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.teaching }}</span>
+                    </td>
+                </tr>
+            </tfoot>
         </table>
 
     </div>
@@ -215,6 +239,13 @@
                 </tr>
                 {% endfor %}
             </tbody>
+        <tfoot>
+            <tr style="background-color: #ffffff; font-weight: bold;">
+                <td colspan="5" class="text-end" style="padding-right: 20px;">
+                    Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.feedback }}</span>
+                </td>
+            </tr>
+        </tfoot>
         </table>
         
     </div>
@@ -260,6 +291,13 @@
             </tr>
             {% endfor %}
         </tbody>
+    <tfoot>
+        <tr style="background-color: #ffffff; font-weight: bold;">
+            <td colspan="5" class="text-end" style="padding-right: 20px;">
+                Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.dept }}</span>
+            </td>
+        </tr>
+    </tfoot>
     </table>
     
 </div>
@@ -303,6 +341,13 @@
             </tr>
             {% endfor %}
         </tbody>
+    <tfoot>
+        <tr style="background-color: #ffffff; font-weight: bold;">
+            <td colspan="5" class="text-end" style="padding-right: 20px;">
+                Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.institute }}</span>
+            </td>
+        </tr>
+    </tfoot>
     </table>
     
 </div>
@@ -313,8 +358,6 @@
 
             {% if self_improvement_data %}
             <div class="table-container">
-                <h3>ACR : {{ selected_year }}</h3>
-            <div class="table-container">
                 <h3>Self-Improvement Initiatives for Academic Year: {{ selected_year }}</h3>
                 <table class="table table-striped">
                     <thead>
@@ -324,7 +367,9 @@
                             <th>Name of Conference</th>
                             <th>ISSN</th>
                             <th>Co-authors</th>
-                            <th>Link</th>
+                            <th>Impact Factor</th>
+                            <th>Citations</th>
+                            <th>Rating</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -335,9 +380,9 @@
                             <td>{{ row[2] }}</td>  <!-- Name of Conference -->
                             <td>{{ row[3] }}</td>  <!-- ISSN -->
                             <td>{{ row[4] }}</td>  <!-- Co-authors -->
-                            <td>
-                                <a href="{{ row[5] }}" target="_blank" class="btn btn-primary">View Link</a> <!-- Link -->
-                            </td>
+                            <td>{{ row[5] }}</td>  <!-- Impact Factor -->
+                            <td>{{ row[6] }}</td>  <!-- Citations -->
+                            <td>{{ row[7] }}</td>  <!-- Rating -->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -396,6 +441,100 @@
                             <td>{{ row[0] }}</td>  <!-- Name -->
                             <td>{{ row[1] }}</td>  <!-- Month -->
                             <td>{{ row[2] }}</td>  <!-- Registration Number -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <pre></pre>
+
+            {% if moocs_data %}
+            <div class="table-container">
+                <h3>MOOCS Courses for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of MOOCS course</th>
+                            <th>Month/Year</th>
+                            <th>Duration</th>
+                            <th>Completion Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in moocs_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Month/Year -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Completion Status -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <pre></pre>
+
+            {% if swayam_data %}
+            <div class="table-container">
+                <h3>SWAYAM NPTEL Courses for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of Swayam course</th>
+                            <th>Month/Year</th>
+                            <th>Duration</th>
+                            <th>Completion Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in swayam_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Month/Year -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Completion Status -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <pre></pre>
+
+            {% if webinar_data %}
+            <div class="table-container">
+                <h3>Seminars/Webinars for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of Seminar/Webinar</th>
+                            <th>Technology/Topic</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                            <th>Internal/External</th>
+                            <th>Name of Institute</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in webinar_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Technology/Topic -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Date -->
+                            <td>{{ row[5] }}</td>  <!-- Internal/External -->
+                            <td>{{ row[6] }}</td>  <!-- Name of Institute -->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -490,6 +629,13 @@
             </div>
             {% endif %}
             <div>
+                <!-- ACR Total Display -->
+            <div style="text-align: center; margin: 20px 0;">
+                <div style="display: inline-block; background-color: white; border: 1px solid #ddd; border-radius: 5px; padding: 10px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <span style="font-size: 1.1rem; font-weight: bold;">ACR Total = </span>
+                    <span style="font-size: 1.3rem; color: #ed0000; font-weight: bold;">{{ points_data.acr }}</span>
+                </div>
+            </div>
             
         </div>
             <pre></pre>
@@ -526,6 +672,13 @@
                         </tr>
                         {% endfor %}
                     </tbody>
+                    <tfoot>
+                        <tr style="background-color: #ffffff; font-weight: bold;">
+                            <td colspan="5" class="text-end" style="padding-right: 20px;">
+                                Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.society }}</span>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
                
             </div>
@@ -542,55 +695,203 @@
             <tr>
                 <th>Criteria</th>
                 <th>Maximum Points</th>
-                <th>Points Earned</th>
+                <th>Points (Self Assessment)</th>
+                {% if assessments %}
+                <th class="bg-info text-white">Points Given by HOD</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Teaching Process</td>
                 <td>25</td>
-                <td>{{ points_data['teaching'] }}</td>
+                <td>{{ points_data['teaching']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas1 %}
+                <td class="bg-light">{{ assessments.hodas1 }}</td>
+                {% endif %}
             </tr>
+            {% if assessments and assessments.hodfeed1 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed1 }}</td>
+            </tr>
+            {% endif %}
+            
             <tr>
                 <td>Students' Feedback</td>
                 <td>25</td>
-                <td>{{ points_data['feedback'] }}</td>
+                <td>{{ points_data['feedback']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas2 %}
+                <td class="bg-light">{{ assessments.hodas2 }}</td>
+                {% endif %}
             </tr>
+            {% if assessments and assessments.hodfeed2 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed2 }}</td>
+            </tr>
+            {% endif %}
+            
             <tr>
                 <td>Departmental Activities</td>
                 <td>20</td>
-                <td>{{ points_data['dept'] }}</td>
+                <td>{{ points_data['dept']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas3 %}
+                <td class="bg-light">{{ assessments.hodas3 }}</td>
+                {% endif %}
             </tr>
+            {% if assessments and assessments.hodfeed3 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed3 }}</td>
+            </tr>
+            {% endif %}
+            
             <tr>
                 <td>Institute Activity</td>
                 <td>10</td>
-                <td>{{ points_data['institute'] }}</td>
+                <td>{{ points_data['institute']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas4 %}
+                <td class="bg-light">{{ assessments.hodas4 }}</td>
+                {% endif %}
             </tr>
+            {% if assessments and assessments.hodfeed4 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed4 }}</td>
+            </tr>
+            {% endif %}
+            
             <tr>
                 <td>ACR</td>
                 <td>10</td>
-                <td>{{ points_data['acr'] }}</td>
+                <td>{{ points_data['acr']|float|round(2) }}</td>
+                <!-- ACR assessment by HOD is hidden for confidentiality -->
             </tr>
+            {% if assessments and assessments.hodfeed5 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed5 }}</td>
+            </tr>
+            {% endif %}
+            
             <tr>
                 <td>Contribution to Society</td>
                 <td>10</td>
-                <td>{{ points_data['society'] }}</td>
+                <td>{{ points_data['society']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas6 %}
+                <td class="bg-light">{{ assessments.hodas6 }}</td>
+                {% endif %}
             </tr>
+            {% if assessments and assessments.hodfeed6 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed6 }}</td>
+            </tr>
+            {% endif %}
+            
             <tr>
                 <th>Total</th>
                 <th>100</th>
-                <th>{{ points_data['teaching']|int + points_data['feedback']|int + points_data['dept']|int 
-                    + points_data['institute']|int + points_data['acr']|int + points_data['society']|int }}</th>
-            </tr>
-            
+                <th>{{ (points_data['teaching']|float + points_data['feedback']|float + points_data['dept']|float 
+                    + points_data['institute']|float + points_data['acr']|float + points_data['society']|float)|round(2) }}</th>
+                {% if assessments %}
+                <th class="bg-info text-white">{{ (assessments.hodas1|default(0)|float + assessments.hodas2|default(0)|float + 
+                       assessments.hodas3|default(0)|float + assessments.hodas4|default(0)|float + 
+                       assessments.hodas6|default(0)|float)|round(2) }}</th>
+                {% endif %}
+            </tr>  
         </tbody>
     </table>
+    
+    {% if assessments and assessments|length > 0 %}
+    <div class="alert alert-info mt-3">
+        <h5 class="alert-heading"><i class="fas fa-check-circle"></i> Form Reviewed</h5>
+        <p><strong>Note:</strong> This form has been reviewed by your Head of Department. The assessment points and remarks from your HOD are displayed in the <span class="bg-info text-white px-2 py-1 rounded">highlighted columns</span> above.</p>
+        <hr>
+        <p class="mb-0 small">The HOD's assessment provides valuable feedback on your performance. Take note of any remarks provided.</p>
+    </div>
+    
+    <!-- HOD Assessment Details Section -->
+    <div class="table-container mt-4">
+        <h4 class="text-center mb-3"><i class="fas fa-clipboard-check text-primary"></i> HOD Assessment Details</h4>
+        <table class="table table-bordered">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th>Assessment Area</th>
+                    <th>Maximum Points</th>
+                    <th>HOD Assessment</th>
+                    <th>HOD Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Teaching Process</strong></td>
+                    <td class="text-center">25</td>
+                    <td class="text-center bg-light">{{ assessments.hodas1|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed1|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Students' Feedback</strong></td>
+                    <td class="text-center">25</td>
+                    <td class="text-center bg-light">{{ assessments.hodas2|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed2|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Departmental Activities</strong></td>
+                    <td class="text-center">20</td>
+                    <td class="text-center bg-light">{{ assessments.hodas3|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed3|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Institute Activity</strong></td>
+                    <td class="text-center">10</td>
+                    <td class="text-center bg-light">{{ assessments.hodas4|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed4|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>ACR</strong></td>
+                    <td class="text-center">10</td>
+                    <td class="text-center bg-light">***</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed5|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Contribution to Society</strong></td>
+                    <td class="text-center">10</td>
+                    <td class="text-center bg-light">{{ assessments.hodas6|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed6|default('No remarks provided') }}</td>
+                </tr>
+                <tr class="bg-primary text-white">
+                    <th>Total</th>
+                    <th class="text-center">90</th>
+                    <th class="text-center">{{ (assessments.hodas1|default(0)|float + assessments.hodas2|default(0)|float + assessments.hodas3|default(0)|float + assessments.hodas4|default(0)|float + assessments.hodas6|default(0)|float)|round(2) }}</th>
+                    <th></th>
+                </tr>
+            </tbody>
+            
+        </table>
+        
+        {% if assessments.feedback %}
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-comments"></i> Overall HOD Feedback</h5>
+            </div>
+            <div class="card-body">
+                <p class="font-italic">{{ assessments.feedback }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-secondary mt-3">
+        <h5 class="alert-heading"><i class="fas fa-hourglass-half"></i> Pending Review</h5>
+        <p>This form has not yet been reviewed by your Head of Department.</p>
+        <hr>
+        <p class="mb-0 small">Once your HOD reviews your form, their assessment and feedback will appear here.</p>
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 <pre> </pre>
 
 {% if user_data %}
-<button id="printButton" onclick="window.print()">Print</button>
+<div class="text-center">
+    <button id="printButton" onclick="window.print()" class="btn btn-success">Print</button>
+</div>
 {% endif %}
 
 <pre></pre>
@@ -623,15 +924,25 @@
         option.text = `${startYear}/${endYear.toString().slice(-2)}`;
         dropdown.appendChild(option);
     }
+    
+    // Add onchange event to automatically submit form when selection changes
+    dropdown.addEventListener('change', function() {
+        document.getElementById('academicForm').submit();
+    });
+    
+    // Auto-submit disabled to prevent refresh loops
+    // dropdown.options[0].selected = true; // Just select the first option but don't auto-submit
 }
 
 // Call the function to populate the dropdown when the page loads
 window.onload = generateAcademicYears;
 
 function printPage() {
-            window.print();
-        }
-
+    window.print();
+}
     </script>
+    <div class="text-center my-4">
+        <button class="btn btn-secondary" onclick="window.history.back()">Back</button>
+    </div>
 </body>
 </html>

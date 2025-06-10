@@ -64,18 +64,25 @@
         #myBarChart {
             width: 100% !important;
             height: 400px !important;
+            cursor: pointer;
+        }
+        .chart-help {
+            font-size: 12px;
+            color: #555;
+            margin-top: 10px;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <!-- Top Right Links -->
     <div class="top-bar">
-        <a href="/principlestaff">Stafflist</a>
+        <a href="/principlefaculty">Faculty list</a>
         <a href="/logout">Logout</a>
     </div>
 
     <!-- Logo -->
-    <a href="/principlestaff" class="logo-link">
+    <a href="/principlefaculty" class="logo-link">
         <img src="/static/logo.png" alt="Logo">
     </a>
 
@@ -96,8 +103,44 @@
     <!-- Graph Container -->
     <div class="graph-container">
         <div class="graph-box">
-            <h3 class="graph-title">Top 5 Performers</h3>
+            <h3 class="graph-title">Department Performers</h3>
+            <div id="noDataMessage" style="display:none; color: red;">No data available for the selected year.</div>
             <canvas id="myBarChart"></canvas>
+            <div class="chart-help">Click on any bar to view detailed assessment form for that faculty member</div>
+        </div>
+    </div>
+
+    <!-- Section-wise Scores Filter for Principal -->
+    <div class="graph-container" style="margin-top: 30px;">
+        <div class="graph-box">
+            <h4 class="graph-title">Filter Scores by Section</h4>
+            <div class="d-flex align-items-center mb-3">
+                <select id="sectionSelect" class="form-control mr-2" style="width: 200px;">
+                    <option value="teaching">Teaching Process</option>
+                    <option value="feedback">Student Feedback</option>
+                    <option value="dept">Department Activities</option>
+                    <option value="institute">Institute Activities</option>
+                    <option value="acr">Annual Confidential Report (ACR)</option>
+                    <option value="society">Contributions to Society</option>
+                </select>
+                <select id="sectionAcademicYear" class="form-control mr-2" style="width: 200px;"></select>
+                <button id="sectionRefreshButton" class="btn btn-primary">Show</button>
+            </div>
+            <div id="sectionScoresNoData" style="display:none; color: red;">No data available for the selected section/year.</div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="sectionScoresTable" style="background: white;">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Rank</th>
+<th>Name</th>
+<th>User ID</th>
+<th>Score</th>
+<th>HOD Points</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -126,27 +169,37 @@
         }
 
         // Call the function when the page loads
-        window.onload = generateAcademicYears;
+        window.onload = function() {
+            generateAcademicYears();
+            updateChartData(); // Load initial chart data
+        };
 
         // Initialize the Bar Chart
         var ctx = document.getElementById('myBarChart').getContext('2d');
         var myBarChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['name 1', 'name 2', 'name 3', 'name 4', 'name 5'],
+                labels: [],
                 datasets: [
                     {
                         label: 'Self Appraisal Marks',
-                        data: [50, 75, 90, 60, 85],
+                        data: [],
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
                     },
                     {
                         label: 'Marks given by Head of the Department',
-                        data: [45, 70, 80, 55, 90],
+                        data: [],
                         backgroundColor: 'rgba(255, 99, 132, 0.6)',
                         borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Principal\'s Marks',
+                        data: [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
                         borderWidth: 1
                     }
                 ]
@@ -159,49 +212,194 @@
                     }
                 },
                 responsive: true,
-                maintainAspectRatio: false
+                maintainAspectRatio: false,
+                onClick: function(event, elements) {
+                    if (elements && elements.length > 0) {
+                        // Get the index of the clicked bar
+                        const index = elements[0].index;
+                        // Get the user ID from our stored userData array
+                        if (window.userData && window.userData[index]) {
+                            const userId = window.userData[index].userid;
+                            const userName = window.userData[index].name;
+                            if (userId) {
+                                // Redirect to the principle_pastforms page with the user ID
+                                window.location.href = `/principlepastform?userid=${userId}&name=${encodeURIComponent(userName)}&department=${encodeURIComponent(document.getElementById('department').value)}`;
+                            }
+                        }
+                    }
+                },
+                hover: {
+                    mode: 'index',
+                    intersect: false
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                }
             }
         });
 
-        document.getElementById('refreshButton').addEventListener('click', async function () {
-    const academicYear = document.getElementById('academicYear').value;
-    const department = document.getElementById('department').value;
+        async function updateChartData() {
+            const academicYear = document.getElementById('academicYear').value;
+            const department = document.getElementById('department').value;
 
-    console.log(`Selected Academic Year: ${academicYear}`);
-    console.log(`Selected Department: ${department}`);
+            if (!academicYear || !department) {
+                console.log("Academic year or department not selected yet.");
+                // Optionally, clear the chart or show a message
+                myBarChart.data.labels = [];
+                myBarChart.data.datasets[0].data = [];
+                myBarChart.data.datasets[1].data = [];
+                myBarChart.data.datasets[2].data = []; // Clear principal's marks too
+                myBarChart.update();
+                const noDataMessage = document.getElementById('noDataMessage');
+                if (noDataMessage) {
+                    noDataMessage.textContent = 'Please select Academic Year and Department.';
+                    noDataMessage.style.display = 'block';
+                }
+                return;
+            }
 
-    try {
-        const response = await fetch('/get_performers_with_hod', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ academic_year: academicYear, department: department })
-        });
+            console.log(`Selected Academic Year: ${academicYear}`);
+            console.log(`Selected Department: ${department}`);
 
-        if (!response.ok) throw new Error('Failed to fetch data');
+            try {
+                const response = await fetch('/get_performers_with_hod', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ academic_year: academicYear, department: department })
+                });
 
-        const data = await response.json();
-        console.log('Received Data:', data);
+                if (!response.ok) throw new Error('Failed to fetch data');
 
-        if (data.length > 0) {
-            const labels = data.map(item => item.name);
-            const totalScores = data.map(item => item.total);
-            const hodScores = data.map(item => item.hodtotal);
+                const data = await response.json();
+                console.log('Received Data:', data);
+                
+                // Store the user data globally so it can be accessed on chart click
+                window.userData = data;
 
-            myBarChart.data.labels = labels;
-            myBarChart.data.datasets[0].data = totalScores;
-            myBarChart.data.datasets[1].data = hodScores;
-            myBarChart.update();
+                if (data.length > 0) {
+                    const labels = data.map(item => item.name);
+                    const totalScores = data.map(item => item.total);
+                    const hodScores = data.map(item => item.hodtotal);
+                    const principalScores = data.map(item => item.principle_total);
 
-            document.getElementById('noDataMessage').style.display = 'none';
-        } else {
-            showNoDataMessage();
+                    myBarChart.data.labels = labels;
+                    myBarChart.data.datasets[0].data = totalScores;
+                    myBarChart.data.datasets[1].data = hodScores;
+                    myBarChart.data.datasets[2].data = principalScores;
+                    
+                    // Update chart options for better display with more data points
+                    if (data.length > 10) {
+                        myBarChart.options.scales.x = {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 90,
+                                minRotation: 45
+                            }
+                        };
+                    }
+                    
+                    myBarChart.update();
+
+                    // Hide any previous "no data" message if it exists
+                    const noDataMessage = document.getElementById('noDataMessage');
+                    if (noDataMessage) {
+                        noDataMessage.style.display = 'none';
+                    }
+                } else {
+                    // Show a message for no data if that element exists
+                    const noDataMessage = document.getElementById('noDataMessage');
+                    if (noDataMessage) {
+                        noDataMessage.style.display = 'block';
+                    }
+                    
+                    // Clear the chart data
+                    myBarChart.data.labels = [];
+                    myBarChart.data.datasets[0].data = [];
+                    myBarChart.data.datasets[1].data = [];
+                    myBarChart.data.datasets[2].data = []; // Clear principal's marks too
+                    myBarChart.update();
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Show error message if that element exists
+                const noDataMessage = document.getElementById('noDataMessage');
+                if (noDataMessage) {
+                    noDataMessage.style.display = 'block';
+                    noDataMessage.textContent = 'Error fetching data. Please try again.';
+                }
+            }
         }
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        showNoDataMessage();
-    }
-});
 
+        document.getElementById('refreshButton').addEventListener('click', updateChartData);
+        document.getElementById('academicYear').addEventListener('change', updateChartData);
+        document.getElementById('department').addEventListener('change', updateChartData);
+
+        // Auto-refresh chart data every 60 seconds
+        setInterval(updateChartData, 60000);
+    </script>
+    <script>
+        // Populate academic years for section filter
+        function populateSectionAcademicYears() {
+            const currentYear = new Date().getFullYear();
+            const month = new Date().getMonth();
+            const dropdown = document.getElementById('sectionAcademicYear');
+            dropdown.innerHTML = '';
+            const academicStartYear = month >= 8 ? currentYear : currentYear - 1;
+            for (let i = 0; i <= 4; i++) {
+                const startYear = academicStartYear - i;
+                const endYear = startYear + 1;
+                const option = document.createElement('option');
+                option.value = `${startYear}/${endYear.toString().slice(-2)}`;
+                option.textContent = `${startYear}/${endYear.toString().slice(-2)}`;
+                dropdown.appendChild(option);
+            }
+        }
+        populateSectionAcademicYears();
+
+        // Fetch and display section-wise scores
+        async function fetchSectionScores() {
+            const academicYear = document.getElementById('sectionAcademicYear').value;
+            const department = document.getElementById('department').value;
+            const section = document.getElementById('sectionSelect').value;
+            try {
+                const response = await fetch('/get_section_scores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ academic_year: academicYear, department: department, section: section })
+                });
+                if (!response.ok) throw new Error('Failed to fetch section scores');
+                const data = await response.json();
+                const tbody = document.querySelector('#sectionScoresTable tbody');
+                tbody.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach((item, idx) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+    <td>${idx + 1}</td>
+    <td>${item.name}</td>
+    <td><a href="/principlepastform?userid=${item.userid}&name=${encodeURIComponent(item.name)}&department=${encodeURIComponent(department)}" target="_blank">${item.userid}</a></td>
+    <td>${item.score}</td>
+    <td>${item.hod_score}</td>
+`;
+                        tbody.appendChild(tr);
+                    });
+                    document.getElementById('sectionScoresNoData').style.display = 'none';
+                } else {
+                    document.getElementById('sectionScoresNoData').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('sectionScoresNoData').style.display = 'block';
+                const tbody = document.querySelector('#sectionScoresTable tbody');
+                tbody.innerHTML = '';
+            }
+        }
+        // Event listeners
+        document.getElementById('sectionRefreshButton').addEventListener('click', fetchSectionScores);
+        document.getElementById('sectionSelect').addEventListener('change', fetchSectionScores);
+        document.getElementById('sectionAcademicYear').addEventListener('change', fetchSectionScores);
+        // Initial load
+        fetchSectionScores();
     </script>
 </body>
 </html>

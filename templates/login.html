@@ -60,6 +60,18 @@
         <div class="login-box">
             <h3 class="text-center">Login</h3>
 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  {% if category == 'danger' %}
+                    <div class="alert alert-danger" role="alert">
+                      {{ message }}
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
             <form action="/login" method="post">
                 <div class="form-group">
                     <label for="loginId">Email</label>
@@ -80,6 +92,9 @@
             <div class="login-links">
                 <a href="/forgotpass">Forgot Password?</a> <!-- Added link here -->
             </div>
+        </div>
+        <div class="text-center mt-3">
+            <button class="btn btn-secondary" onclick="window.history.back()">Back</button>
         </div>
     </div>
 <script>

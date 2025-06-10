@@ -169,6 +169,36 @@
             border: 1px solid #f5c6cb;
             border-radius: 5px;
         }
+
+        /* Make input fields expand vertically with content */
+        input.form-control {
+            height: auto;
+            min-height: calc(1.5em + .75rem + 2px);
+            overflow: visible;
+            resize: vertical;
+            white-space: normal;
+            text-overflow: clip;
+        }
+
+        /* Ensure table cells expand to fit content */
+        .table td {
+            vertical-align: middle;
+            height: auto;
+            min-height: 50px;
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        /* Make textual form inputs auto-expand */
+        textarea.form-control, 
+        input[type="text"].form-control, 
+        input[type="url"].form-control {
+            overflow: hidden;
+            resize: vertical;
+            min-height: 38px;
+            height: auto;
+            white-space: pre-wrap;
+        }
     </style>
     
 </head>
@@ -222,9 +252,9 @@
                             <option value="EVEN/ODD" {% if row[0] == 'EVEN/ODD' %}selected{% endif %}>EVEN/ODD</option>
                         </select>
                     </td>
-                    <td><input type="text" class="form-control" value="{{ row[1] }}" required title="Enter Activity"></td>
+                    <td><textarea class="form-control" required title="Enter Activity" rows="2">{{ row[1] }}</textarea></td>
                     <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateTeachingTotal()" required title="Enter Points"></td>
-                    <td><input type="text" class="form-control" value="{{ row[3] }}" required title="Enter Order Copy"></td>
+                    <td><textarea class="form-control" required title="Enter Order Copy" rows="2">{{ row[3] }}</textarea></td>
                     <td>
                         {% if row[4] %}
                         <a href="{{ url_for('static', filename=row[4]) }}" target="_blank">View Upload</a>
@@ -281,9 +311,9 @@
                             <option value="EVEN/ODD" {% if row[0] == 'EVEN/ODD' %}selected{% endif %}>EVEN/ODD</option>
                         </select>
                     </td>
-                    <td><input type="text" class="form-control" value="{{ row[1] }}" required title="Enter Activity"></td>
+                    <td><textarea class="form-control" required title="Enter Activity" rows="2">{{ row[1] }}</textarea></td>
                     <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateFeedbackTotal()" required title="Enter Points"></td>
-                    <td><input type="text" class="form-control" value="{{ row[3] }}" required title="Enter Order Copy"></td>
+                    <td><textarea class="form-control" required title="Enter Order Copy" rows="2">{{ row[3] }}</textarea></td>
                     <td>
                         {% if row[4] %}
                         <a href="{{ url_for('static', filename=row[4]) }}" target="_blank">View Upload</a>
@@ -343,7 +373,12 @@ function validateField(field) {
         return false;
     }
     
-    if (field.type === 'number') {
+    // Handle different field types
+    if (field.tagName.toLowerCase() === 'textarea' || field.type === 'text') {
+        // For text fields, just check if they're not empty (already done above)
+        field.style.borderColor = '';
+        return true;
+    } else if (field.type === 'number') {
         const numValue = parseFloat(value);
         const min = parseFloat(field.min);
         const max = parseFloat(field.max);
@@ -418,9 +453,9 @@ function addTeachingRow() {
                 <option value="EVEN/ODD">EVEN/ODD</option>
             </select>
         </td>
-        <td><input type="text" class="form-control" required title="Enter Activity"></td>
+        <td><textarea class="form-control" required title="Enter Activity" rows="2"></textarea></td>
         <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateTeachingTotal()"></td>
-        <td><input type="text" class="form-control" required title="Enter Order Copy"></td>
+        <td><textarea class="form-control" required title="Enter Order Copy" rows="2"></textarea></td>
         <td>
             <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
             <div class="upload-status"></div>
@@ -447,9 +482,9 @@ function addFeedbackRow() {
                 <option value="EVEN/ODD">EVEN/ODD</option>
             </select>
         </td>
-        <td><input type="text" class="form-control" required title="Enter Activity"></td>
+        <td><textarea class="form-control" required title="Enter Activity" rows="2"></textarea></td>
         <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateFeedbackTotal()"></td>
-        <td><input type="text" class="form-control" required title="Enter Order Copy"></td>
+        <td><textarea class="form-control" required title="Enter Order Copy" rows="2"></textarea></td>
         <td>
             <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
             <div class="upload-status"></div>
@@ -752,9 +787,9 @@ function saveFormData() {
     document.querySelectorAll('#deptTable tr').forEach((row, index) => {
         const srno = row.getAttribute('data-srno') || (index + 1);
         const semester = row.querySelector('select').value;
-        const activity = row.querySelector('input[title="Enter Activity"]').value;
+        const activity = row.querySelector('textarea[title="Enter Activity"]').value;
         const points = row.querySelector('.points').value;
-        const orderCopy = row.querySelector('input[title="Enter Order Copy"]').value;
+        const orderCopy = row.querySelector('textarea[title="Enter Order Copy"]').value;
         const fileInput = row.querySelector('input[type="file"]');
         const uploadedFile = row.querySelector('input[name="uploaded_file"]');
         
@@ -777,9 +812,9 @@ function saveFormData() {
     document.querySelectorAll('#instituteTable tr').forEach((row, index) => {
         const srno = row.getAttribute('data-srno') || (index + 1);
         const semester = row.querySelector('select').value;
-        const activity = row.querySelector('input[title="Enter Activity"]').value;
+        const activity = row.querySelector('textarea[title="Enter Activity"]').value;
         const points = row.querySelector('.points').value;
-        const orderCopy = row.querySelector('input[title="Enter Order Copy"]').value;
+        const orderCopy = row.querySelector('textarea[title="Enter Order Copy"]').value;
         const fileInput = row.querySelector('input[type="file"]');
         const uploadedFile = row.querySelector('input[name="uploaded_file"]');
         
@@ -1029,6 +1064,9 @@ function recalculateInstituteRowNumbers() {
                 </div>
             </div>
         </div>
+    </div>
+    <div class="text-center my-4">
+        <a href="/form/{{ form_id }}" class="btn btn-secondary">Back to Form 1</a>
     </div>
 </body>
 

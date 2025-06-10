@@ -55,12 +55,44 @@
         .assessment-box {
             margin-top: 10px;
         }
+        
+        /* Print styling */
+        @media print {
+            body {
+                background: none;
+                font-size: 12pt;
+            }
+            .top-bar, .logo-link, .btn, .no-print {
+                display: none !important;
+            }
+            .table-container {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                background: none;
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+            .container {
+                margin-top: 20px;
+                width: 100%;
+                background: none;
+            }
+            textarea, input {
+                border: none;
+                background: none;
+            }
+            #saveAssessment {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Top Right Links -->
     <div class="top-bar">
-        <a href="/dashboard">Dashboard</a>
+        <a href="/dashboard{% if department %}?department={{ department }}{% endif %}">Dashboard</a>
+        <a href="/facultylist?department={{ department }}">Staff List</a>
         <a href="/highlanding">Home</a>
         <a href="/logout">Logout</a>
     </div>
@@ -84,6 +116,69 @@
         </form>
     </div>
 <pre></pre>
+
+    <!-- User Details Container - Always show basic user info -->
+    <div class="container" style="width: 500px; margin: 20px auto;">
+        <h2 class="text-center mb-4">User Details</h2>
+        <table class="table table-bordered">
+            <tr>
+                <th>User ID</th>
+                <td>{% if user_data %}{{ user_data[0] }}{% else %}{{ user_id }}{% endif %}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ user_name }}</td>
+            </tr>
+            <!-- Always show department from request if available -->
+            <tr>
+                <th>Department</th>
+                <td>{% if user_data %}{{ user_data[2] }}{% elif department %}{{ department }}{% else %}Not Available{% endif %}</td>
+            </tr>
+            {% if user_data %}
+            <tr>
+                <th>Email</th>
+                <td>{{ user_data[1] }}</td>
+            </tr>
+            <!-- Name is already displayed above, so we don't need to repeat it here -->
+            <!-- <tr>
+                <th>Name</th>
+                <td>{{ user_data[3] }}</td>
+            </tr> -->
+            <tr>
+                <th>Designation</th>
+                <td>{{ user_data[4] }}</td>
+            </tr>
+            <tr>
+                <th>Date of Joining</th>
+                <td>{{ user_data[5] }}</td>
+            </tr>
+            <tr>
+                <th>Date of Birth</th>
+                <td>{{ user_data[6] }}</td>
+            </tr>
+            <tr>
+                <th>Educational Qualification</th>
+                <td>{{ user_data[7] }}</td>
+            </tr>
+            <tr>
+                <th>Experience</th>
+                <td>{{ user_data[8] }}</td>
+            </tr>
+        </table>
+
+        {% if form_id %}
+        <h2 class="text-center mt-4 mb-3">Form Information</h2>
+        <div class="text-center">
+            <p><strong>Form ID:</strong> {{ form_id }}</p>
+            <p><strong>Academic Year:</strong> {{ selected_year }}</p>
+        </div>
+        {% endif %}
+        
+        {% if user_data %}
+        <!-- Close the if user_data condition -->
+        {% endif %}
+    </div>
+
     <!-- Display Teaching Data with Assessment -->
     {% if teaching_data %}
     <div class="table-container">
@@ -108,7 +203,7 @@
                     <td>{{ row[1] }}</td>
                     <td>{{ row[2] }}</td>
                     <td>{{ row[3] }}</td>
-                    <td>{{ row[4] }}</td>
+                    <td>{{ "%.1f"|format(row[4]|float) if row[4] is not none else '0.0' }}</td>
                 </tr>
                 {% else %}
                 <tr>
@@ -119,14 +214,18 @@
         </table>
         <tr style="background-color: #f5c6d1; font-weight: bold;">
             <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
-                ACR Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.teaching }}</span>
+                 Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.teaching|float|round(2) }}</span>
             </td>
         </tr>
 <pre></pre>
         <!-- Assessment Input Box -->
         <div class="assessment-box">
             <label for="teachingMarks">Assessment by HOD (Teaching process):</label>
-            <input type="number" class="form-control" id="teachingMarks" name="teachingMarks" min="0" max="25">
+            <input type="number" class="form-control" id="teachingMarks" name="teachingMarks" min="0" max="25" value="{{ assessments.hodas1 }}">
+            <div class="mt-2">
+                <label for="teachingRemarks">Remarks:</label>
+                <textarea class="form-control" id="teachingRemarks" name="teachingRemarks" rows="2">{{ assessments.hodfeed1 }}</textarea>
+            </div>
         </div>
     </div>
     {% endif %}
@@ -167,14 +266,18 @@
     </table>
     <tr style="background-color: #f5c6d1; font-weight: bold;">
         <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
-            ACR Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.feedback }}</span>
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.feedback }}</span>
         </td>
     </tr>
     <pre></pre>
         <!-- Assessment Input Box -->
         <div class="assessment-box">
             <label for="teachingMarks">Assessment by HOD (Student feedback):</label>
-            <input type="number" class="form-control" id="feedbackMarks" name="teachingMarks" min="0" max="25">
+            <input type="number" class="form-control" id="feedbackMarks" name="teachingMarks" min="0" max="25" value="{{ assessments.hodas2 }}">
+            <div class="mt-2">
+                <label for="feedbackRemarks">Remarks:</label>
+                <textarea class="form-control" id="feedbackRemarks" name="feedbackRemarks" rows="2">{{ assessments.hodfeed2 }}</textarea>
+            </div>
         </div>
 </div>
 {% endif %}
@@ -222,14 +325,18 @@
     </table>
     <tr style="background-color: #f5c6d1; font-weight: bold;">
         <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
-            ACR Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.dept }}</span>
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.dept }}</span>
         </td>
     </tr>
     <pre></pre>
         <!-- Assessment Input Box -->
         <div class="assessment-box">
-            <label for="teachingMarks">Assessment by HOD (Department activities):</label>
-            <input type="number" class="form-control" id="deptMarks" name="teachingMarks" min="0" max="25">
+            <label for="deptMarks">Assessment by HOD (Department activities):</label>
+            <input type="number" class="form-control" id="deptMarks" name="deptMarks" min="0" max="20" value="{{ assessments.hodas3 }}">
+            <div class="mt-2">
+                <label for="deptRemarks">Remarks:</label>
+                <textarea class="form-control" id="deptRemarks" name="deptRemarks" rows="2">{{ assessments.hodfeed3 }}</textarea>
+            </div>
         </div>
 </div>
 {% endif %}
@@ -275,14 +382,18 @@
     </table>
     <tr style="background-color: #f5c6d1; font-weight: bold;">
         <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
-            ACR Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.institute }}</span>
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.institute }}</span>
         </td>
     </tr>
     <pre></pre>
         <!-- Assessment Input Box -->
         <div class="assessment-box">
-            <label for="teachingMarks">Assessment by HOD (Institute activities):</label>
-            <input type="number" class="form-control" id="instituteMarks" name="teachingMarks" min="0" max="25">
+            <label for="instituteMarks">Assessment by HOD (Institute activities):</label>
+            <input type="number" class="form-control" id="instituteMarks" name="instituteMarks" min="0" max="10" value="{{ assessments.hodas4 }}">
+            <div class="mt-2">
+                <label for="instituteRemarks">Remarks:</label>
+                <textarea class="form-control" id="instituteRemarks" name="instituteRemarks" rows="2">{{ assessments.hodfeed4 }}</textarea>
+            </div>
         </div>
 
 </div>
@@ -290,8 +401,6 @@
  <pre></pre>
 
  {% if self_improvement_data %}
-            <div class="table-container">
-                <h3>ACR : {{ selected_year }}</h3>
             <div class="table-container">
                 <h3>Self-Improvement Initiatives for Academic Year: {{ selected_year }}</h3>
                 <table class="table table-striped">
@@ -302,7 +411,9 @@
                             <th>Name of Conference</th>
                             <th>ISSN</th>
                             <th>Co-authors</th>
-                            <th>Link</th>
+                            <th>Impact Factor</th>
+                            <th>Citations</th>
+                            <th>Rating</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -313,9 +424,9 @@
                             <td>{{ row[2] }}</td>  <!-- Name of Conference -->
                             <td>{{ row[3] }}</td>  <!-- ISSN -->
                             <td>{{ row[4] }}</td>  <!-- Co-authors -->
-                            <td>
-                                <a href="{{ row[5] }}" target="_blank" class="btn btn-primary">View Link</a> <!-- Link -->
-                            </td>
+                            <td>{{ row[5] }}</td>  <!-- Impact Factor -->
+                            <td>{{ row[6] }}</td>  <!-- Citations -->
+                            <td>{{ row[7] }}</td>  <!-- Rating -->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -470,6 +581,95 @@
 
             </div>
             {% endif %}
+
+            {% if moocs_data %}
+            <div class="table-container">
+                <h3>MOOCS Courses for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of MOOCS course</th>
+                            <th>Month/Year</th>
+                            <th>Duration</th>
+                            <th>Completion Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in moocs_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Month/Year -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Completion Status -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if swayam_data %}
+            <div class="table-container">
+                <h3>SWAYAM NPTEL Courses for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of Swayam course</th>
+                            <th>Month/Year</th>
+                            <th>Duration</th>
+                            <th>Completion Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in swayam_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Month/Year -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Completion Status -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if webinar_data %}
+            <div class="table-container">
+                <h3>Seminars/Webinars for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of Seminar/Webinar</th>
+                            <th>Technology/Topic</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                            <th>Internal/External</th>
+                            <th>Name of Institute</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in webinar_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Technology/Topic -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Date -->
+                            <td>{{ row[5] }}</td>  <!-- Internal/External -->
+                            <td>{{ row[6] }}</td>  <!-- Name of Institute -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
             <tr style="background-color: #f5c6d1; font-weight: bold;">
                 <td colspan="5" style="padding: 0; width: 100%;">
                     <div style="
@@ -504,17 +704,151 @@
     <label for="acrMarks" class="mb-2">Assessment by HOD (ACR):</label>
     <div class="row justify-content-center">
         <div>
-            <input type="number" class="form-control" id="acrMarks" name="deptMarks" min="0" max="20">
+            <input type="number" class="form-control" id="acrMarks" name="acrMarks" min="0" max="10" value="{{ assessments.hodas5 }}">
+        </div>
+    </div>
+    <div class="row justify-content-center mt-2">
+        <div>
+            <label for="acrRemarks">Remarks:</label>
+            <textarea class="form-control" id="acrRemarks" name="acrRemarks" rows="2">{{ assessments.hodfeed5 }}</textarea>
         </div>
     </div>
 </div>
 
-            
-            
-            <pre></pre>
-            <pre></pre>
+<!-- Numerical Rating Table -->
+<div class="table-container">
+    <h3>Faculty Performance Rating</h3>
+    <div class="alert alert-info">Click on the rating number to select (5: Excellent, 4: Very Good, 3: Good, 2: Fair, 1: Average)</div>
+    <table class="table table-bordered" id="ratingTable">
+        <thead>
+            <tr>
+                <th>Sr No</th>
+                <th>Parameter</th>
+                <th colspan="5" class="text-center">Ratings</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th class="text-center">Excellent</th>
+                <th class="text-center">Very Good</th>
+                <th class="text-center">Good</th>
+                <th class="text-center">Fair</th>
+                <th class="text-center">Average</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Openness to adopt/experiment new policies</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 5 %} selected{% endif %}" data-row="1" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 4 %} selected{% endif %}" data-row="1" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 3 %} selected{% endif %}" data-row="1" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 2 %} selected{% endif %}" data-row="1" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 1 %} selected{% endif %}" data-row="1" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Professional knowledge</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 5 %} selected{% endif %}" data-row="2" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 4 %} selected{% endif %}" data-row="2" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 3 %} selected{% endif %}" data-row="2" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 2 %} selected{% endif %}" data-row="2" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 1 %} selected{% endif %}" data-row="2" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Attitude & ownership towards work</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 5 %} selected{% endif %}" data-row="3" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 4 %} selected{% endif %}" data-row="3" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 3 %} selected{% endif %}" data-row="3" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 2 %} selected{% endif %}" data-row="3" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 1 %} selected{% endif %}" data-row="3" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Proactive Initiative in Department Activities</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 5 %} selected{% endif %}" data-row="4" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 4 %} selected{% endif %}" data-row="4" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 3 %} selected{% endif %}" data-row="4" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 2 %} selected{% endif %}" data-row="4" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 1 %} selected{% endif %}" data-row="4" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Written & verbal power of expression</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 5 %} selected{% endif %}" data-row="5" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 4 %} selected{% endif %}" data-row="5" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 3 %} selected{% endif %}" data-row="5" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 2 %} selected{% endif %}" data-row="5" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 1 %} selected{% endif %}" data-row="5" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Potential working in a team</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 5 %} selected{% endif %}" data-row="6" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 4 %} selected{% endif %}" data-row="6" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 3 %} selected{% endif %}" data-row="6" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 2 %} selected{% endif %}" data-row="6" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 1 %} selected{% endif %}" data-row="6" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>Organizing capability</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 5 %} selected{% endif %}" data-row="7" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 4 %} selected{% endif %}" data-row="7" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 3 %} selected{% endif %}" data-row="7" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 2 %} selected{% endif %}" data-row="7" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 1 %} selected{% endif %}" data-row="7" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td>Loyalty towards work and organization</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 5 %} selected{% endif %}" data-row="8" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 4 %} selected{% endif %}" data-row="8" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 3 %} selected{% endif %}" data-row="8" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 2 %} selected{% endif %}" data-row="8" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 1 %} selected{% endif %}" data-row="8" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td>Quality of interaction with students</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 5 %} selected{% endif %}" data-row="9" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 4 %} selected{% endif %}" data-row="9" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 3 %} selected{% endif %}" data-row="9" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 2 %} selected{% endif %}" data-row="9" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 1 %} selected{% endif %}" data-row="9" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td>Regularity and Attendance</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 5 %} selected{% endif %}" data-row="10" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 4 %} selected{% endif %}" data-row="10" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 3 %} selected{% endif %}" data-row="10" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 2 %} selected{% endif %}" data-row="10" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 1 %} selected{% endif %}" data-row="10" data-rating="1">1</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="totalRatingScore">Total Score: </label>
+                <span id="totalRatingScore">0</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Score out of 10 = Total Score/5 = </label>
+                <span id="averageRatingScore">0</span> <small>(*shall be considered as assessment by HOD)</small>
+            </div>
+        </div>
+    </div>
+</div>
 
-            {% if contribution_data %}
+<pre></pre>
+<pre></pre>
+
+{% if contribution_data %}
             <div class="table-container">
                 <h3>Contributions to Society for Academic Year: {{ selected_year }}</h3>
                 <table class="table table-striped">
@@ -549,13 +883,17 @@
                 </table>
                 <tr style="background-color: #f5c6d1; font-weight: bold;">
                     <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
-                        ACR Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.society }}</span>
+                         Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.society }}</span>
                     </td>
                 </tr>
                 <pre></pre>
         <div class="assessment-box">
             <label for="deptMarks">Assessment by HOD (Contribution to society):</label>
-            <input type="number" class="form-control" id="contriMarks" name="deptMarks" min="0" max="20">
+            <input type="number" class="form-control" id="contriMarks" name="deptMarks" min="0" max="20" value="{{ assessments.hodas6 }}">
+            <div class="mt-2">
+                <label for="contriRemarks">Remarks:</label>
+                <textarea class="form-control" id="contriRemarks" name="contriRemarks" rows="2">{{ assessments.hodfeed6 }}</textarea>
+            </div>
         </div>
             </div>
             {% endif %}
@@ -565,67 +903,84 @@
  {% if points_data %}
  <div class="table-container">
      <h3>Final Score:</h3>
-     <table class="table table-bordered">
-         <thead>
-             <tr>
-                 <th>Criteria</th>
-                 <th>Maximum Points</th>
-                 <th>Points Earned</th>
-             </tr>
-         </thead>
+      <table class="table table-bordered">
+          <thead>
+              <tr>
+                  <th>Criteria</th>
+                  <th>Maximum Points</th>
+                  <th>Points (self assessment)</th>
+                  <th>Points Given by HOD</th>
+              </tr>
+          </thead>
          <tbody>
-             <tr>
-                 <td>Teaching Process</td>
-                 <td>25</td>
-                 <td>{{ points_data['teaching'] }}</td>
-             </tr>
-             <tr>
-                 <td>Students' Feedback</td>
-                 <td>25</td>
-                 <td>{{ points_data['feedback'] }}</td>
-             </tr>
-             <tr>
-                 <td>Departmental Activities</td>
-                 <td>20</td>
-                 <td>{{ points_data['dept'] }}</td>
-             </tr>
-             <tr>
-                 <td>Institute Activity</td>
-                 <td>10</td>
-                 <td>{{ points_data['institute'] }}</td>
-             </tr>
-             <tr>
-                 <td>ACR</td>
-                 <td>10</td>
-                 <td>{{ points_data['acr'] }}</td>
-             </tr>
-             <tr>
-                 <td>Contribution to Society</td>
-                 <td>10</td>
-                 <td>{{ points_data['society'] }}</td>
-             </tr>
-             <tr>
-                 <th>Total</th>
-                 <th>100</th>
-                 <th>{{ points_data['teaching']|int + points_data['feedback']|int + points_data['dept']|int 
-                     + points_data['institute']|int + points_data['acr']|int + points_data['society']|int }}</th>
-             </tr>
+              <tr>
+                  <td>Teaching Process</td>
+                  <td>25</td>
+                  <td>{{ points_data['teaching'] }}</td>
+                  <td>{{ assessments.hodas1 }}</td>
+              </tr>
+              <tr>
+                  <td>Students' Feedback</td>
+                  <td>25</td>
+                  <td>{{ points_data['feedback'] }}</td>
+                  <td>{{ assessments.hodas2 }}</td>
+              </tr>
+              <tr>
+                  <td>Departmental Activities</td>
+                  <td>20</td>
+                  <td>{{ points_data['dept'] }}</td>
+                  <td>{{ assessments.hodas3 }}</td>
+              </tr>
+              <tr>
+                  <td>Institute Activity</td>
+                  <td>10</td>
+                  <td>{{ points_data['institute'] }}</td>
+                  <td>{{ assessments.hodas4 }}</td>
+              </tr>
+              <tr>
+                  <td>ACR</td>
+                  <td>10</td>
+                  <td>{{ points_data['acr'] }}</td>
+                  <td id="finalAcrScore">{{ finalacr_value }}</td>
+              </tr>
+             
+              <tr>
+                  <td>Contribution to Society</td>
+                  <td>10</td>
+                  <td>{{ points_data['society'] }}</td>
+                  <td>{{ assessments.hodas6 }}</td>
+              </tr>
+              <tr>
+                  <th>Total</th>
+                  <th>100</th>
+                  <th>{{ points_data['teaching']|int + points_data['feedback']|int + points_data['dept']|int 
+                      + points_data['institute']|int + points_data['acr']|int + points_data['society']|int }}</th>
+                  <th>{{ assessments.hodas1|int + assessments.hodas2|int + assessments.hodas3|int 
+                      + assessments.hodas4|int + finalacr_value|int + assessments.hodas6|int }}</th>
+              </tr>
              
          </tbody>
      </table>
+     
+     <div class="text-center mt-3 mb-3">
+         <button id="saveAssessment" class="btn btn-success">Save Assessment</button>
+         <button id="printButton" class="btn btn-primary ml-2" onclick="window.print()">Print Page</button>
+     </div>
+
+      <!-- HOD Assessment is now integrated into the main table above -->
  </div>
  {% endif %}
 
 <pre></pre>
     <!-- HOD Feedback Section -->
     <div class="container mt-5">
-        <h3>Feedback</h3>
-        <textarea class="form-control" name="hodFeedback" rows="4" placeholder="Enter your feedback here..."></textarea>
+        <h3> Overall Feedback</h3>
+        <textarea class="form-control" name="hodFeedback" rows="4" placeholder="Enter your feedback here...">{{ assessments.feedback }}</textarea>
     </div>
     
 
     <div class="text-center mt-4">
-        <button type="button" class="btn btn-success mt-3" onclick="submitAssessment()">Submit Assessment</button>
+        <button type="button" class="btn btn-danger mt-3" id="submitAssessmentBtn">Submit Final Assessment</button>
        
         <a href="/highlanding" class="btn btn-primary">Home</a>
     </div>
@@ -654,6 +1009,20 @@
         option.text = `${startYear}/${endYear.toString().slice(-2)}`;
         dropdown.appendChild(option);
     }
+    
+    // Add onchange event to automatically submit form when selection changes
+    dropdown.addEventListener('change', function() {
+        if(validateForm()) {
+            document.getElementById('academicForm').submit();
+        }
+    });
+    
+    // If there's no selected year already (no form data loaded yet), auto-submit with the first option
+    if (!window.location.href.includes('search_pastforms') && dropdown.options.length > 0) {
+        setTimeout(function() {
+            document.getElementById('academicForm').submit();
+        }, 300); // Small delay to ensure DOM is ready
+    }
 }
 
 // Call the function to populate the dropdown when the page loads
@@ -669,54 +1038,519 @@ window.onload = generateAcademicYears;
             return true;
         }
 
-        let isSubmitting = false; // Flag to prevent multiple submissions
-
-function submitAssessment() {
-    if (isSubmitting) return; // Prevent further submissions
-    isSubmitting = true; // Set flag to true
-
-    // Gather form data
-    const formData = {
-        user_id: "{{ user_id }}",  // Use template syntax to embed values
-        acad_years: "{{ selected_year }}",
-        hodas1: $("#teachingMarks").val(),
-        hodas2: $("#feedbackMarks").val(),
-        hodas3: $("#deptMarks").val(),
-        hodas4: $("#instituteMarks").val(),
-        hodas5: $("#acrMarks").val(),
-        hodas6: $("#contriMarks").val(),
-        feedback: $("textarea[name='hodFeedback']").val()
-
-    };
-
-    // AJAX request to submit the assessment
-    $.ajax({
-        url: "/submit_assessment", // Flask route
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(formData),
-        success: function(response) {
-            // Handle success (e.g., show a success message)
-            alert("Assessment submitted successfully!");
-            location.reload(); // Optionally reload the page
-        },
-        error: function(xhr, status, error) {
-            // Handle error (e.g., show an error message)
-            alert("Error submitting assessment: " + error);
-            isSubmitting = false; // Reset flag on error
-        }
-    });
-}
-
-// Attach click event to button
-$(document).ready(function() {
-    $(".btn-success").on("click", submitAssessment);
-});
-
-
+        // Remove the submitAssessment function from here as it's now defined in the script below
         </script>
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.11/dist/umd/popper.min.js"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     </script>
+
+    <!-- Save and Submit Assessment JavaScript -->
+    <script>
+        $(document).ready(function() {
+            // Load previously saved ratings from the server when page loads
+            loadSavedRatings();
+            
+            // Save Assessment Button Handler
+            // Remove previous click handler if it exists
+            $("#saveAssessment").off('click');
+            
+            // Add a single, reliable click handler for the Save Assessment button
+            $("#saveAssessment").click(function() {
+                console.log("Save Assessment button clicked");
+                saveAssessmentData(false);
+            });
+
+            // Submit Assessment Button Handler
+            $("#submitAssessmentBtn").click(function() {
+                submitAssessment();
+            });
+            
+            // Function to load previously saved ratings
+            function loadSavedRatings() {
+                $.ajax({
+                    url: "/get_saved_ratings",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        user_id: "{{ user_id }}",
+                        acad_years: "{{ selected_year }}"
+                    }),
+                    success: function(response) {
+                        if (response.status === "success" && response.ratings) {
+                            const ratings = response.ratings;
+                            console.log("Loaded saved ratings:", ratings);
+                            
+                            // Set the selected ratings in the UI
+                            for (let i = 1; i <= 10; i++) {
+                                if (ratings[`r${i}`]) {
+                                    const ratingValue = ratings[`r${i}`];
+                                    // Remove any existing selections
+                                    $(`.rating-circle[data-row="${i}"]`).removeClass("selected");
+                                    // Select the saved rating
+                                    $(`.rating-circle[data-row="${i}"][data-rating="${ratingValue}"]`).addClass("selected");
+                                }
+                            }
+                            
+                            // Update the total score display
+                            if (ratings.r_avg) {
+                                $("#ratingAvgDisplay").text(ratings.r_avg);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading saved ratings:", error);
+                    }
+                });
+            }
+
+            // Function to save assessment data without final submission
+            function saveAssessmentData(isSubmitting) {
+                console.log("==== SAVE ASSESSMENT FUNCTION STARTED ====");
+                // Gather form data
+                // Get all the rating values
+                let ratings = {};
+                for (let i = 1; i <= 10; i++) {
+                    // Find the selected rating for each row
+                    const selectedRating = $(`.rating-circle.selected[data-row="${i}"]`).data('rating') || 1;
+                    ratings[`r${i}`] = selectedRating;
+                    console.log(`Rating ${i}: ${selectedRating}`);
+                }
+                
+                // Calculate the integer average of all ratings
+                const ratingValues = Object.values(ratings);
+                const ratingSum = ratingValues.reduce((sum, rating) => sum + parseInt(rating), 0);
+                const ratingAvg = Math.floor(ratingSum / 5); // Divide by 5 since max is 50 (10 rows * max 5 rating)
+                console.log("Rating Sum:", ratingSum, "Rating Average (r_avg):", ratingAvg);
+                
+                // Get the manual ACR value directly from the input field
+                const manualAcrValue = parseInt($("#acrMarks").val() || 0);
+                console.log("Manual ACR Value (hodas5):", manualAcrValue);
+                
+                // Calculate the final ACR score: (manualAcrValue + ratingAvg) / 2
+                const finalAcrScore = Math.floor((manualAcrValue + ratingAvg) / 2);
+                console.log("Final ACR Score (finalacr):", finalAcrScore);
+                
+                // Update the UI to display the final ACR score
+                $("#finalAcrScore").text(finalAcrScore);
+                
+                console.log("ACR value in final score table updated to:", finalAcrScore);
+                
+                // Create the form data object with all necessary values
+                const formData = {
+                    user_id: "{{ user_id }}",
+                    acad_years: "{{ selected_year }}",
+                    hodas1: $("#teachingMarks").val(),
+                    hodas2: $("#feedbackMarks").val(),
+                    hodas3: $("#deptMarks").val(),
+                    hodas4: $("#instituteMarks").val(),
+                    hodas5: $("#acrMarks").val(), // This is the manual ACR value entered by the user
+                    hodas6: $("#contriMarks").val(),
+                    feedback: $("textarea[name='hodFeedback']").val(),
+                    hodfeed1: $("#teachingRemarks").val(),
+                    hodfeed2: $("#feedbackRemarks").val(),
+                    hodfeed3: $("#deptRemarks").val(),
+                    hodfeed4: $("#instituteRemarks").val(), 
+                    hodfeed5: $("#acrRemarks").val(),
+                    hodfeed6: $("#contriRemarks").val(),
+                    is_final_submit: isSubmitting, // Flag to indicate if this is a save or submit
+                    // Add the ratings to the form data
+                    r1: ratings.r1,
+                    r2: ratings.r2,
+                    r3: ratings.r3,
+                    r4: ratings.r4,
+                    r5: ratings.r5,
+                    r6: ratings.r6,
+                    r7: ratings.r7,
+                    r8: ratings.r8,
+                    r9: ratings.r9,
+                    r10: ratings.r10,
+                    r_avg: ratingAvg,
+                    // Most importantly, include the final ACR score to save to form3_tot.finalacr
+                    finalacr: finalAcrScore
+                };
+                
+                console.log("Form data being sent to server:", formData);
+
+                // AJAX request to save the assessment
+                $.ajax({
+                    url: "/save_assessment", // Flask route for saving
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        console.log("Save successful, server response:", response);
+                        
+                        // Ensure the ACR field in the table shows the correct final score
+                        $("#finalAcrScore").text(finalAcrScore);
+                        
+                        // Update the HOD assessment table with new values
+                        updateHodAssessmentTable();
+                        
+                        // Log the current state of important values
+                        console.log("After save - ACR input value:", $("#acrMarks").val());
+                        console.log("After save - Final ACR score in table:", $("#finalAcrScore").text());
+                        
+                        if (!isSubmitting) {
+                            alert("Assessment saved successfully!");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error saving assessment:", error, xhr.responseText);
+                        alert("Error saving assessment: " + error);
+                    }
+                });
+            }
+
+            // Function to update the HOD assessment table with current values
+            function updateHodAssessmentTable() {
+                // Get all the input values
+                const teaching = $("#teachingMarks").val() || 0;
+                const feedback = $("#feedbackMarks").val() || 0;
+                const dept = $("#deptMarks").val() || 0;
+                const institute = $("#instituteMarks").val() || 0;
+                const acr = $("#acrMarks").val() || 0;
+                const contri = $("#contriMarks").val() || 0;
+                
+                // Calculate total
+                const total = parseInt(teaching) + parseInt(feedback) + parseInt(dept) + 
+                              parseInt(institute) + parseInt(acr) + parseInt(contri);
+                
+                // Update the table cells
+                const hodScoreCells = $(".hodScore");
+                hodScoreCells.eq(0).text(teaching);
+                hodScoreCells.eq(1).text(feedback);
+                hodScoreCells.eq(2).text(dept);
+                hodScoreCells.eq(3).text(institute);
+                hodScoreCells.eq(4).text(acr);
+                hodScoreCells.eq(5).text(contri);
+                
+                // Update total score
+                $("#hodTotalScore").text(total);
+            }
+
+            // Modify the submitAssessment function to use saveAssessmentData
+            let isSubmitting = false;
+            
+            function submitAssessment() {
+                if (isSubmitting) return;
+                isSubmitting = true;
+                
+                // Get all the rating values
+                let ratings = {};
+                for (let i = 1; i <= 10; i++) {
+                    // Find the selected rating for each row
+                    const selectedRating = $(`.rating-circle.selected[data-row="${i}"]`).data('rating') || 1;
+                    ratings[`r${i}`] = selectedRating;
+                }
+                
+                // Calculate the integer average of all ratings
+                // Sum all ratings and divide by 10, then round to integer
+                const ratingValues = Object.values(ratings);
+                const ratingSum = ratingValues.reduce((sum, rating) => sum + rating, 0);
+                const ratingAvg = Math.round(ratingSum / ratingValues.length);
+                
+                // Gather form data
+                const formData = {
+                    user_id: "{{ user_id }}",
+                    acad_years: "{{ selected_year }}",
+                    hodas1: $("#teachingMarks").val(),
+                    hodas2: $("#feedbackMarks").val(),
+                    hodas3: $("#deptMarks").val(),
+                    hodas4: $("#instituteMarks").val(),
+                    hodas5: $("#acrMarks").val(),
+                    hodas6: $("#contriMarks").val(),
+                    feedback: $("textarea[name='hodFeedback']").val(),
+                    hodfeed1: $("#teachingRemarks").val(),
+                    hodfeed2: $("#feedbackRemarks").val(),
+                    hodfeed3: $("#deptRemarks").val(),
+                    hodfeed4: $("#instituteRemarks").val(), 
+                    hodfeed5: $("#acrRemarks").val(),
+                    hodfeed6: $("#contriRemarks").val(),
+                    is_final_submit: true,
+                    // Add the ratings to the form data
+                    r1: ratings.r1,
+                    r2: ratings.r2,
+                    r3: ratings.r3,
+                    r4: ratings.r4,
+                    r5: ratings.r5,
+                    r6: ratings.r6,
+                    r7: ratings.r7,
+                    r8: ratings.r8,
+                    r9: ratings.r9,
+                    r10: ratings.r10,
+                    r_avg: ratingAvg
+                };
+
+                // AJAX request to submit the assessment
+                $.ajax({
+                    url: "/submit_assessment", 
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        alert("Assessment submitted successfully!");
+                        location.reload(); // Reload the page
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Error submitting assessment: " + error);
+                        isSubmitting = false; // Reset flag on error
+                    }
+                });
+            }
+        });
+    </script>
+    <div class="text-center my-4">
+        <button class="btn btn-secondary" onclick="window.history.back()">Back</button>
+    </div>
+    <style>
+        /* Rating circles styling */
+        .rating-circle {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            text-align: center;
+            line-height: 28px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .rating-circle:hover {
+            background-color: #e0e0e0;
+            transform: scale(1.1);
+        }
+        .rating-circle.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+    </style>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize the rating selection system
+            let ratings = {};
+            
+            // Function to update total and average scores
+            function updateScores() {
+                let total = 0;
+                for (const row in ratings) {
+                    total += ratings[row];
+                }
+                
+                $("#totalRatingScore").text(total);
+                
+                // Calculate average (total / 5) as per requirements
+                const average = (total / 5).toFixed(2);
+                $("#averageRatingScore").text(average);
+                
+                // Calculate final ACR score (average of ratings average and ACR input)
+                const acrScore = parseInt($("#acrMarks").val() || 0);
+                const finalScore = ((parseFloat(average) + acrScore) / 2).toFixed(2);
+                
+                // Update the final ACR score in the final assessment table
+                $("#finalAcrScore").text(finalScore);
+            }
+            
+            // Handle rating selection
+            $(".rating-circle").click(function() {
+                const row = $(this).data("row");
+                const rating = $(this).data("rating");
+                
+                // Remove selected class from all ratings in this row
+                $(`.rating-circle[data-row="${row}"]`).removeClass("selected");
+                
+                // Add selected class to the clicked rating
+                $(this).addClass("selected");
+                
+                // Store the rating value
+                ratings[row] = rating;
+                
+                // Update scores
+                updateScores();
+            });
+            
+            // Also update scores when ACR marks change
+            $("#acrMarks").on("input", function() {
+                updateScores();
+            });
+        });
+    </script>
+    <!-- Additional script to fix rating display issues -->
+    <script>
+        $(document).ready(function() {
+            // Initialize the rating display when page loads
+            setTimeout(function() {
+                // Calculate sum of all selected ratings
+                let totalSum = 0;
+                for (let i = 1; i <= 10; i++) {
+                    const selectedRating = parseInt($(".rating-circle.selected[data-row='" + i + "']").data('rating') || 0);
+                    totalSum += selectedRating;
+                }
+                
+                // Calculate average (out of 10)
+                const avgRating = Math.round(totalSum / 5); // Divide by 5 since max is 50 (10 rows * 5 max rating)
+                
+                // Update UI
+                $("#totalRatingScore").text(totalSum);
+                $("#averageRatingScore").text(avgRating);
+                
+                // Update the ACR score in the final score table
+                $("#finalAcrScore").text(avgRating);
+                
+                console.log("Initialized ratings - Sum:", totalSum, "Average:", avgRating);
+                
+                // IMPORTANT: We've moved this logic to the saveAssessmentData function
+                // Do not attach additional click handlers here to avoid conflicts
+                console.log("Page load complete - ACR calculation will be handled by saveAssessmentData");
+            }, 1000); // Small delay to ensure DOM is fully loaded
+        });
+    </script>
+    <!-- ACR Rating Fix Script -->
+    <script>
+        // Function to override the form data before submission
+        function overrideFormData() {
+            // Override AJAX before form submission
+            const originalAjax = $.ajax;
+            
+            $.ajax = function(options) {
+                if (options.url === "/save_assessment" || options.url === "/submit_assessment") {
+                    // Calculate the rating average
+                    let totalSum = 0;
+                    for (let i = 1; i <= 10; i++) {
+                        const selectedRating = parseInt($(`.rating-circle.selected[data-row="${i}"]`).data('rating') || 1);
+                        totalSum += selectedRating;
+                    }
+                    
+                    // Calculate the average as total divided by 5
+                    const ratingAvg = Math.floor(totalSum / 5);
+                    
+                    // Get the data from the request
+                    let data = JSON.parse(options.data);
+                    
+                    // IMPORTANT: Get the manual hodas5 value directly from the acrMarks input field
+                    // This preserves the user's manually entered value
+                    const manualAcrValue = parseInt($("#acrMarks").val() || 0);
+                    
+                    // Calculate the final ACR score: (hodas5 + r_avg) / 2
+                    const finalAcrScore = Math.floor((manualAcrValue + ratingAvg) / 2);
+                    
+                    // Update the data object with all required values:
+                    // 1. Manual ACR value from input field (hodas5)
+                    // 2. Rating average (r_avg)
+                    // 3. We don't need to send finalacr separately - it's calculated on the server
+                    data.hodas5 = manualAcrValue;
+                    data.r_avg = ratingAvg;
+                    
+                    console.log("Manual ACR Value:", manualAcrValue, "Rating Avg:", ratingAvg, "Final Score:", finalAcrScore);
+                    
+                    // Update the data in the request
+                    options.data = JSON.stringify(data);
+                    
+                    // Update the display in the final score table to show the average of manual ACR and rating average
+                    $("#finalAcrScore").text(finalAcrScore);
+                    
+                    console.log("Form submission - Manual ACR:", manualAcrValue, "Rating Avg:", ratingAvg, "Final ACR Score:", finalAcrScore);
+                }
+                
+                return originalAjax.apply(this, arguments);
+            };
+        }
+
+        $(document).ready(function() {
+            // Override AJAX before form submission
+            overrideFormData();
+            
+            // Function to load saved ratings and update the UI
+            function loadSavedRatings() {
+                $.ajax({
+                    url: "/get_saved_ratings",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        user_id: "{{ user_id }}",
+                        acad_years: "{{ selected_year }}"
+                    }),
+                    success: function(response) {
+                        if (response.status === "success" && response.ratings) {
+                            const ratings = response.ratings;
+                            console.log("Loaded saved ratings:", ratings);
+                            
+                            // Set the selected ratings in the UI
+                            let totalSum = 0;
+                            for (let i = 1; i <= 10; i++) {
+                                if (ratings[`r${i}`]) {
+                                    const ratingValue = parseInt(ratings[`r${i}`]);
+                                    totalSum += ratingValue;
+                                    
+                                    // Remove any existing selections
+                                    $(`.rating-circle[data-row="${i}"]`).removeClass("selected");
+                                    
+                                    // Select the saved rating
+                                    $(`.rating-circle[data-row="${i}"][data-rating="${ratingValue}"]`).addClass("selected");
+                                }
+                            }
+                            
+                            // Update the total rating score
+                            $("#totalRatingScore").text(totalSum);
+                            
+                            // Get the saved r_avg value or calculate it
+                            const ratingAvg = ratings.r_avg ? parseInt(ratings.r_avg) : Math.floor(totalSum / 5);
+                            $("#averageRatingScore").text(ratingAvg);
+                            
+                            // Get the current hodas5 value 
+                            const hodas5Value = parseInt("{{ assessments.hodas5 }}" || 0);
+                            
+                            // Calculate the average of hodas5 and r_avg
+                            const finalAcrScore = Math.floor((hodas5Value + ratingAvg) / 2);
+                            
+                            // Update the ACR score in the final table
+                            $("#finalAcrScore").text(finalAcrScore);
+                            
+                            console.log("Loaded ratings - Sum:", totalSum, "Rating Avg:", ratingAvg, "HOD Assessment:", hodas5Value, "Final ACR Score:", finalAcrScore);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading saved ratings:", error);
+                    }
+                });
+            }
+            
+            // Call loadSavedRatings when page loads
+            loadSavedRatings();
+            
+            // Initialize the rating UI on page load
+            setTimeout(function() {
+                let totalSum = 0;
+                for (let i = 1; i <= 10; i++) {
+                    const selectedRating = parseInt($(`.rating-circle.selected[data-row="${i}"]`).data('rating') || 0);
+                    totalSum += selectedRating;
+                }
+                
+                // Calculate average of ratings: totalSum / 5 (without rounding)
+                const avgRating = Math.floor(totalSum / 5);
+                
+                // Update the total rating score
+                $("#totalRatingScore").text(totalSum);
+                
+                // Update the average rating score
+                $("#averageRatingScore").text(avgRating);
+                
+                // Get the manual ACR value from the acrMarks input field
+                const manualAcrValue = parseInt($("#acrMarks").val() || 0);
+                
+                // Calculate the average of manual ACR and r_avg: (manualAcrValue + avgRating) / 2
+                const finalAcrScore = Math.floor((manualAcrValue + avgRating) / 2);
+                
+                // Update the ACR score in the final table
+                $("#finalAcrScore").text(finalAcrScore);
+                
+                console.log("Page load - Updated ratings. Sum:", totalSum, "Rating Avg:", avgRating, "Manual ACR:", manualAcrValue, "Final ACR Score:", finalAcrScore);
+            }, 1000);
+        });
+    </script>
 </body>
+{% endif %}
 </html>

@@ -49,12 +49,35 @@
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 8px;
-            width: 80%;
-            margin: 0 auto;
+            width: 95%;
+            margin: 20px auto;
         }
-
+        /* Fix for table cell truncation */
+        table {
+            width: 100%;
+            table-layout: auto;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ccc;
+            word-break: normal;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            min-width: 100px;
+        }
+        th {
+            background-color: #f7f7f7;
+        }
+        /* Ensure name/title columns have enough width */
+        th:first-child, td:first-child {
+            min-width: 250px;
+        }
         /* Optional: Styling for the print button */
-        #printButton {
+        #printButton, #reviewButton {
             padding: 10px 20px;
             background-color: #007BFF;
             color: white;
@@ -62,7 +85,7 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        #printButton:hover {
+        #printButton:hover, #reviewButton:hover {
             background-color: #0056b3;
         }
         .container {
@@ -74,80 +97,12 @@
             width: 100%; /* Full width for smaller screens */
         }
     </style>
- <style>
-    body {
-        background: url('/static/bg.jpg') no-repeat center center fixed;
-        background-size: cover;
-        margin: 0;
-    }
-    .top-bar {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-    }
-    .top-bar a {
-        margin-left: 15px;
-        color: white;
-        text-decoration: none;
-        font-weight: bold;
-        transition: color 0.3s ease;
-    }
-    .top-bar a:hover {
-        text-decoration: underline;
-        color: #ff9800;
-    }
-    .logo-link {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-    }
-    .logo-link img {
-        width: 90px;
-        height: auto;
-    }
-    .container {
-        margin-top: 150px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 20px;
-        border-radius: 8px;
-        width: 80%; /* Adjust as needed */
-        max-width: 600px; /* Maximum width for the container */
-        margin: 150px auto; /* Center horizontally and maintain spacing from the top */
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Optional: shadow for depth */
-        text-align: center; /* Center text within the container */
-    }
-    table {
-        width: 100%; /* Full width for the table */
-        border-collapse: collapse; /* Merge table borders */
-        margin-top: 20px; /* Space above the table */
-    }
-    th, td {
-        padding: 10px; /* Padding inside table cells */
-        text-align: left; /* Left-align text in cells */
-        border: 1px solid #ccc; /* Light gray border for the table */
-    }
-    th {
-        background-color: #f7f7f7; /* Light gray background for headers */
-    }
-    /* Optional: Styling for the print button */
-    #printButton #reviewButton{
-        padding: 10px 20px;
-        background-color: #007BFF;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-    #printButton:hover  #reviewButton:hover{
-        background-color: #0056b3;
-    }
-</style>
 </head>
 <body>
 
 <!-- Top Right Links -->
 <div class="top-bar">
-    <a href="/dashboard">Dashboard</a>
+    
     <a href="/logout">Logout</a>
 </div>
 
@@ -228,7 +183,7 @@
                     <td>{{ row[1] }}</td> <!-- Course Code/Name -->
                     <td>{{ row[2] }}</td> <!-- Classes Scheduled (S) -->
                     <td>{{ row[3] }}</td> <!-- Classes Held (H) -->
-                    <td>{{ row[4] }}</td> <!-- Points (H/S) * 5 -->
+                    <td>{{ "%.1f"|format(row[4]|float) if row[4] is not none else '0.0' }}</td> <!-- Points (H/S) * 5 -->
                 </tr>
                 {% else %}
                 <tr>
@@ -334,7 +289,7 @@
     </table>
     <tr style="background-color: #f5c6d1; font-weight: bold;">
         <td colspan="5" class="text-end" style="padding-right: 20px;">
-            Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.dept}}</span>
+            Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.dept }}</span>
         </td>
     </tr>
 </div>
@@ -392,8 +347,6 @@
 
             {% if self_improvement_data %}
             <div class="table-container">
-                <h3>ACR : {{ selected_year }}</h3>
-            <div class="table-container">
                 <h3>Self-Improvement Initiatives for Academic Year: {{ selected_year }}</h3>
                 <table class="table table-striped">
                     <thead>
@@ -403,7 +356,9 @@
                             <th>Name of Conference</th>
                             <th>ISSN</th>
                             <th>Co-authors</th>
-                            <th>Link</th>
+                            <th>Impact Factor</th>
+                            <th>Citations</th>
+                            <th>Rating</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -414,9 +369,9 @@
                             <td>{{ row[2] }}</td>  <!-- Name of Conference -->
                             <td>{{ row[3] }}</td>  <!-- ISSN -->
                             <td>{{ row[4] }}</td>  <!-- Co-authors -->
-                            <td>
-                                <a href="{{ row[5] }}" target="_blank" class="btn btn-primary">View Link</a> <!-- Link -->
-                            </td>
+                            <td>{{ row[5] }}</td>  <!-- Impact Factor -->
+                            <td>{{ row[6] }}</td>  <!-- Citations -->
+                            <td>{{ row[7] }}</td>  <!-- Rating -->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -482,6 +437,96 @@
             </div>
             {% endif %}
 
+            <pre></pre>
+            {% if moocs_data %}
+            <div class="table-container">
+                <h3>MOOCS Courses for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of MOOCS course</th>
+                            <th>Month/Year</th>
+                            <th>Duration</th>
+                            <th>Completion Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in moocs_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Month/Year -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Completion Status -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if swayam_data %}
+            <div class="table-container">
+                <h3>SWAYAM NPTEL Courses for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of Swayam course</th>
+                            <th>Month/Year</th>
+                            <th>Duration</th>
+                            <th>Completion Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in swayam_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Month/Year -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Completion Status -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if webinar_data %}
+            <div class="table-container">
+                <h3>Seminars/Webinars for Academic Year: {{ selected_year }}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Name of Seminar/Webinar</th>
+                            <th>Technology/Topic</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                            <th>Internal/External</th>
+                            <th>Name of Institute</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in webinar_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>  <!-- Sr No. -->
+                            <td>{{ row[1] }}</td>  <!-- Name -->
+                            <td>{{ row[2] }}</td>  <!-- Technology/Topic -->
+                            <td>{{ row[3] }}</td>  <!-- Duration -->
+                            <td>{{ row[4] }}</td>  <!-- Date -->
+                            <td>{{ row[5] }}</td>  <!-- Internal/External -->
+                            <td>{{ row[6] }}</td>  <!-- Name of Institute -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            
             <pre></pre>
 
             {% if resource_data %}
@@ -571,14 +616,14 @@
             
         
             {% endif %}
-            <div>
-            <tr style="background-color: #f5c6d1; font-weight: bold;">
-                <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
-                    ACR Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.acr }}</span>
-                </td>
-            </tr>
-        </div>
-            <pre></pre>
+
+            <!-- ACR Total Display -->
+            <div style="text-align: center; margin: 20px 0;">
+                <div style="display: inline-block; background-color: white; border: 1px solid #ddd; border-radius: 5px; padding: 10px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <span style="font-size: 1.1rem; font-weight: bold;">ACR Total = </span>
+                    <span style="font-size: 1.3rem; color: #ed0000; font-weight: bold;">{{ points_data.acr }}</span>
+                </div>
+            </div>
 
             {% if contribution_data %}
             <div class="table-container">
@@ -639,50 +684,53 @@
             <tr>
                 <td>Teaching Process</td>
                 <td>25</td>
-                <td>{{ points_data['teaching'] }}</td>
+                <td>{{ points_data['teaching']|float|round(2) }}</td>
             </tr>
             <tr>
                 <td>Students' Feedback</td>
                 <td>25</td>
-                <td>{{ points_data['feedback'] }}</td>
+                <td>{{ points_data['feedback']|float|round(2) }}</td>
             </tr>
             <tr>
                 <td>Departmental Activities</td>
                 <td>20</td>
-                <td>{{ points_data['dept'] }}</td>
+                <td>{{ points_data['dept']|float|round(2) }}</td>
             </tr>
             <tr>
                 <td>Institute Activity</td>
                 <td>10</td>
-                <td>{{ points_data['institute'] }}</td>
+                <td>{{ points_data['institute']|float|round(2) }}</td>
             </tr>
             <tr>
                 <td>ACR</td>
                 <td>10</td>
-                <td>{{ points_data['acr'] }}</td>
+                <td>{{ points_data['acr']|float|round(2) }}</td>
             </tr>
+            
             <tr>
                 <td>Contribution to Society</td>
                 <td>10</td>
-                <td>{{ points_data['society'] }}</td>
+                <td>{{ points_data['society']|float|round(2) }}</td>
             </tr>
             <tr>
                 <th>Total</th>
                 <th>100</th>
-                <th>{{ points_data['teaching']|int + points_data['feedback']|int + points_data['dept']|int 
-                    + points_data['institute']|int + points_data['acr']|int + points_data['society']|int }}</th>
+                <th>{{ (points_data['teaching']|float + points_data['feedback']|float + points_data['dept']|float 
+                    + points_data['institute']|float + points_data['acr']|float + points_data['society']|float)|round(2) }}</th>
             </tr>
             
         </tbody>
     </table>
+
 </div>
+
 {% endif %}
 <pre> </pre>
-<button id="printButton" onclick="window.print()">Print</button>
+<div class="text-center">
+    <button id="printButton" onclick="window.print()" class="btn btn-primary">Print</button>
+</div>
 <pre></pre>
 <div class="text-center">
- 
-
     <a href="/landing" class="btn btn-primary">Home</a> 
 
 </div>
