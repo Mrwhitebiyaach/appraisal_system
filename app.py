@@ -1177,19 +1177,25 @@ def save_3total_points():
 def review(form_id):
     # Initialize all variables to ensure they have default values
     teaching_data, feedback_data, dept_act_data, inst_act_data = [], [], [], []
+    academic_review_data = []  # Initialize academic review data
     points_data = {}
     user_data = {}
+    # Form3 data variables - using same structure as form3 route
     self_improvement_data = []
     certification_data = []
-    title_data = []
-    resource_data = []
-    committee_data = []
-    project_data = []
-    contribution_data = []
-    # Add new variables for the new tables
+    training_data = []
     moocs_data = []
     swayam_data = []
     webinar_data = []
+    copyright_data = []
+    patent_data = []
+    resource_data = []
+    committee_data = []
+    conference_committee_data = []
+    project_data = []
+    contribution_data = []
+    self_assessment_marks = ''
+    special_mentions_data = []
 
     # Connect to the database
     connection = connect_to_database()
@@ -1240,6 +1246,15 @@ def review(form_id):
                 cursor.execute(sql, (form_id,))
                 teaching_data = cursor.fetchall()
 
+                # Fetch academic review data
+                cursor.execute("""
+                    SELECT srno, academic_review1, academic_review2, avg_score
+                    FROM numeric_points_attained
+                    WHERE form_id = %s
+                    ORDER BY srno
+                """, (form_id,))
+                academic_review_data = cursor.fetchall()
+
                 # Fetch student feedback data including uploads
                 sql = """
                     SELECT semester, course_code, total_points, points_obtained, uploads
@@ -1264,55 +1279,133 @@ def review(form_id):
                 cursor.execute(sql, (form_id,))
                 inst_act_data = cursor.fetchall()
 
-                # Fetch self-improvement data
-                sql = "SELECT title, month, name_of_conf, issn, co_auth, imp_conference, num_of_citations, rating FROM self_imp WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                self_improvement_data = cursor.fetchall()
+                # ===== FORM3 DATA FETCHING - USING SAME LOGIC AS /form3 ROUTE =====
+                # Convert form_id to string as all table columns are VARCHAR(45)
+                form_id_str = str(form_id)
+                
+                # Helper function to handle NULL values in returned data
+                def safe_get(row, index, default=''):
+                    if index >= len(row) or row[index] is None:
+                        return default
+                    return row[index]
+                
+                # Function to process row data with NULL handling
+                def process_rows(rows):
+                    if not rows:
+                        return []
+                    
+                    processed = []
+                    for row in rows:
+                        # Convert None values to empty strings
+                        processed_row = tuple('' if val is None else val for val in row)
+                        processed.append(processed_row)
+                    
+                    return processed
 
-                # Fetch certification data
-                sql = "SELECT name, uploads FROM certifications WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                certification_data = cursor.fetchall()
+                # Query for self-improvement data
+                cursor.execute("SELECT srno, title, month, name_of_conf, issn, co_auth, imp_conference, num_of_citations, rating, uploads, form_id FROM self_imp WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                self_improvement_data = process_rows(cursor.fetchall())
+                
+                # Query for certification data
+                cursor.execute("SELECT * FROM certifications WHERE form_id = %s", (form_id_str,))
+                certification_data = process_rows(cursor.fetchall())
 
-                # Fetch title data
-                sql = "SELECT name, month, reg_no FROM copyright WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                title_data = cursor.fetchall()
+                # Query for Short-term Training Programs/FDPs data - CORRECTED ORDER
+                cursor.execute("SELECT srno, name, technology, duration, date, organizing_institute, mode, upload FROM short_term_training WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                training_data = process_rows(cursor.fetchall())
 
-                # Fetch resource person data
-                sql = "SELECT name, dept, name_oi, num_op FROM resource_person WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                resource_data = cursor.fetchall()
+                cursor.execute("SELECT srno, name, month, duration, completion, upload FROM moocs WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                moocs_data = process_rows(cursor.fetchall())
+                
+                cursor.execute("SELECT srno, name, month, duration, completion, upload FROM swayam WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                swayam_data = process_rows(cursor.fetchall())
+                
+                cursor.execute("SELECT srno, name, technology, duration, date, int_ext, name_of_institute, upload FROM webinar WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                webinar_data = process_rows(cursor.fetchall())
+                
+                # Query for copyright data with all fields
+                cursor.execute("""
+                    SELECT 
+                        srno,
+                        COALESCE(name, '') as name,
+                        COALESCE(month, '') as month,
+                        COALESCE(reg_no, '') as reg_no,
+                        COALESCE(filed_pub_grant, '') as filed_pub_grant,
+                        COALESCE(category, '') as category,
+                        COALESCE(uploads, '') as uploads
+                    FROM copyright 
+                    WHERE form_id = %s
+                    ORDER BY srno ASC
+                """, (form_id_str,))
+                copyright_data = cursor.fetchall()
+                copyright_data = [tuple(row) for row in copyright_data]
 
-                # Fetch university committee data
-                sql = "SELECT name, roles, designation FROM mem_uni WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                committee_data = cursor.fetchall()
+                # Query for patent data with all fields
+                cursor.execute("""
+                    SELECT 
+                        srno,
+                        COALESCE(name, '') as name,
+                        COALESCE(month, '') as month,
+                        COALESCE(reg_no, '') as reg_no,
+                        COALESCE(filed_pub_grant, '') as filed_pub_grant,
+                        COALESCE(category, '') as category,
+                        COALESCE(uploads, '') as uploads
+                    FROM patents 
+                    WHERE form_id = %s
+                    ORDER BY srno ASC
+                """, (form_id_str,))
+                patent_data = cursor.fetchall()
+                patent_data = [tuple(row) for row in patent_data]
+                
+                # Query for resource person data
+                cursor.execute("SELECT * FROM resource_person WHERE form_id = %s", (form_id_str,))
+                resource_data = process_rows(cursor.fetchall())
+                
+                # Query for university committee data
+                cursor.execute("SELECT * FROM mem_uni WHERE form_id = %s", (form_id_str,))
+                committee_data = process_rows(cursor.fetchall())
+                
+                # Query for members of conference/journal committee data
+                cursor.execute("SELECT srno, name, designation, upload FROM members_conference WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                conference_committee_raw = process_rows(cursor.fetchall())
+                conference_committee_data = [
+                    {
+                        "srno": row[0],
+                        "name": row[1],
+                        "designation": row[2],
+                        "upload": row[3]
+                    } for row in conference_committee_raw
+                ]
 
-                # Fetch external projects data
-                sql = "SELECT role, `desc`, contribution, university, duration, comments FROM external_projects WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                project_data = cursor.fetchall()
-
-                # Fetch contribution data
-                sql = "SELECT semester, activity, points, order_cpy, uploads FROM contribution_to_society WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                contribution_data = cursor.fetchall()
-
-                # Fetch MOOCS data
-                sql = "SELECT srno, name, month, duration, completion FROM moocs WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                moocs_data = cursor.fetchall()
-
-                # Fetch SWAYAM data
-                sql = "SELECT srno, name, month, duration, completion FROM swayam WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                swayam_data = cursor.fetchall()
-
-                # Fetch webinar data
-                sql = "SELECT srno, name, technology, duration, date, int_ext, name_of_institute FROM webinar WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                webinar_data = cursor.fetchall()
+                # Query for external projects data
+                cursor.execute("SELECT * FROM external_projects WHERE form_id = %s", (form_id_str,))
+                project_data = process_rows(cursor.fetchall())
+                
+                # Query for contribution to society data
+                cursor.execute("SELECT semester, activity, points, order_cpy, details, COALESCE(uploads, '') as uploads FROM contribution_to_society WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                contribution_data = process_rows(cursor.fetchall())
+                
+                # Fetch self-assessment marks if available
+                try:
+                    cursor.execute("SELECT self_assessment_marks FROM form3_assessment WHERE form_id = %s", (form_id_str,))
+                    assessment_result = cursor.fetchone()
+                    self_assessment_marks = safe_get(assessment_result, 0, '') if assessment_result else ''
+                except Exception as e:
+                    print(f"Error fetching self assessment marks: {e}")
+                    self_assessment_marks = ''
+                
+                # Query for special mentions data
+                cursor.execute("SELECT srno, name, roles, uploads FROM special_mentions WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                special_mentions_raw = process_rows(cursor.fetchall())
+                special_mentions_data = [
+                    {
+                        "srno": row[0],
+                        "name": row[1],
+                        "roles": row[2],
+                        "uploads": row[3]
+                    } for row in special_mentions_raw
+                ]
+                # ===== END OF FORM3 DATA FETCHING =====
 
                 # Fetch points for Final Score table
                 cursor.execute("SELECT teaching, feedback, hodas1, hodas2, hodfeed1, hodfeed2 FROM form1_tot WHERE form_id = %s", (form_id,))
@@ -1331,11 +1424,17 @@ def review(form_id):
                 points_data = {
                     'teaching': int(form1_tot[0]) if form1_tot and form1_tot[0] else 0,
                     'feedback': int(form1_tot[1]) if form1_tot and form1_tot[1] else 0,
+                    'academic_review': 0,  # Will be calculated from academic_review_data if needed
                     'dept': int(form2_tot[0]) if form2_tot and form2_tot[0] else 0,
                     'institute': int(form2_tot[1]) if form2_tot and form2_tot[1] else 0,
                     'acr': int(form3_tot[0]) if form3_tot and form3_tot[0] else 0,
                     'society': int(form3_tot[1]) if form3_tot and form3_tot[1] else 0,
                 }
+
+                # Calculate academic review total if data exists
+                if academic_review_data:
+                    academic_review_total = sum(float(row[3]) for row in academic_review_data if row[3])
+                    points_data['academic_review'] = academic_review_total
 
                 # Calculate the total points safely
                 total_points = sum(points_data.values())
@@ -1360,30 +1459,35 @@ def review(form_id):
         finally:
             connection.close()
 
-    # Render the template with all the fetched data
+    # Render the template with all the fetched data including Form3 data and academic review data
     return render_template(
         'reviewform.html',
         teaching_data=teaching_data,
         feedback_data=feedback_data,
+        academic_review_data=academic_review_data,  # Added academic review data
         dept_act_data=dept_act_data,
         inst_act_data=inst_act_data,
         points_data=points_data,
+        # Form3 data - same as form3 route
         self_improvement_data=self_improvement_data,
         certification_data=certification_data,
-        title_data=title_data,
-        resource_data=resource_data,
-        committee_data=committee_data,
-        project_data=project_data,
-        contribution_data=contribution_data,
+        training_data=training_data,
         moocs_data=moocs_data,
         swayam_data=swayam_data,
         webinar_data=webinar_data,
+        copyright_data=copyright_data,
+        patent_data=patent_data,
+        resource_data=resource_data,
+        committee_data=committee_data,
+        conference_committee_data=conference_committee_data,
+        project_data=project_data,
+        contribution_data=contribution_data,
+        special_mentions_data=special_mentions_data,
+        self_assessment_marks=self_assessment_marks,
         user_data=user_data,
         selected_year=selected_year,
         form_id=form_id
     )
-
-
 
 
 
@@ -1572,29 +1676,89 @@ def render_pastforms():
                 """, (form_id,))
                 inst_act_data = cursor.fetchall()
                 
-                # Fetch self-improvement data
-                cursor.execute("SELECT title, month, name_of_conf, issn, co_auth, imp_conference, num_of_citations, rating FROM self_imp WHERE form_id = %s", (form_id,))
-                self_improvement_data = cursor.fetchall()
+                # Helper function to handle NULL values in returned data
+                def process_rows(rows):
+                    return [tuple('' if val is None else val for val in row) for row in rows]
                 
-                # Fetch certification data
-                cursor.execute("SELECT name, uploads FROM certifications WHERE form_id = %s", (form_id,))
-                certification_data = cursor.fetchall()
+                # Fetch self-improvement data with uploads
+                cursor.execute("SELECT srno, title, month, name_of_conf, issn, co_auth, imp_conference, num_of_citations, rating, uploads FROM self_imp WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                self_improvement_data = process_rows(cursor.fetchall())
                 
-                # Fetch title data
-                cursor.execute("SELECT name, month, reg_no FROM copyright WHERE form_id = %s", (form_id,))
-                title_data = cursor.fetchall()
+                # Fetch certification data with uploads
+                cursor.execute("SELECT srno, name, upload FROM certifications WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                certification_data = process_rows(cursor.fetchall())
                 
-                # Fetch resource person data
-                cursor.execute("SELECT name, dept, name_oi, num_op FROM resource_person WHERE form_id = %s", (form_id,))
-                resource_data = cursor.fetchall()
+                # Fetch training data with uploads
+                cursor.execute("SELECT srno, name, month, duration, completion, upload FROM training WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                training_data = process_rows(cursor.fetchall())
                 
-                # Fetch university committee data
-                cursor.execute("SELECT name, roles, designation FROM mem_uni WHERE form_id = %s", (form_id,))
-                committee_data = cursor.fetchall()
+                # Fetch MOOCs data with uploads
+                cursor.execute("SELECT srno, name, month, duration, completion, upload FROM moocs WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                moocs_data = process_rows(cursor.fetchall())
                 
-                # Fetch external projects data
-                cursor.execute("SELECT role, `desc`, contribution, university, duration, comments FROM external_projects WHERE form_id = %s", (form_id,))
-                project_data = cursor.fetchall()
+                # Fetch SWAYAM data with uploads
+                cursor.execute("SELECT srno, name, month, duration, completion, upload FROM swayam WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                swayam_data = process_rows(cursor.fetchall())
+                
+                # Fetch webinar data with uploads
+                cursor.execute("SELECT srno, name, technology, duration, date, int_ext, name_of_institute, upload FROM webinar WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                webinar_data = process_rows(cursor.fetchall())
+                
+                # Fetch copyright data with uploads
+                cursor.execute("SELECT srno, name, month, reg_no, status, category, upload FROM copyright WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                copyright_data = process_rows(cursor.fetchall())
+                
+                # Fetch patent data with uploads
+                cursor.execute("SELECT srno, name, month, reg_no, status, category, upload FROM patent WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                patent_data = process_rows(cursor.fetchall())
+                
+                # Fetch resource person data with uploads
+                cursor.execute("SELECT srno, name, dept, name_oi, num_op, upload FROM resource_person WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                resource_data = process_rows(cursor.fetchall())
+                
+                # Fetch university committee data with uploads
+                cursor.execute("SELECT srno, name, roles, designation, upload FROM mem_uni WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                committee_data = process_rows(cursor.fetchall())
+                
+                # Fetch conference committee data with uploads
+                cursor.execute("SELECT srno, name, roles, designation, upload FROM mem_conf WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                conference_committee_data = process_rows(cursor.fetchall())
+                
+                # Fetch external projects data with uploads
+                cursor.execute("SELECT srno, role, `desc`, contribution, university, duration, comments, upload FROM external_projects WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                project_data = process_rows(cursor.fetchall())
+                
+                # Fetch special mentions data with uploads
+                cursor.execute("SELECT srno, name, upload FROM special_mention WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                special_mentions_data = process_rows(cursor.fetchall())
+                
+                # Fetch contribution to society data with uploads
+                cursor.execute("SELECT semester, activity, points, order_cpy, details, uploads FROM contribution_society WHERE form_id = %s", (form_id,))
+                contribution_data = process_rows(cursor.fetchall())
+                
+                # Fetch academic review data
+                cursor.execute("""
+                    SELECT srno, academic_review1, academic_review2, avg_score
+                    FROM numeric_points_attained
+                    WHERE form_id = %s
+                    ORDER BY srno
+                """, (form_id,))
+                academic_review_data = process_rows(cursor.fetchall())
+                
+                # Fetch self assessment marks
+                cursor.execute("SELECT self_assessment_marks FROM form3_assessment WHERE form_id = %s", (form_id,))
+                self_assessment_result = cursor.fetchone()
+                self_assessment_marks = self_assessment_result[0] if self_assessment_result else ''
+                
+                # Calculate points for each category
+                points_data = {
+                    'teaching': sum(row[4] for row in teaching_data) if teaching_data else 0,
+                    'feedback': sum(float(row[3]) for row in feedback_data) if feedback_data else 0,
+                    'dept': sum(float(row[2]) for row in dept_act_data) if dept_act_data else 0,
+                    'institute': sum(float(row[2]) for row in inst_act_data) if inst_act_data else 0,
+                    'acr': sum(float(row[3]) for row in academic_review_data) if academic_review_data else 0,
+                    'society': sum(float(row[2]) for row in contribution_data) if contribution_data else 0
+                }
                 
                 # Fetch contribution data
                 cursor.execute("SELECT semester, activity, points, order_cpy, uploads FROM contribution_to_society WHERE form_id = %s", (form_id,))
@@ -1679,17 +1843,25 @@ def render_pastforms():
                         assessments['hodas6'] = int(hod_form3[1]) if hod_form3[1] is not None else 0
                         assessments['hodfeed5'] = hod_form3[2] if hod_form3[2] is not None else ''
                     
-                    # Fetch general feedback
-                    cursor.execute("SELECT feedback FROM feedback WHERE form_id = %s", (form_id,))
-                    feedback_result = cursor.fetchone()
-                    if feedback_result and feedback_result[0]:
-                        assessments['feedback'] = feedback_result[0]
-                        print(f"Found feedback: {feedback_result[0]}")
-                    
-                    print(f"Final assessments dictionary: {assessments}")
-                else:  # This else corresponds to 'if form_id_result:'
-                    print(f"No form_id found for user_id: {user_id}, acad_years: {default_academic_year}")
-                    assessments = {}
+                    # Check if HOD assessment exists for this form
+                cursor.execute("SELECT * FROM hod_assessment WHERE form_id = %s", (form_id,))
+                hod_assessment = cursor.fetchone()
+                if hod_assessment:
+                    assessments = {
+                        'hodas1': hod_assessment[2],
+                        'hodfeed1': hod_assessment[3],
+                        'hodas2': hod_assessment[4],
+                        'hodfeed2': hod_assessment[5],
+                        'hodas3': hod_assessment[6],
+                        'hodfeed3': hod_assessment[7],
+                        'hodas4': hod_assessment[8],
+                        'hodfeed4': hod_assessment[9],
+                        'hodas5': hod_assessment[10],
+                        'hodfeed5': hod_assessment[11],
+                        'hodas6': hod_assessment[12],
+                        'hodfeed6': hod_assessment[13],
+                        'feedback': hod_assessment[14]
+                    }
                 
                 return render_template('principlepast.html',
                                       user_id=user_id,
@@ -1706,10 +1878,10 @@ def render_pastforms():
                                       title_data=title_data,
                                       resource_data=resource_data,
                                       committee_data=committee_data,
-                                conference_committee_data=conference_committee_data,
+                                      conference_committee_data=conference_committee_data,
                                       project_data=project_data,
                                       contribution_data=contribution_data,
-                                special_mentions_data=special_mentions_data,
+                                      special_mentions_data=special_mentions_data,
                                       moocs_data=moocs_data,
                                       swayam_data=swayam_data,
                                       webinar_data=webinar_data,
@@ -1759,18 +1931,38 @@ def search_pastforms():
     # Connect to the database
     connection = connect_to_database()
 
-    # Initialize all data variables
+    # Initialize all data variables with proper NULL handling
     teaching_data, feedback_data, dept_act_data, inst_act_data, society_data = [], [], [], [], []
-    self_improvement_data, certification_data, title_data, resource_data = [], [], [], []
+    self_improvement_data, certification_data, resource_data = [], [], []
     committee_data, project_data, contribution_data = [], [], []
-    # Initialize new data arrays for MOOCS, SWAYAM, and webinar
     moocs_data, swayam_data, webinar_data = [], [], []
-    points_data = {}  # Store points for criteria
-    acr_data = {}     # Store ACR data (if needed)
-    form_id = None    # Initialize form_id
-    user_data = None  # Initialize user_data
-    assessments = {}  # Initialize assessments dictionary for HOD data
-    finalacr_value = 0  # Initialize finalacr_value
+    academic_review_data = []
+    training_data = []
+    patent_data = []
+    conference_committee_data = []
+    special_mentions_data = []
+    copyright_data = []
+    points_data = {}
+    acr_data = {}
+    form_id = None
+    user_data = None
+    assessments = {
+        'hodas1': 0, 'hodas2': 0, 'hodas3': 0, 'hodas4': 0, 'hodas5': 0, 'hodas6': 0,
+        'hodfeed1': '', 'hodfeed2': '', 'hodfeed3': '', 'hodfeed4': '', 'hodfeed5': '', 'hodfeed6': '',
+        'feedback': ''
+    }
+    finalacr_value = 0
+    self_assessment_marks = ''
+
+    # Helper function for NULL handling
+    def process_rows(rows):
+        if not rows:
+            return []
+        processed = []
+        for row in rows:
+            processed_row = tuple('' if val is None else val for val in row)
+            processed.append(processed_row)
+        return processed
 
     try:
         with connection.cursor() as cursor:
@@ -1788,12 +1980,12 @@ def search_pastforms():
                 user_acad_result = cursor.fetchone()
 
                 if user_acad_result:
-                    user_id, selected_year = user_acad_result  # Unpack the result
+                    user_id, selected_year = user_acad_result
                 else:
                     flash('No data found for the provided form ID.', 'warning')
-                    return redirect(url_for('pastforms'))  # Redirect to pastforms
+                    return redirect(url_for('pastforms'))
 
-                # Fetch user details from the users table, including name and dept
+                # Fetch user details
                 sql_user = """
                 SELECT userid, gmail, dept, name, designation, d_o_j, dob, edu_q, exp
                 FROM users
@@ -1802,114 +1994,167 @@ def search_pastforms():
                 cursor.execute(sql_user, (user_id,))
                 user_data = cursor.fetchone()
 
-                # Unpack user data
-                if user_data:
-                    user_name = user_data[3]  # Name
-                    user_dept = user_data[2]  # Department
-                else:
+                if not user_data:
                     flash('User not found.', 'warning')
-                    return redirect(url_for('pastforms'))  # Redirect to pastforms
+                    return redirect(url_for('pastforms'))
 
-                # Fetch teaching process data
-                sql = """
+                # ===== CORE DATA FETCHING =====
+                # Teaching process data
+                cursor.execute("""
                     SELECT semester, course_code, classes_scheduled, classes_held,
                     (classes_held/classes_scheduled)*5 AS totalpoints
                     FROM teaching_process WHERE form_id = %s
-                """
-                cursor.execute(sql, (form_id,))
-                teaching_data = cursor.fetchall()
+                """, (form_id,))
+                teaching_data = process_rows(cursor.fetchall())
 
-                # Fetch student feedback data including uploads
-                sql = """
+                # Student feedback data
+                cursor.execute("""
                     SELECT semester, course_code, total_points, points_obtained, uploads
                     FROM students_feedback WHERE form_id = %s
-                """
-                cursor.execute(sql, (form_id,))
-                feedback_data = cursor.fetchall()
+                """, (form_id,))
+                feedback_data = process_rows(cursor.fetchall())
 
-                # Fetch department activity data
-                sql = """
+                # Department activity data
+                cursor.execute("""
                     SELECT semester, activity, points, order_cpy, uploads
                     FROM department_act WHERE form_id = %s
-                """
-                cursor.execute(sql, (form_id,))
-                dept_act_data = cursor.fetchall()
+                """, (form_id,))
+                dept_act_data = process_rows(cursor.fetchall())
 
-                # Fetch institute activity data
-                sql = """
+                # Institute activity data
+                cursor.execute("""
                     SELECT semester, activity, points, order_cpy, uploads
                     FROM institute_act WHERE form_id = %s
-                """
-                cursor.execute(sql, (form_id,))
-                inst_act_data = cursor.fetchall()
+                """, (form_id,))
+                inst_act_data = process_rows(cursor.fetchall())
 
-                # Fetch self-improvement data
-                sql = "SELECT title, month, name_of_conf, issn, co_auth, imp_conference, num_of_citations, rating FROM self_imp WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                self_improvement_data = cursor.fetchall()
+                # ===== ACADEMIC REVIEW DATA =====
+                cursor.execute("""
+                    SELECT srno, academic_review1, academic_review2, avg_score
+                    FROM numeric_points_attained
+                    WHERE form_id = %s
+                    ORDER BY srno
+                """, (form_id,))
+                academic_review_data = process_rows(cursor.fetchall())
 
-                # Fetch certification data
-                sql = "SELECT name, uploads FROM certifications WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                certification_data = cursor.fetchall()
+                # ===== FORM3-RELATED DATA =====
+                # Self-improvement data
+                cursor.execute("""
+                    SELECT srno, title, month, name_of_conf, issn, co_auth, imp_conference, 
+                           num_of_citations, rating, uploads
+                    FROM self_imp WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                self_improvement_data = process_rows(cursor.fetchall())
 
-                # Fetch title data
-                sql = "SELECT name, month, reg_no FROM copyright WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                title_data = cursor.fetchall()
+                # Certification data
+                cursor.execute("SELECT * FROM certifications WHERE form_id = %s", (form_id,))
+                certification_data = process_rows(cursor.fetchall())
 
-                # Fetch resource person data
-                sql = "SELECT name, dept, name_oi, num_op FROM resource_person WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                resource_data = cursor.fetchall()
+                # Short-term training data
+                cursor.execute("""
+                    SELECT srno, name, technology, duration, date, organizing_institute, mode, upload
+                    FROM short_term_training WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                training_data = process_rows(cursor.fetchall())
 
-                # Fetch university committee data
-                sql = "SELECT name, roles, designation FROM mem_uni WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                committee_data = cursor.fetchall()
+                # MOOCS data
+                cursor.execute("""
+                    SELECT srno, name, month, duration, completion, upload
+                    FROM moocs WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                moocs_data = process_rows(cursor.fetchall())
 
-                # Fetch external projects data
-                sql = """
-                    SELECT role, `desc`, contribution, university, duration, comments
-                    FROM external_projects WHERE form_id = %s
-                """
-                cursor.execute(sql, (form_id,))
-                project_data = cursor.fetchall()
+                # SWAYAM data
+                cursor.execute("""
+                    SELECT srno, name, month, duration, completion, upload
+                    FROM swayam WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                swayam_data = process_rows(cursor.fetchall())
 
-                # Fetch contribution data
-                sql = """
-                    SELECT semester, activity, points, order_cpy, uploads
-                    FROM contribution_to_society WHERE form_id = %s
-                """
-                cursor.execute(sql, (form_id,))
-                contribution_data = cursor.fetchall()
+                # Webinar data
+                cursor.execute("""
+                    SELECT srno, name, technology, duration, date, int_ext, name_of_institute, upload
+                    FROM webinar WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                webinar_data = process_rows(cursor.fetchall())
 
-                # Fetch MOOCS data
-                sql = "SELECT srno, name, month, duration, completion FROM moocs WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                moocs_data = cursor.fetchall()
+                # Copyright data
+                cursor.execute("""
+                    SELECT srno, name, month, reg_no, filed_pub_grant, category, uploads
+                    FROM copyright WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                copyright_data = process_rows(cursor.fetchall())
 
-                # Fetch SWAYAM data
-                sql = "SELECT srno, name, month, duration, completion FROM swayam WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                swayam_data = cursor.fetchall()
+                # Patent data
+                cursor.execute("""
+                    SELECT srno, name, month, reg_no, filed_pub_grant, category, uploads
+                    FROM patents WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                patent_data = process_rows(cursor.fetchall())
 
-                # Fetch webinar data
-                sql = "SELECT srno, name, technology, duration, date, int_ext, name_of_institute FROM webinar WHERE form_id = %s"
-                cursor.execute(sql, (form_id,))
-                webinar_data = cursor.fetchall()
+                # Resource person data
+                cursor.execute("SELECT * FROM resource_person WHERE form_id = %s", (form_id,))
+                resource_data = process_rows(cursor.fetchall())
 
+                # University committee data
+                cursor.execute("SELECT * FROM mem_uni WHERE form_id = %s", (form_id,))
+                committee_data = process_rows(cursor.fetchall())
+
+                # Conference committee data
+                cursor.execute("""
+                    SELECT srno, name, designation, upload
+                    FROM members_conference WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                conference_committee_data = process_rows(cursor.fetchall())
+
+                # External projects data
+                cursor.execute("SELECT * FROM external_projects WHERE form_id = %s", (form_id,))
+                project_data = process_rows(cursor.fetchall())
+
+                # Contribution to society data
+                cursor.execute("""
+                    SELECT semester, activity, points, order_cpy, details, uploads
+                    FROM contribution_to_society WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                contribution_data = process_rows(cursor.fetchall())
+
+                # Special mentions data
+                cursor.execute("""
+                    SELECT srno, name, roles, uploads
+                    FROM special_mentions WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                special_mentions_data = process_rows(cursor.fetchall())
+
+                # Self-assessment marks
+                cursor.execute("""
+                    SELECT self_assessment_marks
+                    FROM form3_assessment
+                    WHERE form_id = %s
+                """, (form_id,))
+                sa_result = cursor.fetchone()
+                self_assessment_marks = sa_result[0] if sa_result and sa_result[0] else ''
+
+                # ===== POINTS AND ASSESSMENTS DATA =====
                 # Fetch points for final score table
-                cursor.execute("SELECT teaching, feedback FROM form1_tot WHERE form_id = %s", (form_id,))
+                cursor.execute("""
+                    SELECT teaching, feedback, hodas1, hodas2, hodfeed1, hodfeed2 
+                    FROM form1_tot WHERE form_id = %s
+                """, (form_id,))
                 form1_tot = cursor.fetchone()
 
-                cursor.execute("SELECT dept, institute FROM form2_tot WHERE form_id = %s", (form_id,))
+                cursor.execute("""
+                    SELECT dept, institute, hodas3, hodas4, hodfeed3, hodfeed4 
+                    FROM form2_tot WHERE form_id = %s
+                """, (form_id,))
                 form2_tot = cursor.fetchone()
 
-                cursor.execute("SELECT acr, society FROM form3_tot WHERE form_id = %s", (form_id,))
+                cursor.execute("""
+                    SELECT acr, society, hodas5, hodas6, hodfeed5, hodfeed6, finalacr 
+                    FROM form3_tot WHERE form_id = %s
+                """, (form_id,))
                 form3_tot = cursor.fetchone()
 
-                # Populate points_data with proper integer casting
+                # Populate points_data
                 points_data = {
                     'teaching': int(form1_tot[0]) if form1_tot and form1_tot[0] else 0,
                     'feedback': int(form1_tot[1]) if form1_tot and form1_tot[1] else 0,
@@ -1918,119 +2163,80 @@ def search_pastforms():
                     'acr': int(form3_tot[0]) if form3_tot and form3_tot[0] else 0,
                     'society': int(form3_tot[1]) if form3_tot and form3_tot[1] else 0,
                 }
-                
-                # Initialize assessments dictionary
-                assessments = {
-                    'hodas1': 0, 'hodas2': 0, 'hodas3': 0, 'hodas4': 0, 'hodas5': 0, 'hodas6': 0,
-                    'hodfeed1': '', 'hodfeed2': '', 'hodfeed3': '', 'hodfeed4': '', 'hodfeed5': '', 'hodfeed6': '',
-                    'feedback': ''
-                }
-                
-                # Get form_id for the user and academic year
-                cursor.execute(
-                    "SELECT form_id FROM acad_years WHERE user_id = %s AND acad_years = %s",
-                    (user_id, selected_year)
-                )
-                form_id_result = cursor.fetchone()
-                
-                if form_id_result:
-                    form_id = form_id_result[0]
-                    print(f"Found form_id: {form_id} for user_id: {user_id}, acad_years: {selected_year}")
-                    
-                    # Fetch HOD assessment data from form1_tot (teaching and feedback)
-                    cursor.execute("SELECT hodas1, hodas2, hodfeed1, hodfeed2 FROM form1_tot WHERE form_id = %s", (form_id,))
-                    hod_form1 = cursor.fetchone()
-                    if hod_form1:
-                        print(f"Found form1_tot HOD data: {hod_form1}")
-                        assessments['hodas1'] = int(hod_form1[0]) if hod_form1[0] is not None else 0
-                        assessments['hodas2'] = int(hod_form1[1]) if hod_form1[1] is not None else 0
-                        assessments['hodfeed1'] = hod_form1[2] if hod_form1[2] is not None else ''
-                        assessments['hodfeed2'] = hod_form1[3] if hod_form1[3] is not None else ''
-                    
-                    # Fetch HOD assessment data from form2_tot (dept and institute activities)
-                    cursor.execute("SELECT hodas3, hodas4, hodfeed3, hodfeed4 FROM form2_tot WHERE form_id = %s", (form_id,))
-                    hod_form2 = cursor.fetchone()
-                    if hod_form2:
-                        print(f"Found form2_tot HOD data: {hod_form2}")
-                        assessments['hodas3'] = int(hod_form2[0]) if hod_form2[0] is not None else 0
-                        assessments['hodas4'] = int(hod_form2[1]) if hod_form2[1] is not None else 0
-                        assessments['hodfeed3'] = hod_form2[2] if hod_form2[2] is not None else ''
-                        assessments['hodfeed4'] = hod_form2[3] if hod_form2[3] is not None else ''
-                    
-                    # Fetch HOD assessment data from form3_tot (ACR and society)
-                    cursor.execute("SELECT hodas5, hodas6, hodfeed5, hodfeed6 FROM form3_tot WHERE form_id = %s", (form_id,))
-                    hod_form3 = cursor.fetchone()
-                    if hod_form3:
-                        print(f"Found form3_tot HOD data: {hod_form3}")
-                        assessments['hodas5'] = int(hod_form3[0]) if hod_form3[0] is not None else 0
-                        assessments['hodas6'] = int(hod_form3[1]) if hod_form3[1] is not None else 0
-                        assessments['hodfeed5'] = hod_form3[2] if hod_form3[2] is not None else ''
-                        assessments['hodfeed6'] = hod_form3[3] if hod_form3[3] is not None else ''
-                    
-                    # Fetch general feedback
-                    cursor.execute("SELECT feedback FROM feedback WHERE form_id = %s", (form_id,))
-                    feedback_result = cursor.fetchone()
-                    if feedback_result and feedback_result[0]:
-                        assessments['feedback'] = feedback_result[0]
-                        print(f"Found feedback: {feedback_result[0]}")
-                    
-                    # CORRECTLY PLACED finalacr_value fetching LOGIC
-                    # finalacr_value is already initialized to 0 at the function start
-                    if form_id: # Check form_id again, though we are inside 'if result:'
-                        cursor.execute("SELECT finalacr FROM form3_tot WHERE form_id = %s", (form_id,))
-                        finalacr_row = cursor.fetchone()
-                        if finalacr_row and finalacr_row[0] is not None:
-                            finalacr_value = int(finalacr_row[0]) 
-                        print(f"[LOG] Fetched finalacr_value in search_pastforms (inside try): {finalacr_value}")
-                    # else: finalacr_value remains its initial value (0)
-                                        
-                    print(f"Final assessments dictionary: {assessments}")
-                else: # This 'else' corresponds to 'if result:' (form_id not found for user_id, selected_year)
-                    print(f"No form_id found for user_id: {user_id}, acad_years: {selected_year}")
-                    # assessments and finalacr_value retain their initial values (e.g. {{}} and 0)
+
+                # Populate assessments
+                if form1_tot:
+                    assessments.update({
+                        'hodas1': int(form1_tot[2]) if form1_tot[2] is not None else 0,
+                        'hodas2': int(form1_tot[3]) if form1_tot[3] is not None else 0,
+                        'hodfeed1': form1_tot[4] if form1_tot[4] else '',
+                        'hodfeed2': form1_tot[5] if form1_tot[5] else ''
+                    })
+
+                if form2_tot:
+                    assessments.update({
+                        'hodas3': int(form2_tot[2]) if form2_tot[2] is not None else 0,
+                        'hodas4': int(form2_tot[3]) if form2_tot[3] is not None else 0,
+                        'hodfeed3': form2_tot[4] if form2_tot[4] else '',
+                        'hodfeed4': form2_tot[5] if form2_tot[5] else ''
+                    })
+
+                if form3_tot:
+                    assessments.update({
+                        'hodas5': int(form3_tot[2]) if form3_tot[2] is not None else 0,
+                        'hodas6': int(form3_tot[3]) if form3_tot[3] is not None else 0,
+                        'hodfeed5': form3_tot[4] if form3_tot[4] else '',
+                        'hodfeed6': form3_tot[5] if form3_tot[5] else ''
+                    })
+                    finalacr_value = int(form3_tot[6]) if form3_tot and form3_tot[6] is not None else 0
+
+                # Fetch general feedback
+                cursor.execute("SELECT feedback FROM feedback WHERE form_id = %s", (form_id,))
+                feedback_result = cursor.fetchone()
+                if feedback_result and feedback_result[0]:
+                    assessments['feedback'] = feedback_result[0]
 
     except Exception as e:
         flash(f'An error occurred while fetching data: {str(e)}', 'danger')
-        app.logger.error(f"Error in search_pastforms: {{e}}", exc_info=True) # Added more detailed logging
-
+        app.logger.error(f"Error in search_pastforms: {e}", exc_info=True)
     finally:
-        if connection and connection.open: # Safer way to close connection
+        if connection and connection.open:
             connection.close()
-            print("Database connection closed in finally block.")
 
-    # The misplaced block for finalacr_value fetching is now removed by this replacement.
-    # finalacr_value is correctly populated (or is 0 if form_id was not found).
+    # Extract user details safely
+    user_name = user_data[3] if user_data and len(user_data) > 3 else "N/A"
+    user_dept = user_data[2] if user_data and len(user_data) > 2 else "N/A"
 
-    # Ensure all necessary variables are passed to the template
-    # Extract user_name and user_dept safely
-    user_name_to_pass = user_data[3] if user_data and len(user_data) > 3 else "N/A"
-    user_dept_to_pass = user_data[2] if user_data and len(user_data) > 2 else "N/A"
-    
     return render_template(
         'pastforms.html',
         teaching_data=teaching_data,
         feedback_data=feedback_data,
+        academic_review_data=academic_review_data,
         dept_act_data=dept_act_data,
         inst_act_data=inst_act_data,
-        society_data=society_data,
         points_data=points_data,
         self_improvement_data=self_improvement_data,
         certification_data=certification_data,
-        title_data=title_data,
-        resource_data=resource_data,
-        committee_data=committee_data,
-        project_data=project_data,
-        contribution_data=contribution_data,
+        training_data=training_data,
         moocs_data=moocs_data,
         swayam_data=swayam_data,
         webinar_data=webinar_data,
+        copyright_data=copyright_data,
+        patent_data=patent_data,
+        resource_data=resource_data,
+        committee_data=committee_data,
+        conference_committee_data=conference_committee_data,
+        project_data=project_data,
+        contribution_data=contribution_data,
+        special_mentions_data=special_mentions_data,
         user_data=user_data,
-        user_name=user_name_to_pass,
-        user_dept=user_dept_to_pass,
+        user_name=user_name,
+        user_dept=user_dept,
         selected_year=selected_year,
         form_id=form_id,
         assessments=assessments,
         finalacr_value=finalacr_value,
+        self_assessment_marks=self_assessment_marks,
         str=str
     )
 
@@ -2548,14 +2754,16 @@ def hodpastform():
 
 @app.route('/search_pastforms', methods=['POST'])
 def search_pastforms2():
+    # Initialize points data with default values
     points_data = {
-    'teaching': 0,
-    'feedback': 0,
-    'dept': 0,
-    'institute': 0,
-    'acr': 0,
-    'society': 0
-}
+        'teaching': 0,
+        'feedback': 0,
+        'dept': 0,
+        'institute': 0,
+        'acr': 0,
+        'society': 0
+    }
+    
     # Initialize assessments with default values
     assessments = {
         'hodas1': 0,
@@ -2572,22 +2780,36 @@ def search_pastforms2():
         'hodfeed6': '',
         'feedback': ''
     }
+    
+    # Initialize variables
     finalacr_value = 0
-    # Retrieve user details from the session and academic year from the form
+    self_assessment_marks = ''
     user_id = session.get('user_id')
     selected_year = request.form.get('academicYear')
     user_name = session.get('user_name')
+    
     if not user_id or not selected_year:
         flash("User ID or Academic Year is missing!", "danger")
         return redirect(url_for('hodpastform'))
 
-    # Initialize data containers
+    # Initialize all data containers
     teaching_data, feedback_data, dept_act_data, inst_act_data = [], [], [], []
-    society_data, points_data, acr_data = {}, {}, {}
-    self_improvement_data, certification_data, title_data = [], [], []
-    resource_data, committee_data, project_data, contribution_data = [], [], [], []
-    # Initialize new data arrays for MOOCS, SWAYAM, and webinar
+    academic_review_data = []
+    self_improvement_data, certification_data, resource_data = [], [], []
+    committee_data, project_data, contribution_data = [], [], []
     moocs_data, swayam_data, webinar_data = [], [], []
+    training_data, patent_data, conference_committee_data = [], [], []
+    special_mentions_data, copyright_data = [], []
+    
+    # Helper function for NULL handling
+    def process_rows(rows):
+        if not rows:
+            return []
+        processed = []
+        for row in rows:
+            processed_row = tuple('' if val is None else val for val in row)
+            processed.append(processed_row)
+        return processed
 
     # Connect to the database
     connection = connect_to_database()
@@ -2608,98 +2830,163 @@ def search_pastforms2():
 
                 form_id = result[0]  # Extract form_id
 
-                # Fetch finalacr from form3_tot for this form_id
-                cursor.execute("SELECT finalacr FROM form3_tot WHERE form_id = %s", (form_id,))
-                finalacr_row = cursor.fetchone()
-                if finalacr_row and finalacr_row[0] is not None:
-                    finalacr_value = int(finalacr_row[0])
-                # finalacr_value is already initialized to 0 if not found or None
-                print(f"[LOG] Fetched finalacr_value in search_pastforms2: {finalacr_value}")
-
-                # Fetch teaching process data
+                # ===== CORE DATA FETCHING =====
+                # Teaching process data
                 cursor.execute("""
                     SELECT semester, course_code, classes_scheduled, classes_held,
-                           (classes_held / classes_scheduled) * 5 AS totalpoints
-                    FROM teaching_process
-                    WHERE form_id = %s
+                    (classes_held/classes_scheduled)*5 AS totalpoints
+                    FROM teaching_process WHERE form_id = %s
                 """, (form_id,))
-                teaching_data = cursor.fetchall()
+                teaching_data = process_rows(cursor.fetchall())
 
-                # Fetch student feedback data including uploaded documents
+                # Student feedback data
                 cursor.execute("""
                     SELECT semester, course_code, total_points, points_obtained, uploads
-                    FROM students_feedback
-                    WHERE form_id = %s
+                    FROM students_feedback WHERE form_id = %s
                 """, (form_id,))
-                feedback_data = cursor.fetchall()
+                feedback_data = process_rows(cursor.fetchall())
 
-                # Fetch departmental activities data
+                # Department activity data
                 cursor.execute("""
                     SELECT semester, activity, points, order_cpy, uploads
-                    FROM department_act
-                    WHERE form_id = %s
+                    FROM department_act WHERE form_id = %s
                 """, (form_id,))
-                dept_act_data = cursor.fetchall()
+                dept_act_data = process_rows(cursor.fetchall())
 
-                # Fetch institute activity data
-                sql = """
+                # Institute activity data
+                cursor.execute("""
                     SELECT semester, activity, points, order_cpy, uploads
                     FROM institute_act WHERE form_id = %s
-                """
-                cursor.execute(sql, (form_id,))
-                inst_act_data = cursor.fetchall()
+                """, (form_id,))
+                inst_act_data = process_rows(cursor.fetchall())
 
-                # Fetch self-improvement data
-                cursor.execute("SELECT title, month, name_of_conf, issn, co_auth, imp_conference, num_of_citations, rating FROM self_imp WHERE form_id = %s", (form_id,))
-                self_improvement_data = cursor.fetchall()
+                # ===== ACADEMIC REVIEW DATA =====
+                cursor.execute("""
+                    SELECT srno, academic_review1, academic_review2, avg_score
+                    FROM numeric_points_attained
+                    WHERE form_id = %s
+                    ORDER BY srno
+                """, (form_id,))
+                academic_review_data = process_rows(cursor.fetchall())
 
-                # Fetch certification data
-                cursor.execute("SELECT name, uploads FROM certifications WHERE form_id = %s", (form_id,))
-                certification_data = cursor.fetchall()
+                # ===== FORM3-RELATED DATA =====
+                # Self-improvement data
+                cursor.execute("""
+                    SELECT srno, title, month, name_of_conf, issn, co_auth, imp_conference, 
+                           num_of_citations, rating, uploads
+                    FROM self_imp WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                self_improvement_data = process_rows(cursor.fetchall())
 
-                # Fetch title data
-                cursor.execute("SELECT name, month, reg_no FROM copyright WHERE form_id = %s", (form_id,))
-                title_data = cursor.fetchall()
+                # Certification data
+                cursor.execute("SELECT * FROM certifications WHERE form_id = %s", (form_id,))
+                certification_data = process_rows(cursor.fetchall())
 
-                # Fetch resource person data
-                cursor.execute("SELECT name, dept, name_oi, num_op FROM resource_person WHERE form_id = %s", (form_id,))
-                resource_data = cursor.fetchall()
+                # Short-term training data
+                cursor.execute("""
+                    SELECT srno, name, technology, duration, date, organizing_institute, mode, upload
+                    FROM short_term_training WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                training_data = process_rows(cursor.fetchall())
 
-                # Fetch university committee data
-                cursor.execute("SELECT name, roles, designation FROM mem_uni WHERE form_id = %s", (form_id,))
-                committee_data = cursor.fetchall()
+                # MOOCS data
+                cursor.execute("""
+                    SELECT srno, name, month, duration, completion, upload
+                    FROM moocs WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                moocs_data = process_rows(cursor.fetchall())
 
-                # Fetch external projects data
-                cursor.execute("SELECT role, `desc`, contribution, university, duration, comments FROM external_projects WHERE form_id = %s", (form_id,))
-                project_data = cursor.fetchall()
+                # SWAYAM data
+                cursor.execute("""
+                    SELECT srno, name, month, duration, completion, upload
+                    FROM swayam WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                swayam_data = process_rows(cursor.fetchall())
 
-                # Fetch contribution data
-                cursor.execute("SELECT semester, activity, points, order_cpy, uploads FROM contribution_to_society WHERE form_id = %s", (form_id,))
-                contribution_data = cursor.fetchall()
+                # Webinar data
+                cursor.execute("""
+                    SELECT srno, name, technology, duration, date, int_ext, name_of_institute, upload
+                    FROM webinar WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                webinar_data = process_rows(cursor.fetchall())
 
-                # Fetch MOOCS data
-                cursor.execute("SELECT srno, name, month, duration, completion FROM moocs WHERE form_id = %s", (form_id,))
-                moocs_data = cursor.fetchall()
+                # Copyright data
+                cursor.execute("""
+                    SELECT srno, name, month, reg_no, filed_pub_grant, category, uploads
+                    FROM copyright WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                copyright_data = process_rows(cursor.fetchall())
 
-                # Fetch SWAYAM data
-                cursor.execute("SELECT srno, name, month, duration, completion FROM swayam WHERE form_id = %s", (form_id,))
-                swayam_data = cursor.fetchall()
+                # Patent data
+                cursor.execute("""
+                    SELECT srno, name, month, reg_no, filed_pub_grant, category, uploads
+                    FROM patents WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                patent_data = process_rows(cursor.fetchall())
 
-                # Fetch webinar data
-                cursor.execute("SELECT srno, name, technology, duration, date, int_ext, name_of_institute FROM webinar WHERE form_id = %s", (form_id,))
-                webinar_data = cursor.fetchall()
+                # Resource person data
+                cursor.execute("SELECT * FROM resource_person WHERE form_id = %s", (form_id,))
+                resource_data = process_rows(cursor.fetchall())
 
+                # University committee data
+                cursor.execute("SELECT * FROM mem_uni WHERE form_id = %s", (form_id,))
+                committee_data = process_rows(cursor.fetchall())
+
+                # Conference committee data
+                cursor.execute("""
+                    SELECT srno, name, designation, upload
+                    FROM members_conference WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                conference_committee_data = process_rows(cursor.fetchall())
+
+                # External projects data
+                cursor.execute("SELECT * FROM external_projects WHERE form_id = %s", (form_id,))
+                project_data = process_rows(cursor.fetchall())
+
+                # Contribution to society data
+                cursor.execute("""
+                    SELECT semester, activity, points, order_cpy, details, uploads
+                    FROM contribution_to_society WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                contribution_data = process_rows(cursor.fetchall())
+
+                # Special mentions data
+                cursor.execute("""
+                    SELECT srno, name, roles, uploads
+                    FROM special_mentions WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                special_mentions_data = process_rows(cursor.fetchall())
+
+                # Self-assessment marks
+                cursor.execute("""
+                    SELECT self_assessment_marks
+                    FROM form3_assessment
+                    WHERE form_id = %s
+                """, (form_id,))
+                sa_result = cursor.fetchone()
+                self_assessment_marks = sa_result[0] if sa_result and sa_result[0] else ''
+
+                # ===== POINTS AND ASSESSMENTS DATA =====
                 # Fetch points for final score table
-                cursor.execute("SELECT teaching, feedback FROM form1_tot WHERE form_id = %s", (form_id,))
+                cursor.execute("""
+                    SELECT teaching, feedback, hodas1, hodas2, hodfeed1, hodfeed2 
+                    FROM form1_tot WHERE form_id = %s
+                """, (form_id,))
                 form1_tot = cursor.fetchone()
 
-                cursor.execute("SELECT dept, institute FROM form2_tot WHERE form_id = %s", (form_id,))
+                cursor.execute("""
+                    SELECT dept, institute, hodas3, hodas4, hodfeed3, hodfeed4 
+                    FROM form2_tot WHERE form_id = %s
+                """, (form_id,))
                 form2_tot = cursor.fetchone()
 
-                cursor.execute("SELECT acr, society FROM form3_tot WHERE form_id = %s", (form_id,))
+                cursor.execute("""
+                    SELECT acr, society, hodas5, hodas6, hodfeed5, hodfeed6, finalacr 
+                    FROM form3_tot WHERE form_id = %s
+                """, (form_id,))
                 form3_tot = cursor.fetchone()
 
-                # Populate points_data with proper integer casting
+                # Populate points_data
                 points_data = {
                     'teaching': int(form1_tot[0]) if form1_tot and form1_tot[0] else 0,
                     'feedback': int(form1_tot[1]) if form1_tot and form1_tot[1] else 0,
@@ -2708,33 +2995,32 @@ def search_pastforms2():
                     'acr': int(form3_tot[0]) if form3_tot and form3_tot[0] else 0,
                     'society': int(form3_tot[1]) if form3_tot and form3_tot[1] else 0,
                 }
-                
-                # Fetch HOD assessment data from form1_tot
-                cursor.execute("SELECT hodas1, hodas2, hodfeed1, hodfeed2 FROM form1_tot WHERE form_id = %s", (form_id,))
-                hod_form1 = cursor.fetchone()
-                if hod_form1:
-                    assessments['hodas1'] = int(hod_form1[0]) if hod_form1[0] is not None else 0
-                    assessments['hodas2'] = int(hod_form1[1]) if hod_form1[1] is not None else 0
-                    assessments['hodfeed1'] = hod_form1[2] if hod_form1[2] is not None else ''
-                    assessments['hodfeed2'] = hod_form1[3] if hod_form1[3] is not None else ''
 
-                # Fetch HOD assessment data from form2_tot
-                cursor.execute("SELECT hodas3, hodas4, hodfeed3, hodfeed4 FROM form2_tot WHERE form_id = %s", (form_id,))
-                hod_form2 = cursor.fetchone()
-                if hod_form2:
-                    assessments['hodas3'] = int(hod_form2[0]) if hod_form2[0] is not None else 0
-                    assessments['hodas4'] = int(hod_form2[1]) if hod_form2[1] is not None else 0
-                    assessments['hodfeed3'] = hod_form2[2] if hod_form2[2] is not None else ''
-                    assessments['hodfeed4'] = hod_form2[3] if hod_form2[3] is not None else ''
+                # Populate assessments
+                if form1_tot:
+                    assessments.update({
+                        'hodas1': int(form1_tot[2]) if form1_tot[2] is not None else 0,
+                        'hodas2': int(form1_tot[3]) if form1_tot[3] is not None else 0,
+                        'hodfeed1': form1_tot[4] if form1_tot[4] else '',
+                        'hodfeed2': form1_tot[5] if form1_tot[5] else ''
+                    })
 
-                # Fetch HOD assessment data from form3_tot
-                cursor.execute("SELECT hodas5, hodas6, hodfeed5, hodfeed6 FROM form3_tot WHERE form_id = %s", (form_id,))
-                hod_form3 = cursor.fetchone()
-                if hod_form3:
-                    assessments['hodas5'] = int(hod_form3[0]) if hod_form3[0] is not None else 0
-                    assessments['hodas6'] = int(hod_form3[1]) if hod_form3[1] is not None else 0
-                    assessments['hodfeed5'] = hod_form3[2] if hod_form3[2] is not None else ''
-                    assessments['hodfeed6'] = hod_form3[3] if hod_form3[3] is not None else ''
+                if form2_tot:
+                    assessments.update({
+                        'hodas3': int(form2_tot[2]) if form2_tot[2] is not None else 0,
+                        'hodas4': int(form2_tot[3]) if form2_tot[3] is not None else 0,
+                        'hodfeed3': form2_tot[4] if form2_tot[4] else '',
+                        'hodfeed4': form2_tot[5] if form2_tot[5] else ''
+                    })
+
+                if form3_tot:
+                    assessments.update({
+                        'hodas5': int(form3_tot[2]) if form3_tot[2] is not None else 0,
+                        'hodas6': int(form3_tot[3]) if form3_tot[3] is not None else 0,
+                        'hodfeed5': form3_tot[4] if form3_tot[4] else '',
+                        'hodfeed6': form3_tot[5] if form3_tot[5] else ''
+                    })
+                    finalacr_value = int(form3_tot[6]) if form3_tot and form3_tot[6] is not None else 0
 
                 # Fetch general feedback
                 cursor.execute("SELECT feedback FROM feedback WHERE form_id = %s", (form_id,))
@@ -2750,60 +3036,57 @@ def search_pastforms2():
         if connection:
             connection.close()
     
-    # Make a separate database connection just for fetching user data
-    # This ensures it runs even if there was an error in the previous operations
+    # Fetch user data separately
     user_data = None
     connection = connect_to_database()
     if connection:
         try:
             with connection.cursor() as cursor:
-                # Fetch user details using the correct column names
                 cursor.execute("""
                     SELECT userid, gmail, dept, name, designation, d_o_j, dob, edu_q, exp 
                     FROM users WHERE userid = %s
                 """, (user_id,))
                 user_data = cursor.fetchone()
-                print(f"Debug - User Data in search_pastforms2: {user_data}")
-                print(f"Debug - User ID: {user_id}")
         except Exception as e:
             print(f"Error fetching user data: {str(e)}")
-            # If we can't fetch user data, we at least ensure the variable exists
-            user_data = None
         finally:
             connection.close()
 
-    # Print debug information before rendering template
-    print(f"Debug - About to render hodpastform template with:")
-    print(f"Debug - user_data: {user_data}")
-    print(f"Debug - form_id: {form_id}")
-    print(f"Debug - selected_year: {selected_year}")
+    # Extract user details safely
+    user_name = user_data[3] if user_data and len(user_data) > 3 else "N/A"
+    user_dept = user_data[2] if user_data and len(user_data) > 2 else "N/A"
 
-    # Render the template with all the fetched data
     return render_template(
         'hodpastform.html',
         teaching_data=teaching_data,
         feedback_data=feedback_data,
+        academic_review_data=academic_review_data,
         dept_act_data=dept_act_data,
         inst_act_data=inst_act_data,
         points_data=points_data,
         self_improvement_data=self_improvement_data,
         certification_data=certification_data,
-        title_data=title_data,
-        resource_data=resource_data,
-        committee_data=committee_data,
-        project_data=project_data,
-        contribution_data=contribution_data,
+        training_data=training_data,
         moocs_data=moocs_data,
         swayam_data=swayam_data,
         webinar_data=webinar_data,
+        copyright_data=copyright_data,
+        patent_data=patent_data,
+        resource_data=resource_data,
+        committee_data=committee_data,
+        conference_committee_data=conference_committee_data,
+        project_data=project_data,
+        contribution_data=contribution_data,
+        special_mentions_data=special_mentions_data,
         selected_year=selected_year,
         form_id=form_id,
         user_name=user_name,
         assessments=assessments,
         user_id=user_id,
         user_data=user_data,
-        department=user_data[2] if user_data else None,
-        finalacr_value=finalacr_value
+        department=user_dept,
+        finalacr_value=finalacr_value,
+        self_assessment_marks=self_assessment_marks
     )
 
 
@@ -3642,6 +3925,7 @@ def principlepastform():
 
 @app.route('/principle_pastforms', methods=['POST'])
 def principle_pastforms():
+    # Initialize points data with default values
     points_data = {
         'teaching': 0,
         'feedback': 0,
@@ -3664,6 +3948,7 @@ def principle_pastforms():
 
     # Initialize finalacr_value to avoid undefined errors
     finalacr_value = 0
+    self_assessment_marks = ''
 
     # Retrieve user details from session and academic year from the form
     user_id = session.get('user_id')
@@ -3676,17 +3961,29 @@ def principle_pastforms():
         flash("User ID or Academic Year is missing!", "danger")
         return redirect(url_for('principlepastform'))
 
-    # Initialize data containers
+    # Initialize all data containers
     teaching_data, feedback_data, dept_act_data, inst_act_data = [], [], [], []
-    society_data, points_data, acr_data = {}, {}, {}
-    self_improvement_data, certification_data, title_data = [], [], []
+    academic_review_data = []
+    self_improvement_data, certification_data = [], []
     resource_data, committee_data, project_data, contribution_data = [], [], [], []
-    moocs_data, swayam_data, webinar_data = [], [], []  # Ensure these are initialized
+    moocs_data, swayam_data, webinar_data = [], [], []
+    training_data, patent_data, conference_committee_data = [], [], []
+    special_mentions_data, copyright_data = [], []
     hodas_data = {}  # Container for HOD-specific data
     extra_feedback = ""  # For HOD's overall textual feedback, used by template
     user_data = None  # Initialize user_data to avoid UnboundLocalError
     form_id = None  # Initialize form_id as well
     hod_ratings = None
+
+    # Helper function for NULL handling
+    def process_rows(rows):
+        if not rows:
+            return []
+        processed = []
+        for row in rows:
+            processed_row = tuple('' if val is None else val for val in row)
+            processed.append(processed_row)
+        return processed
 
     # Connect to the database
     connection = connect_to_database()
@@ -3712,22 +4009,152 @@ def principle_pastforms():
                 form_id = result[0]  # Extract form_id
                 print(f"[LOG] Using form_id: {form_id}")
 
+                # ===== CORE DATA FETCHING =====
+                # Teaching process data
+                cursor.execute("""
+                    SELECT semester, course_code, classes_scheduled, classes_held,
+                    (classes_held/classes_scheduled)*5 AS totalpoints
+                    FROM teaching_process WHERE form_id = %s
+                """, (form_id,))
+                teaching_data = process_rows(cursor.fetchall())
+
+                # Student feedback data
+                cursor.execute("""
+                    SELECT semester, course_code, total_points, points_obtained, uploads
+                    FROM students_feedback WHERE form_id = %s
+                """, (form_id,))
+                feedback_data = process_rows(cursor.fetchall())
+
+                # Department activity data
+                cursor.execute("""
+                    SELECT semester, activity, points, order_cpy, uploads
+                    FROM department_act WHERE form_id = %s
+                """, (form_id,))
+                dept_act_data = process_rows(cursor.fetchall())
+
+                # Institute activity data
+                cursor.execute("""
+                    SELECT semester, activity, points, order_cpy, uploads
+                    FROM institute_act WHERE form_id = %s
+                """, (form_id,))
+                inst_act_data = process_rows(cursor.fetchall())
+
+                # ===== ACADEMIC REVIEW DATA =====
+                cursor.execute("""
+                    SELECT srno, academic_review1, academic_review2, avg_score
+                    FROM numeric_points_attained
+                    WHERE form_id = %s
+                    ORDER BY srno
+                """, (form_id,))
+                academic_review_data = process_rows(cursor.fetchall())
+
+                # ===== FORM3-RELATED DATA =====
+                # Self-improvement data
+                cursor.execute("""
+                    SELECT srno, title, month, name_of_conf, issn, co_auth, imp_conference, 
+                           num_of_citations, rating, uploads
+                    FROM self_imp WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                self_improvement_data = process_rows(cursor.fetchall())
+
+                # Certification data
+                cursor.execute("SELECT * FROM certifications WHERE form_id = %s", (form_id,))
+                certification_data = process_rows(cursor.fetchall())
+
+                # Short-term training data
+                cursor.execute("""
+                    SELECT srno, name, technology, duration, date, organizing_institute, mode, upload
+                    FROM short_term_training WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                training_data = process_rows(cursor.fetchall())
+
+                # MOOCS data
+                cursor.execute("""
+                    SELECT srno, name, month, duration, completion, upload
+                    FROM moocs WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                moocs_data = process_rows(cursor.fetchall())
+
+                # SWAYAM data
+                cursor.execute("""
+                    SELECT srno, name, month, duration, completion, upload
+                    FROM swayam WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                swayam_data = process_rows(cursor.fetchall())
+
+                # Webinar data
+                cursor.execute("""
+                    SELECT srno, name, technology, duration, date, int_ext, name_of_institute, upload
+                    FROM webinar WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                webinar_data = process_rows(cursor.fetchall())
+
+                # Copyright data
+                cursor.execute("""
+                    SELECT srno, name, month, reg_no, filed_pub_grant, category, uploads
+                    FROM copyright WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                copyright_data = process_rows(cursor.fetchall())
+
+                # Patent data
+                cursor.execute("""
+                    SELECT srno, name, month, reg_no, filed_pub_grant, category, uploads
+                    FROM patents WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                patent_data = process_rows(cursor.fetchall())
+
+                # Resource person data
+                cursor.execute("SELECT * FROM resource_person WHERE form_id = %s", (form_id,))
+                resource_data = process_rows(cursor.fetchall())
+
+                # University committee data
+                cursor.execute("SELECT * FROM mem_uni WHERE form_id = %s", (form_id,))
+                committee_data = process_rows(cursor.fetchall())
+
+                # Conference committee data
+                cursor.execute("""
+                    SELECT srno, name, designation, upload
+                    FROM members_conference WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                conference_committee_data = process_rows(cursor.fetchall())
+
+                # External projects data
+                cursor.execute("SELECT * FROM external_projects WHERE form_id = %s", (form_id,))
+                project_data = process_rows(cursor.fetchall())
+
+                # Contribution to society data
+                cursor.execute("""
+                    SELECT semester, activity, points, order_cpy, details, uploads
+                    FROM contribution_to_society WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                contribution_data = process_rows(cursor.fetchall())
+
+                # Special mentions data
+                cursor.execute("""
+                    SELECT srno, name, roles, uploads
+                    FROM special_mentions WHERE form_id = %s ORDER BY srno
+                """, (form_id,))
+                special_mentions_data = process_rows(cursor.fetchall())
+
+                # Self-assessment marks
+                cursor.execute("""
+                    SELECT self_assessment_marks
+                    FROM form3_assessment
+                    WHERE form_id = %s
+                """, (form_id,))
+                sa_result = cursor.fetchone()
+                self_assessment_marks = sa_result[0] if sa_result and sa_result[0] else ''
+
+                # ===== HOD RATINGS AND FEEDBACK =====
                 # Fetch HOD ratings (r1 to r10 and r_avg) from feedback table for this form_id
-                print(f"[LOG] About to fetch HOD ratings for form_id: {form_id}")
-                print(f"[LOG] Executing: SELECT r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r_avg FROM feedback WHERE form_id = {form_id}")
                 cursor.execute("SELECT r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r_avg FROM feedback WHERE form_id = %s", (form_id,))
                 ratings_row = cursor.fetchone()
-                print(f"[LOG] ratings_row: {ratings_row}")
-                print(f"Debug - selected_year: {selected_year}")
                 if ratings_row:
-                    print(f"[LOG] faculty ratings: {[ratings_row[i] for i in range(11)]}")
                     hod_ratings = {f"r{i+1}": ratings_row[i] for i in range(10)}
                     hod_ratings["r_avg"] = ratings_row[10]
                 else:
-                    print("[LOG] No faculty ratings found for this form_id")
                     hod_ratings = {f"r{i+1}": None for i in range(10)}
                     hod_ratings["r_avg"] = None
-                print(f"[LOG] hod_ratings to be passed to template: {hod_ratings}")
 
                 # Fetch both HOD and Principal feedback from feedback table
                 cursor.execute("SELECT feedback, principle_feedback FROM feedback WHERE form_id = %s", (form_id,))
@@ -3740,106 +4167,25 @@ def principle_pastforms():
                     # Principal feedback (from principle_feedback column)
                     if feedback_result[1]:
                         assessments['principle_feedback'] = feedback_result[1]
-                
-                print(f"[DEBUG APP.PY] After feedback fetch: extra_feedback = '{extra_feedback}' (HOD feedback)")
-                print(f"[DEBUG APP.PY] After feedback fetch: assessments['principle_feedback'] = '{assessments.get('principle_feedback')}' (Principal feedback)")
 
-                # Fetch teaching process data
-                cursor.execute("""
-                    SELECT semester, course_code, classes_scheduled, classes_held,
-                           (classes_held / classes_scheduled) * 5 AS totalpoints
-                    FROM teaching_process
-                    WHERE form_id = %s
-                """, (form_id,))
-                teaching_data = cursor.fetchall()
-
-                # Fetch student feedback data including uploaded documents
-                cursor.execute("""
-                    SELECT semester, course_code, total_points, points_obtained, uploads
-                    FROM students_feedback
-                    WHERE form_id = %s
-                """, (form_id,))
-                feedback_data = cursor.fetchall()
-
-                # Fetch departmental activities data
-                cursor.execute("""
-                    SELECT semester, activity, points, order_cpy, uploads
-                    FROM department_act
-                    WHERE form_id = %s
-                """, (form_id,))
-                dept_act_data = cursor.fetchall()
-
-                # Fetch institute activity data
-                cursor.execute("""
-                    SELECT semester, activity, points, order_cpy, uploads
-                    FROM institute_act WHERE form_id = %s
-                """, (form_id,))
-                inst_act_data = cursor.fetchall()
-
-                # Fetch self-improvement data
-                cursor.execute("SELECT title, month, name_of_conf, issn, co_auth, imp_conference, num_of_citations, rating FROM self_imp WHERE form_id = %s", (form_id,))
-                self_improvement_data = cursor.fetchall()
-
-                # Fetch certification data
-                cursor.execute("SELECT name, uploads FROM certifications WHERE form_id = %s", (form_id,))
-                certification_data = cursor.fetchall()
-
-                # Fetch title data
-                cursor.execute("SELECT name, month, reg_no FROM copyright WHERE form_id = %s", (form_id,))
-                title_data = cursor.fetchall()
-
-                # Fetch resource person data
-                cursor.execute("SELECT name, dept, name_oi, num_op FROM resource_person WHERE form_id = %s", (form_id,))
-                resource_data = cursor.fetchall()
-
-                # Fetch university committee data
-                cursor.execute("SELECT name, roles, designation FROM mem_uni WHERE form_id = %s", (form_id,))
-                committee_data = cursor.fetchall()
-
-                # Fetch external projects data
-                cursor.execute("SELECT role, `desc`, contribution, university, duration, comments FROM external_projects WHERE form_id = %s", (form_id,))
-                project_data = cursor.fetchall()
-
-                # Fetch contribution data
-                cursor.execute("SELECT semester, activity, points, order_cpy, uploads FROM contribution_to_society WHERE form_id = %s", (form_id,))
-                contribution_data = cursor.fetchall()
-
-                # MISSING QUERIES - ADD THESE:
-                # Fetch MOOCS data
-                cursor.execute("SELECT srno, name, month, duration, completion FROM moocs WHERE form_id = %s", (form_id,))
-                moocs_data = cursor.fetchall()
-
-                # Fetch SWAYAM data
-                cursor.execute("SELECT srno, name, month, duration, completion FROM swayam WHERE form_id = %s", (form_id,))
-                swayam_data = cursor.fetchall()
-
-                # Fetch webinar data
-                cursor.execute("SELECT srno, name, technology, duration, date, int_ext, name_of_institute FROM webinar WHERE form_id = %s", (form_id,))
-                webinar_data = cursor.fetchall()
-
-                # Fetch points for Final Score table
+                # ===== POINTS AND ASSESSMENTS DATA =====
                 # Fetch form1_tot data including principal assessment fields
                 cursor.execute("SELECT teaching, feedback, hodas1, hodas2, hodfeed1, hodfeed2, prinas1, prinas2, prinfeed1, prinfeed2 FROM form1_tot WHERE form_id = %s", (form_id,))
                 form1_tot = cursor.fetchone()
-                print("Fetched Form1 Totals:", form1_tot)
 
                 # Fetch form2_tot data including principal assessment fields
                 cursor.execute("SELECT dept, institute, hodas3, hodas4, hodfeed3, hodfeed4, prinas3, prinas4, prinfeed3, prinfeed4 FROM form2_tot WHERE form_id = %s", (form_id,))
                 form2_tot = cursor.fetchone()
-                print("Fetched Form2 Totals:", form2_tot)
 
                 # Fetch form3_tot data including principal assessment fields AND finalacr
                 cursor.execute("SELECT acr, society, hodas5, hodas6, hodfeed5, hodfeed6, prinas5, prinas6, prinfeed5, prinfeed6, finalacr FROM form3_tot WHERE form_id = %s", (form_id,))
                 form3_tot = cursor.fetchone()
-                print("Fetched Form3 Totals:", form3_tot)
 
                 # Extract finalacr_value from the query result
                 if form3_tot and len(form3_tot) > 10 and form3_tot[10] is not None:
                     finalacr_value = int(form3_tot[10])
                 else:
                     finalacr_value = 0
-
-                print(f"[LOG] finalacr_value extracted: {finalacr_value}")
 
                 # Populate points_data with proper integer casting
                 points_data = {
@@ -3851,7 +4197,7 @@ def principle_pastforms():
                     'society': int(form3_tot[1]) if form3_tot and form3_tot[1] else 0,
                 }
 
-                # Calculate total_hod_points for the POST route as well
+                # Calculate total_hod_points
                 total_hod_points = (
                     float(assessments.get('hodas1', 0)) +
                     float(assessments.get('hodas2', 0)) +
@@ -3895,62 +4241,56 @@ def principle_pastforms():
                     
         except Exception as e:
             flash(f"Error fetching data: {str(e)}", "danger")
+            print(f"Error in principle_pastforms: {e}")
         finally:
-            connection.close()
+            if connection:
+                connection.close()
             
-    # Make a separate database connection just for fetching user data
-    # This ensures it runs even if there was an error in the previous operations
+    # Make a separate database connection for fetching user data
     connection = connect_to_database()
     if connection:
         try:
             with connection.cursor() as cursor:
-                # Fetch user details using the correct column names
+                # Fetch user details
                 cursor.execute("""
                     SELECT userid, gmail, dept, name, designation, d_o_j, dob, edu_q, exp 
                     FROM users WHERE userid = %s
                 """, (user_id,))
                 user_data = cursor.fetchone()
-                print(f"Debug - User Data in principle_pastforms: {user_data}")
-                print(f"Debug - User ID: {user_id}")
-                print(f"Debug - Rendering template with user_data: {type(user_data)}")
         except Exception as e:
             print(f"Error fetching user data: {str(e)}")
-            # If we can't fetch user data, we at least ensure the variable exists
-            user_data = None
         finally:
-            connection.close()
+            if connection:
+                connection.close()
 
-    # Print debug information before rendering template
-    print(f"Debug - About to render template with:")
-    print(f"Debug - user_data: {user_data}")
-    print(f"Debug - form_id: {form_id}")
-    print(f"Debug - selected_year: {selected_year}")
-    print(f"Debug - finalacr_value: {finalacr_value}")
-    print(f"Debug - assessments['principle_feedback'] (Principal): {assessments.get('principle_feedback')}")
-    print(f"Debug - extra_feedback (HOD): {extra_feedback}")
-    
+    # Extract user details safely
+    user_name = user_data[3] if user_data and len(user_data) > 3 else "N/A"
+    user_dept = user_data[2] if user_data and len(user_data) > 2 else "N/A"
+
     # Render the template with all the fetched data
     return render_template(
         'principlepast.html',
         assessments=assessments,
         teaching_data=teaching_data,
         feedback_data=feedback_data,
+        academic_review_data=academic_review_data,
         dept_act_data=dept_act_data,
         inst_act_data=inst_act_data,
-        society_data=society_data,
         points_data=points_data,
-        hodas_data=hodas_data,
-        extra_feedback=extra_feedback,
         self_improvement_data=self_improvement_data,
         certification_data=certification_data,
-        title_data=title_data,
+        training_data=training_data,
+        moocs_data=moocs_data,
+        swayam_data=swayam_data,
+        webinar_data=webinar_data,
+        copyright_data=copyright_data,
+        patent_data=patent_data,
         resource_data=resource_data,
         committee_data=committee_data,
+        conference_committee_data=conference_committee_data,
         project_data=project_data,
         contribution_data=contribution_data,
-        moocs_data=moocs_data,          # ADD THIS
-        swayam_data=swayam_data,        # ADD THIS
-        webinar_data=webinar_data,      # ADD THIS
+        special_mentions_data=special_mentions_data,
         selected_year=selected_year,
         user_name=user_name, 
         user_id=user_id,
@@ -3958,7 +4298,9 @@ def principle_pastforms():
         form_id=form_id,
         hod_ratings=hod_ratings,
         finalacr_value=finalacr_value,
-        total_hod_points=total_hod_points
+        total_hod_points=total_hod_points,
+        self_assessment_marks=self_assessment_marks,
+        extra_feedback=extra_feedback
     )
     
 @app.route('/principledash')

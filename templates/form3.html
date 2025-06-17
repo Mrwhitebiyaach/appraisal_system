@@ -353,8 +353,9 @@
                         <td><input type="text" class="form-control" title="Enter Rating" name="rating"></td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
@@ -662,7 +663,8 @@
                         </td>
                         <td>
                             <div class="d-flex">
-                                <input type="file" class="form-control" name="certificate" accept=".pdf,.doc,.docx">
+                                <input type="file" class="form-control" name="training_{{ loop.index }}_file" accept=".pdf,.doc,.docx">
+    <input type="hidden" name="uploads" value="{{ item[7] }}">
     {% if item[7] %}
         <a href="/uploads/{{ item[7].split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
     {% endif %}
@@ -686,7 +688,12 @@
                                 <option value="Offline">Offline</option>
                             </select>
                         </td>
-                        <td><input type="file" class="form-control" name="certificate" accept=".pdf,.doc,.docx"></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" class="form-control" name="training_1_file" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="uploads" value="">
+                            </div>
+                        </td>
                         <td><button class="btn btn-danger" onclick="removeRow(this, 'trainingTable')">-</button></td>
                     </tr>
                 {% endif %}
@@ -727,8 +734,9 @@
                         </td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
@@ -751,8 +759,9 @@
                         </td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
@@ -797,8 +806,9 @@
                         </td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
@@ -821,8 +831,9 @@
                         </td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
@@ -857,24 +868,24 @@
                     {% for item in webinar_data %}
                     <tr>
                         <td>{{ loop.index }}</td>
-                        <td><textarea class="form-control" name="name" title="name of seminar/webinar" rows="2">{{ item.1 }}</textarea></td>
-                        <td><textarea class="form-control" title="technology" rows="2">{{ item.2 }}</textarea></td>
-                        <td><input type="text" class="form-control" name="duration" title="duration" value="{{ item.3 }}"></td>
-                        <td><input type="text" class="form-control" name="date" title="date range" value="{{ item.4 }}"></td>
+                        <td><textarea class="form-control" name="name" title="name of seminar/webinar" rows="2">{{ item[1] }}</textarea></td>
+                        <td><textarea class="form-control" title="technology" rows="2">{{ item[2] }}</textarea></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration" value="{{ item[3] }}"></td>
+                        <td><input type="text" class="form-control" name="date" title="date range" value="{{ item[4] }}"></td>
                         <td>
                             <select class="form-control" name="int_ext" title="internal/external">
                                 <option value="">Select</option>
-                                <option value="Internal" {% if item.5 == 'Internal' %}selected{% endif %}>Internal</option>
-                                <option value="External" {% if item.5 == 'External' %}selected{% endif %}>External</option>
+                                <option value="Internal" {% if item[5] == 'Internal' %}selected{% endif %}>Internal</option>
+                                <option value="External" {% if item[5] == 'External' %}selected{% endif %}>External</option>
                             </select>
                         </td>
-                        <td><textarea class="form-control" name="name_of_institute" title="institute name" rows="2">{{ item.6 }}</textarea></td>
+                        <td><textarea class="form-control" name="name_of_institute" title="institute name" rows="2">{{ item[6] }}</textarea></td>
                         <td>
                             <div class="d-flex">
                                 <input type="file" name="seminar_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
-                                <input type="hidden" name="seminar_upload" value="{{ item.7 if item and item|length > 7 else '' }}">
-                                {% if item and item|length > 7 and item.7 %}
-                                    <a href="/uploads/{{ item.7.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                <input type="hidden" name="uploads" value="{{ item[7] if item|length > 7 else '' }}">
+                                {% if item|length > 7 and item[7] %}
+                                    <a href="/uploads/{{ item[7].split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
                                 {% endif %}
                             </div>
                         </td>
@@ -899,7 +910,7 @@
                         <td>
                             <div class="d-flex">
                                 <input type="file" name="seminar_1_file" class="form-control" accept=".pdf,.doc,.docx">
-                                <input type="hidden" name="seminar_upload">
+                                <input type="hidden" name="uploads" value="">
                             </div>
                         </td>
                         <td><button class="btn btn-danger" onclick="removeRow(this, 'seminarTable')">-</button></td>
@@ -946,8 +957,9 @@
                         <td><textarea class="form-control" name="name" title="Enter Name of the Certification" rows="2"></textarea></td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
@@ -989,9 +1001,10 @@
                         <td>
                             <div class="d-flex">
                                 <input type="file" name="resource_person_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
-                                {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
-                                     <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
-                                 {% endif %}
+                                <input type="hidden" name="uploads" value="{{ item.5 }}">
+                                {% if item.5 %}
+                                    <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                {% endif %}
                             </div>
                         </td>
                         <td><button class="btn btn-danger" onclick="removeRow(this, 'resourcePersonTable')">-</button></td>
@@ -1007,6 +1020,7 @@
                         <td>
                             <div class="d-flex">
                                 <input type="file" name="resource_person_1_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="uploads" value="">
                             </div>
                         </td>
                         <td><button class="btn btn-danger" onclick="removeRow(this, 'resourcePersonTable')">-</button></td>
@@ -1386,8 +1400,9 @@
                         <td><textarea class="form-control" title="Enter Details" rows="2">{{ item.4 }}</textarea></td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
@@ -1417,8 +1432,9 @@
                         <td><textarea class="form-control" title="Enter Details" rows="2"></textarea></td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
@@ -1632,8 +1648,9 @@ function toggleSelfImprovementTable() {
             </td>
             <td>
     <div class="d-flex">
-        <input type="file" name="contribution_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        {% if item is defined and item.5 and (item.5.endswith('.pdf') or item.5.endswith('.doc') or item.5.endswith('.docx')) %}
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
