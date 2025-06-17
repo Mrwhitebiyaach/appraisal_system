@@ -95,7 +95,7 @@ CREATE TABLE `certifications` (
 
 LOCK TABLES `certifications` WRITE;
 /*!40000 ALTER TABLE `certifications` DISABLE KEYS */;
-INSERT INTO `certifications` VALUES ('515988','awd',NULL,NULL),('527559','awda',NULL,NULL),('905592','5555',NULL,NULL);
+INSERT INTO `certifications` VALUES ('515988','awd',NULL,NULL),('527559','awda',NULL,NULL),('449389','',NULL,'1'),('905592','edit','uploads/cert_905592_1750060897_0_bill.pdf',NULL),('905592','edit','uploads/cert_905592_1750060897_1_poster_appraisalsystem.pdf',NULL);
 /*!40000 ALTER TABLE `certifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -113,6 +113,7 @@ CREATE TABLE `contribution_to_society` (
   `points` varchar(45) DEFAULT NULL,
   `order_cpy` varchar(495) DEFAULT NULL,
   `uploads` varchar(425) DEFAULT NULL,
+  `details` varchar(45) DEFAULT NULL,
   `srno` varchar(45) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -123,7 +124,7 @@ CREATE TABLE `contribution_to_society` (
 
 LOCK TABLES `contribution_to_society` WRITE;
 /*!40000 ALTER TABLE `contribution_to_society` DISABLE KEYS */;
-INSERT INTO `contribution_to_society` VALUES ('515988','V','awd','3','awd',NULL,NULL),('527559','V','awdad','5','awd',NULL,NULL),('905592','I','awd','5','awd',NULL,NULL);
+INSERT INTO `contribution_to_society` VALUES ('515988','V','awd','3','awd',NULL,NULL,NULL),('527559','V','awdad','5','awd',NULL,NULL,NULL),('905592','I','awdawd','3','awd','uploads/contrib_905592_1750072850_1_bill.pdf','awsssss','1'),('905592','II','2222','3','22','uploads/contrib_905592_1750073675_2_poster_appraisalsystem.pdf','dawd','2');
 /*!40000 ALTER TABLE `contribution_to_society` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -135,11 +136,14 @@ DROP TABLE IF EXISTS `copyright`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `copyright` (
+  `srno` varchar(45) DEFAULT NULL,
   `form_id` varchar(45) DEFAULT NULL,
   `name` varchar(495) DEFAULT NULL,
   `month` varchar(45) DEFAULT NULL,
   `reg_no` varchar(555) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL
+  `filed_pub_grant` varchar(45) DEFAULT NULL,
+  `category` varchar(415) DEFAULT NULL,
+  `uploads` varchar(425) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -149,7 +153,7 @@ CREATE TABLE `copyright` (
 
 LOCK TABLES `copyright` WRITE;
 /*!40000 ALTER TABLE `copyright` DISABLE KEYS */;
-INSERT INTO `copyright` VALUES ('515988','awd','awd','awd',NULL),('527559','wad','wada','wdaa',NULL),('905592','6666666','666666666666666666','66666',NULL);
+INSERT INTO `copyright` VALUES (NULL,'515988','awd','awd','awd',NULL,NULL,NULL),(NULL,'527559','wad','wada','wdaa',NULL,NULL,NULL),('1','449389','','','',NULL,NULL,NULL),('1','905592','1','161','1','Published','International','uploads/copyright_905592_1749983042_0_bill.pdf'),('2','905592','212','21221','3','Granted','National','uploads/copyright_905592_1749983139_1_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `copyright` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -229,7 +233,8 @@ CREATE TABLE `external_projects` (
   `university` varchar(495) DEFAULT NULL,
   `duration` varchar(495) DEFAULT NULL,
   `comments` varchar(495) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL
+  `srno` varchar(45) DEFAULT NULL,
+  `upload` varchar(415) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -239,7 +244,7 @@ CREATE TABLE `external_projects` (
 
 LOCK TABLES `external_projects` WRITE;
 /*!40000 ALTER TABLE `external_projects` DISABLE KEYS */;
-INSERT INTO `external_projects` VALUES ('515988','awd','awd','adwd','wdad','waw','d',NULL),('527559','awd','awda','dawd','dada','awda','wd',NULL),('905592','9','9','9','9','9','9',NULL);
+INSERT INTO `external_projects` VALUES ('515988','awd','awd','adwd','wdad','waw','d',NULL,NULL),('527559','awd','awda','dawd','dada','awda','wd',NULL,NULL),('449389','','','','','','','1',NULL),('905592','wad','awda','wda','dawd','dwdwd','awd','1','uploads/external_905592_1750072285_1_bill.pdf'),('905592','dwa','dwad','wda','dwad','222','dwa','2','uploads/external_905592_1750072285_2_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `external_projects` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -309,7 +314,7 @@ CREATE TABLE `form1_tot` (
 
 LOCK TABLES `form1_tot` WRITE;
 /*!40000 ALTER TABLE `form1_tot` DISABLE KEYS */;
-INSERT INTO `form1_tot` VALUES (130525,'0','0','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(449389,'0','0','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(515988,'28','18','10','18','10','wwwwwwww','wwwwwwwwwwwwwwwwww',NULL,NULL,NULL,NULL),(527559,'33','13','20',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'36','16','20','15','15','www','ww','6','6','111','222');
+INSERT INTO `form1_tot` VALUES (130525,'0','0','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(449389,'0','0','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(515988,'28','18','10','18','10','wwwwwwww','wwwwwwwwwwwwwwwwww',NULL,NULL,NULL,NULL),(527559,'33','13','20',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'54','19','20','15','15','www','ww','6','6','111','222');
 /*!40000 ALTER TABLE `form1_tot` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -367,7 +372,7 @@ CREATE TABLE `form3_assessment` (
 
 LOCK TABLES `form3_assessment` WRITE;
 /*!40000 ALTER TABLE `form3_assessment` DISABLE KEYS */;
-INSERT INTO `form3_assessment` VALUES ('515988','3'),('527559','10'),('905592','8');
+INSERT INTO `form3_assessment` VALUES ('449389','2'),('515988','3'),('527559','10'),('905592','9');
 /*!40000 ALTER TABLE `form3_assessment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -402,7 +407,7 @@ CREATE TABLE `form3_tot` (
 
 LOCK TABLES `form3_tot` WRITE;
 /*!40000 ALTER TABLE `form3_tot` DISABLE KEYS */;
-INSERT INTO `form3_tot` VALUES (449389,'5','4','1',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(515988,'6','3','3','10','2','wwwww','addw',NULL,NULL,NULL,NULL,'9'),(527559,'15','10','5',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'13','8','5','6','9','1ww','ww','6','6','555','666','4');
+INSERT INTO `form3_tot` VALUES (449389,'2','2','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(515988,'6','3','3','10','2','wwwww','addw',NULL,NULL,NULL,NULL,'9'),(527559,'15','10','5',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'14','8','6','6','9','1ww','ww','6','6','555','666','4');
 /*!40000 ALTER TABLE `form3_tot` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -477,7 +482,8 @@ CREATE TABLE `mem_uni` (
   `name` varchar(495) DEFAULT NULL,
   `roles` varchar(495) DEFAULT NULL,
   `designation` varchar(495) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL
+  `srno` varchar(45) DEFAULT NULL,
+  `upload` varchar(295) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -487,8 +493,34 @@ CREATE TABLE `mem_uni` (
 
 LOCK TABLES `mem_uni` WRITE;
 /*!40000 ALTER TABLE `mem_uni` DISABLE KEYS */;
-INSERT INTO `mem_uni` VALUES ('515988','awd','awd','awd',NULL),('527559','awd','awda','wd',NULL),('905592','8','8','8',NULL);
+INSERT INTO `mem_uni` VALUES ('515988','awd','awd','awd',NULL,NULL),('527559','awd','awda','wd',NULL,NULL),('449389','','','','1',NULL),('905592','dwa','dwa','aw','1','uploads/committee_905592_1750071380_1_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `mem_uni` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `members_conference`
+--
+
+DROP TABLE IF EXISTS `members_conference`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `members_conference` (
+  `srno` varchar(45) DEFAULT NULL,
+  `form_id` varchar(45) DEFAULT NULL,
+  `name` varchar(425) DEFAULT NULL,
+  `designation` varchar(425) DEFAULT NULL,
+  `upload` varchar(215) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `members_conference`
+--
+
+LOCK TABLES `members_conference` WRITE;
+/*!40000 ALTER TABLE `members_conference` DISABLE KEYS */;
+INSERT INTO `members_conference` VALUES ('1','905592','ddaw','da','uploads/conf_905592_1750099675_1_bill.pdf'),('2','905592','a','a','uploads/conf_905592_1750099675_2_poster_appraisalsystem.pdf');
+/*!40000 ALTER TABLE `members_conference` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -504,7 +536,8 @@ CREATE TABLE `moocs` (
   `duration` varchar(45) DEFAULT NULL,
   `completion` varchar(455) DEFAULT NULL,
   `srno` varchar(45) DEFAULT NULL,
-  `form_id` varchar(45) DEFAULT NULL
+  `form_id` varchar(45) DEFAULT NULL,
+  `upload` varchar(415) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -514,8 +547,63 @@ CREATE TABLE `moocs` (
 
 LOCK TABLES `moocs` WRITE;
 /*!40000 ALTER TABLE `moocs` DISABLE KEYS */;
-INSERT INTO `moocs` VALUES ('awd','awd','wdda','No','1','515988'),('awda','awd','awd','Yes','1','527559'),('22222','2222','222','Yes','1','905592');
+INSERT INTO `moocs` VALUES ('awd','awd','wdda','No','1','515988',NULL),('awda','awd','awd','Yes','1','527559',NULL),('','','','','1','449389',NULL),('awd','awd','222','Yes','1','905592','uploads/moocs_905592_1750103888_1_bill.pdf'),('dwa','dwa','ss','No','2','905592','uploads/moocs_905592_1750103888_2_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `moocs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `numeric_points_attained`
+--
+
+DROP TABLE IF EXISTS `numeric_points_attained`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `numeric_points_attained` (
+  `srno` int DEFAULT NULL,
+  `form_id` int DEFAULT NULL,
+  `academic_review1` int DEFAULT NULL,
+  `academic_review2` int DEFAULT NULL,
+  `avg_score` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `numeric_points_attained`
+--
+
+LOCK TABLES `numeric_points_attained` WRITE;
+/*!40000 ALTER TABLE `numeric_points_attained` DISABLE KEYS */;
+INSERT INTO `numeric_points_attained` VALUES (1,905592,18,12,15);
+/*!40000 ALTER TABLE `numeric_points_attained` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `patents`
+--
+
+DROP TABLE IF EXISTS `patents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `patents` (
+  `srno` varchar(45) DEFAULT NULL,
+  `form_id` varchar(45) DEFAULT NULL,
+  `name` varchar(552) DEFAULT NULL,
+  `month` varchar(45) DEFAULT NULL,
+  `reg_no` varchar(425) DEFAULT NULL,
+  `filed_pub_grant` varchar(45) DEFAULT NULL,
+  `category` varchar(45) DEFAULT NULL,
+  `uploads` varchar(425) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `patents`
+--
+
+LOCK TABLES `patents` WRITE;
+/*!40000 ALTER TABLE `patents` DISABLE KEYS */;
+INSERT INTO `patents` VALUES ('1','905592','111','111','11','Published','International','uploads/patent_905592_1749983042_0_bill.pdf'),('2','905592','222212','21111','3','Published','International','uploads/patent_905592_1749983139_1_bill.pdf');
+/*!40000 ALTER TABLE `patents` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -531,7 +619,8 @@ CREATE TABLE `resource_person` (
   `dept` varchar(425) DEFAULT NULL,
   `name_oi` varchar(425) DEFAULT NULL,
   `num_op` varchar(425) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL
+  `srno` varchar(45) DEFAULT NULL,
+  `upload` varchar(415) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -541,7 +630,7 @@ CREATE TABLE `resource_person` (
 
 LOCK TABLES `resource_person` WRITE;
 /*!40000 ALTER TABLE `resource_person` DISABLE KEYS */;
-INSERT INTO `resource_person` VALUES ('515988','awd','awd','awd','12',NULL),('527559','wdawd','wdawd','awda','0',NULL),('905592','777777','77777777','7777777777','777777',NULL);
+INSERT INTO `resource_person` VALUES ('515988','awd','awd','awd','12',NULL,NULL),('527559','wdawd','wdawd','awda','0',NULL,NULL),('449389','','','','','1',NULL),('905592','awd','awda','ed','5','1','uploads/resource_905592_1750070348_1_bill.pdf'),('905592','awdw','awd','awd','3','2','uploads/resource_905592_1750070348_2_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `resource_person` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -562,7 +651,8 @@ CREATE TABLE `self_imp` (
   `imp_conference` varchar(225) DEFAULT NULL,
   `num_of_citations` varchar(425) DEFAULT NULL,
   `rating` varchar(425) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL
+  `srno` varchar(45) DEFAULT NULL,
+  `uploads` varchar(415) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -572,8 +662,64 @@ CREATE TABLE `self_imp` (
 
 LOCK TABLES `self_imp` WRITE;
 /*!40000 ALTER TABLE `self_imp` DISABLE KEYS */;
-INSERT INTO `self_imp` VALUES ('515988','awd','awd','awd','awd','awd','',NULL,NULL,NULL),('527559','awd','wdaw','dawd','awd','awdaw','',NULL,NULL,NULL),('905592','111','2','3','4','5','6','7','8','1');
+INSERT INTO `self_imp` VALUES ('515988','awd','awd','awd','awd','awd','',NULL,NULL,NULL,NULL),('527559','awd','wdaw','dawd','awd','awdaw','',NULL,NULL,NULL,NULL),('449389','','','','','','','','','1',NULL),('905592','111','2','3','4','5','6','7','8','1','uploads/selfimp_905592_1750008908_1_bill.pdf');
 /*!40000 ALTER TABLE `self_imp` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `short_term_training`
+--
+
+DROP TABLE IF EXISTS `short_term_training`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `short_term_training` (
+  `srno` int DEFAULT NULL,
+  `form_id` int DEFAULT NULL,
+  `name` varchar(425) DEFAULT NULL,
+  `technology` varchar(919) DEFAULT NULL,
+  `duration` varchar(75) DEFAULT NULL,
+  `date` varchar(85) DEFAULT NULL,
+  `organizing_institute` varchar(425) DEFAULT NULL,
+  `mode` varchar(45) DEFAULT NULL,
+  `upload` varchar(525) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `short_term_training`
+--
+
+LOCK TABLES `short_term_training` WRITE;
+/*!40000 ALTER TABLE `short_term_training` DISABLE KEYS */;
+INSERT INTO `short_term_training` VALUES (1,905592,'222','222','22','222','222','Online','uploads/training_905592_1749983139_0_bill.pdf'),(2,905592,'33','3','3','3','33','Online','uploads/training_905592_1749983139_1_poster_appraisalsystem.pdf');
+/*!40000 ALTER TABLE `short_term_training` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `special_mentions`
+--
+
+DROP TABLE IF EXISTS `special_mentions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `special_mentions` (
+  `srno` varchar(45) DEFAULT NULL,
+  `form_id` varchar(45) DEFAULT NULL,
+  `name` varchar(415) DEFAULT NULL,
+  `roles` varchar(215) DEFAULT NULL,
+  `uploads` varchar(415) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `special_mentions`
+--
+
+LOCK TABLES `special_mentions` WRITE;
+/*!40000 ALTER TABLE `special_mentions` DISABLE KEYS */;
+INSERT INTO `special_mentions` VALUES ('1','905592','awd','awd','uploads/special_905592_1750090354_1_bill.pdf');
+/*!40000 ALTER TABLE `special_mentions` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -602,7 +748,7 @@ CREATE TABLE `students_feedback` (
 
 LOCK TABLES `students_feedback` WRITE;
 /*!40000 ALTER TABLE `students_feedback` DISABLE KEYS */;
-INSERT INTO `students_feedback` VALUES (515988,'I','Physics',5,'2',NULL,NULL,1),(527559,'I','Chemistry',5,'4',NULL,NULL,1),(905592,'I','Mathematics-I',5,'4','uploads\\2024_december_ethical-hacking-and-forensicrev-2019-c-scheme.pdf',NULL,1);
+INSERT INTO `students_feedback` VALUES (515988,'I','Physics',5,'2',NULL,NULL,1),(527559,'I','Chemistry',5,'4',NULL,NULL,1),(905592,'II','Mathematics-II',5,'4',NULL,NULL,1);
 /*!40000 ALTER TABLE `students_feedback` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -619,7 +765,8 @@ CREATE TABLE `swayam` (
   `duration` varchar(45) DEFAULT NULL,
   `completion` varchar(495) DEFAULT NULL,
   `srno` varchar(45) DEFAULT NULL,
-  `form_id` varchar(45) DEFAULT NULL
+  `form_id` varchar(45) DEFAULT NULL,
+  `upload` varchar(415) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -629,7 +776,7 @@ CREATE TABLE `swayam` (
 
 LOCK TABLES `swayam` WRITE;
 /*!40000 ALTER TABLE `swayam` DISABLE KEYS */;
-INSERT INTO `swayam` VALUES ('awd','dawd','awd','Yes','1','515988'),('awda','da','wda','Yes','1','527559'),('3333','333','333333','Yes','1','905592');
+INSERT INTO `swayam` VALUES ('awd','dawd','awd','Yes','1','515988',NULL),('awda','da','wda','Yes','1','527559',NULL),('','','','','1','449389',NULL),('dwww','wwww','333333','Yes','1','905592','uploads/swayam_905592_1750103888_1_poster_appraisalsystem.pdf'),('sas','as','ss','No','2','905592','uploads/swayam_905592_1750103888_2_bill.pdf');
 /*!40000 ALTER TABLE `swayam` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -658,7 +805,7 @@ CREATE TABLE `teaching_process` (
 
 LOCK TABLES `teaching_process` WRITE;
 /*!40000 ALTER TABLE `teaching_process` DISABLE KEYS */;
-INSERT INTO `teaching_process` VALUES (515988,'I','Mathematics-I',5,4,0,NULL,1),(515988,'I','Physics',5,3,0,NULL,2),(527559,'I','Chemistry',6,3,0,NULL,1),(905592,'I','Mathematics-I',11,7,0,NULL,1);
+INSERT INTO `teaching_process` VALUES (515988,'I','Mathematics-I',5,4,0,NULL,1),(515988,'I','Physics',5,3,0,NULL,2),(527559,'I','Chemistry',6,3,0,NULL,1),(905592,'I','Mathematics-I',12,9,4,NULL,1);
 /*!40000 ALTER TABLE `teaching_process` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -688,7 +835,7 @@ CREATE TABLE `total` (
 
 LOCK TABLES `total` WRITE;
 /*!40000 ALTER TABLE `total` DISABLE KEYS */;
-INSERT INTO `total` VALUES (123456,'2024/25','60','68','128','IT','Roshna Sangle',NULL),(515988,'2024/25','70','45','125','IT','Vishal Badgujar',NULL),(527559,'2024/25','54',NULL,'619','IT','dhanashree salvi',NULL),(654321,'2023/24','72','70','213','IT','omkar',NULL),(905592,'2024/25','55','70','99999','IT','Mayank Ashok Salvi','36');
+INSERT INTO `total` VALUES (123456,'2024/25','60','68','128','IT','Roshna Sangle',NULL),(449389,'2025/26','2',NULL,'99999','IT','Mayank Ashok Salvi',NULL),(515988,'2024/25','70','45','125','IT','Vishal Badgujar',NULL),(527559,'2024/25','54',NULL,'619','IT','dhanashree salvi',NULL),(654321,'2023/24','72','70','213','IT','omkar',NULL),(905592,'2024/25','59','70','99999','IT','Mayank Ashok Salvi','36');
 /*!40000 ALTER TABLE `total` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -743,7 +890,8 @@ CREATE TABLE `webinar` (
   `int_ext` varchar(495) DEFAULT NULL,
   `name_of_institute` varchar(495) DEFAULT NULL,
   `srno` varchar(45) DEFAULT NULL,
-  `form_id` varchar(45) DEFAULT NULL
+  `form_id` varchar(45) DEFAULT NULL,
+  `upload` varchar(415) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -753,7 +901,7 @@ CREATE TABLE `webinar` (
 
 LOCK TABLES `webinar` WRITE;
 /*!40000 ALTER TABLE `webinar` DISABLE KEYS */;
-INSERT INTO `webinar` VALUES ('awd','awd','awdaw','','','awd','1','515988'),('awd','awd','awda','wd','Internal','awd','1','527559'),('44444444444444444','444444444444','44444444','444444444444444','Internal','44444','1','905592');
+INSERT INTO `webinar` VALUES ('awd','awd','awdaw','','','awd','1','515988',NULL),('awd','awd','awda','wd','Internal','awd','1','527559',NULL),('','','','','','','1','449389',NULL),('awd','444444444444','44444444','awd','External','adw','1','905592','uploads/webinar_905592_1750104054_1_bill.pdf'),('dwa','dwa','dwa','sw','Internal','dwa','2','905592','uploads/webinar_905592_1750104054_2_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `webinar` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -766,4 +914,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-10 13:03:27
+-- Dump completed on 2025-06-17 10:04:55
