@@ -594,101 +594,117 @@
     </div>
     {% endif %}
 
-    <!-- MOOCS -->
-    {% if moocs_data %}
-    <div class="table-container">
-        <h3>MOOCS for Academic Year: {{ selected_year }}</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Sr. No.</th>
-                    <th>Course Name</th>
-                    <th>Month/Year</th>
-                    <th>Duration</th>
-                    <th>Certification Status</th>
-                    <th>Document</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in moocs_data %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
-                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
-                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
-                    <td>
-                        <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
-                            {{ row[4] if row[4] else 'N/A' }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if row[5] %}
-                            <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
-                               target="_blank" class="btn btn-primary">
-                               View Document
-                            </a>
-                        {% else %}
-                            <span class="text-muted">No Document</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" class="no-data">No MOOCS courses available for the selected academic year.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
+   <!-- Fixed MOOCS Section with Better File Handling -->
+{% if moocs_data %}
+<div class="table-container">
+    <h3>MOOCS for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Sr. No.</th>
+                <th>Course Name</th>
+                <th>Month/Year</th>
+                <th>Duration</th>
+                <th>Certification Status</th>
+                <th>Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in moocs_data %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                <td>
+                    <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ row[4] if row[4] else 'N/A' }}
+                    </span>
+                </td>
+                <td>
+                    {% if row[5] %}
+                        {% set filename = row[5].split('/')[-1] %}
+                        <a href="{{ url_for('uploaded_file', filename=filename) }}"
+                           target="_blank" class="btn btn-primary btn-sm me-2">
+                           <i class="fas fa-eye"></i> View Document
+                        </a>
+                        <!-- Debug link - remove in production -->
+                        <a href="{{ url_for('debug_uploaded_file', filename=filename) }}"
+                           target="_blank" class="btn btn-secondary btn-sm">
+                           <i class="fas fa-bug"></i> Debug
+                        </a>
+                        <!-- Show filename for debugging -->
+                        <small class="text-muted d-block mt-1">File: {{ filename }}</small>
+                    {% else %}
+                        <span class="text-muted">No Document</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No MOOCS courses available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
 
-    <!-- SWAYAM NPTEL -->
-    {% if swayam_data %}
-    <div class="table-container">
-        <h3>SWAYAM NPTEL for Academic Year: {{ selected_year }}</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Sr. No.</th>
-                    <th>Course Name</th>
-                    <th>Month/Year</th>
-                    <th>Duration</th>
-                    <th>Certification Status</th>
-                    <th>Document</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in swayam_data %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
-                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
-                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
-                    <td>
-                        <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
-                            {{ row[4] if row[4] else 'N/A' }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if row[5] %}
-                            <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
-                               target="_blank" class="btn btn-primary">
-                               View Document
-                            </a>
-                        {% else %}
-                            <span class="text-muted">No Document</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" class="no-data">No SWAYAM NPTEL courses available for the selected academic year.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
+<!-- Fixed SWAYAM NPTEL Section -->
+{% if swayam_data %}
+<div class="table-container">
+    <h3>SWAYAM NPTEL for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Sr. No.</th>
+                <th>Course Name</th>
+                <th>Month/Year</th>
+                <th>Duration</th>
+                <th>Certification Status</th>
+                <th>Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in swayam_data %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                <td>
+                    <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ row[4] if row[4] else 'N/A' }}
+                    </span>
+                </td>
+                <td>
+                    {% if row[5] %}
+                        {% set filename = row[5].split('/')[-1] %}
+                        <a href="{{ url_for('uploaded_file', filename=filename) }}"
+                           target="_blank" class="btn btn-primary btn-sm me-2">
+                           <i class="fas fa-eye"></i> View Document
+                        </a>
+                        <!-- Debug link - remove in production -->
+                        <a href="{{ url_for('debug_uploaded_file', filename=filename) }}"
+                           target="_blank" class="btn btn-secondary btn-sm">
+                           <i class="fas fa-bug"></i> Debug
+                        </a>
+                        <!-- Show filename for debugging -->
+                        <small class="text-muted d-block mt-1">File: {{ filename }}</small>
+                    {% else %}
+                        <span class="text-muted">No Document</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No SWAYAM NPTEL courses available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
 
     <!-- Seminars/Webinars -->
     {% if webinar_data %}

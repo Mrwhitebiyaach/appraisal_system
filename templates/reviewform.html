@@ -1110,7 +1110,7 @@
 <pre></pre>
 <div class="text-center">
     <a href="{{ url_for('form3_page', form_id=form_id) }}" class="btn btn-secondary me-2">Back</a>
-    <a href="/landing" class="btn btn-primary">Submit</a>
+    <button onclick="confirmSubmit()" class="btn btn-primary">Submit</button>
 </div>
 <pre></pre>
 
@@ -1126,7 +1126,16 @@
             window.print();
         }
 
-       
+        // Function to confirm submission
+        function confirmSubmit() {
+            var confirmMessage = "This will save the data. You can edit it later, but once the principle assesses the form you can't edit it. Do you want to continue?";
+            
+            if (confirm(confirmMessage)) {
+                // User clicked "OK", proceed with submission
+                window.location.href = "/landing";
+            }
+            // If user clicked "Cancel", do nothing
+        }
 
     </script>
 </body>

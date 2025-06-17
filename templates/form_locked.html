@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Locked</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('/static/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+        }
+        .content {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            max-width: 600px;
+            position: relative;
+            top: 150px;
+            margin: 0 auto;
+        }
+        .alert-warning {
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">Form Access Restricted</h4>
+            <p>{{ message }}</p>
+            <hr>
+            <p class="mb-0">
+                <strong>Academic Year:</strong> {{ academic_year }}<br>
+                <strong>Form ID:</strong> {{ form_id }}
+            </p>
+        </div>
+        <a href="/landing" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</body>
+</html>

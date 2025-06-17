@@ -122,11 +122,19 @@
                 <option value="AIML">AIML</option>
                 <option value="DS">DS</option>
             </select>
+            
+            <label for="academicYear" class="mr-2 font-weight-bold">Academic Year:</label>
+            <select id="academicYear" class="form-control mr-2">
+                {% for year in acad_year_options %}
+                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+            
             <button class="btn btn-primary" onclick="filterFaculty()">Search</button>
         </div>
 
         <!-- Department Header -->
-        <h1>Department: <span id="selectedDepartment">All</span></h1>
+        <h1>Department: <span id="selectedDepartment">All</span> | Year: <span id="selectedYear">{{ selected_year }}</span></h1>
 
         <!-- Table Section -->
         <div class="table-responsive">
@@ -233,14 +241,19 @@
 
         function filterFaculty() {
             const selectedDepartment = document.getElementById('department').value;
+            const selectedYear = document.getElementById('academicYear').value;
 
             // Update department header
             const departmentHeader = document.getElementById('selectedDepartment');
             departmentHeader.textContent = selectedDepartment || 'All';
+            
+            // Update year header
+            const yearHeader = document.getElementById('selectedYear');
+            yearHeader.textContent = selectedYear;
 
             // Send AJAX request to Flask route to fetch users by department
             $.ajax({
-                url: `/filter_faculty?department=${selectedDepartment}`,
+                url: `/filter_faculty?department=${selectedDepartment}&academic_year=${selectedYear}`,
                 method: 'GET',
                 success: function(response) {
                     const facultyTable = document.getElementById('facultyTable');

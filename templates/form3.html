@@ -500,6 +500,7 @@
     </div>
 
     <div class="table-box">
+        <!-- Patent table -->
         <h4>Patent Published</h4>
         <table class="table table-bordered" id="patentTable">
             <thead>
@@ -663,7 +664,7 @@
                         </td>
                         <td>
                             <div class="d-flex">
-                                <input type="file" class="form-control" name="training_{{ loop.index }}_file" accept=".pdf,.doc,.docx">
+                                <input type="file" name="training_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
     <input type="hidden" name="uploads" value="{{ item[7] }}">
     {% if item[7] %}
         <a href="/uploads/{{ item[7].split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
@@ -690,7 +691,7 @@
                         </td>
                         <td>
                             <div class="d-flex">
-                                <input type="file" class="form-control" name="training_1_file" accept=".pdf,.doc,.docx">
+                                <input type="file" name="training_1_file" class="form-control" accept=".pdf,.doc,.docx">
                                 <input type="hidden" name="uploads" value="">
                             </div>
                         </td>
@@ -806,7 +807,7 @@
                         </td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="file" name="swayam_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
         <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
         {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
@@ -831,7 +832,7 @@
                         </td>
                         <td>
     <div class="d-flex">
-        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="file" name="swayam_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
         <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
         {% if item is defined and item.5 %}
             <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>

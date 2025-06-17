@@ -481,6 +481,21 @@ def submit_academic_year():
 
         if existing_form:
             form_id = existing_form[0]
+            
+            # **NEW CHECK: Prevent editing if form has been assessed by principal**
+            cursor.execute(
+                "SELECT principle_total FROM total WHERE user_id = %s AND form_id = %s AND acad_years = %s",
+                (user_id, form_id, selected_academic_year)
+            )
+            principal_assessment = cursor.fetchone()
+            
+            if principal_assessment and principal_assessment[0] is not None and principal_assessment[0] != '':
+                # Form has been assessed by principal - prevent editing
+                connection.close()
+                return render_template('form_locked.html', 
+                                     message="Your appraisal form has been assessed by the Principal and cannot be edited.",
+                                     academic_year=selected_academic_year,
+                                     form_id=form_id)
 
             # Fetch existing teaching process data
             cursor.execute(
@@ -501,7 +516,6 @@ def submit_academic_year():
                 ORDER BY srno
             """, (form_id,))
             academic_review_data = cursor.fetchall()
-
 
             # Fetch existing feedback data
             cursor.execute(
@@ -526,6 +540,7 @@ def submit_academic_year():
             connection.commit()
             teaching_data = []  # Empty data if form is new
             feedback_data = []
+            academic_review_data = []
 
     connection.close()
 
@@ -538,7 +553,6 @@ def submit_academic_year():
         feedback_data=feedback_data,
         academic_review_data=academic_review_data
     )
-
 
 
 
@@ -2241,25 +2255,113 @@ def search_pastforms():
     )
 
 
-# Route to serve uploaded files
+# Route to serve uploaded files - FIXED VERSION
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    # Ensure the filename is safe and exists in the upload directory
-    safe_filename = os.path.basename(filename)  # Prevent directory traversal attacks
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_filename)
-
+    """
+    Serve uploaded files with proper security and error handling
+    """
     try:
-        if os.path.exists(file_path):
-            return send_from_directory(app.config['UPLOAD_FOLDER'], safe_filename, as_attachment=False)
-        else:
-            abort(404, description="File not found")
+        # Ensure the filename is safe and exists in the upload directory
+        safe_filename = secure_filename(filename)  # Use secure_filename from werkzeug
+        
+        # Check if UPLOAD_FOLDER is configured
+        if not app.config.get('UPLOAD_FOLDER'):
+            app.logger.error("UPLOAD_FOLDER not configured")
+            abort(500, description="Upload folder not configured")
+        
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_filename)
+        
+        # Debug logging
+        app.logger.info(f"Attempting to serve file: {safe_filename}")
+        app.logger.info(f"Full file path: {file_path}")
+        app.logger.info(f"File exists: {os.path.exists(file_path)}")
+        
+        if not os.path.exists(file_path):
+            app.logger.error(f"File not found: {file_path}")
+            abort(404, description=f"File '{safe_filename}' not found")
+        
+        # Check if file is readable
+        if not os.access(file_path, os.R_OK):
+            app.logger.error(f"File not readable: {file_path}")
+            abort(403, description="File access denied")
+        
+        # Get file size for logging
+        file_size = os.path.getsize(file_path)
+        app.logger.info(f"File size: {file_size} bytes")
+        
+        # Determine mimetype
+        mimetype = None
+        if safe_filename.lower().endswith('.pdf'):
+            mimetype = 'application/pdf'
+        elif safe_filename.lower().endswith(('.jpg', '.jpeg')):
+            mimetype = 'image/jpeg'
+        elif safe_filename.lower().endswith('.png'):
+            mimetype = 'image/png'
+        elif safe_filename.lower().endswith('.doc'):
+            mimetype = 'application/msword'
+        elif safe_filename.lower().endswith('.docx'):
+            mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        
+        # Send file with proper headers
+        response = send_from_directory(
+            app.config['UPLOAD_FOLDER'], 
+            safe_filename, 
+            as_attachment=False,
+            mimetype=mimetype
+        )
+        
+        # Set additional headers for PDFs
+        if safe_filename.lower().endswith('.pdf'):
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = f'inline; filename="{safe_filename}"'
+            # Add headers to prevent caching issues
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        
+        app.logger.info(f"Successfully serving file: {safe_filename}")
+        return response
+        
     except Exception as e:
-        abort(500, description=f"Server error: {str(e)}")
+        app.logger.error(f"Error serving file {filename}: {str(e)}", exc_info=True)
+        abort(500, description=f"Server error while serving file: {str(e)}")
 
 
-@app.route('/uploads/<filename>')
-def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+# Alternative route for debugging - you can temporarily use this
+@app.route('/debug/uploads/<filename>')
+def debug_uploaded_file(filename):
+    """
+    Debug version with more detailed logging
+    """
+    safe_filename = secure_filename(filename)
+    upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+    file_path = os.path.join(upload_folder, safe_filename)
+    
+    debug_info = {
+        'filename': filename,
+        'safe_filename': safe_filename,
+        'upload_folder': upload_folder,
+        'file_path': file_path,
+        'file_exists': os.path.exists(file_path),
+        'file_readable': os.access(file_path, os.R_OK) if os.path.exists(file_path) else False,
+        'file_size': os.path.getsize(file_path) if os.path.exists(file_path) else 0,
+        'current_working_directory': os.getcwd(),
+        'upload_folder_exists': os.path.exists(upload_folder),
+        'upload_folder_contents': os.listdir(upload_folder) if os.path.exists(upload_folder) else []
+    }
+    
+    return f"<pre>{json.dumps(debug_info, indent=2)}</pre>"
+
+
+# Make sure you have this import at the top of your file
+from werkzeug.utils import secure_filename
+import json
+
+
+
+
+
 
 @app.route('/highlanding')
 def highlanding():
@@ -3617,7 +3719,7 @@ def principlestaff():
 @app.route('/filter_faculty', methods=['GET'])
 def filter_faculty():
     department = request.args.get('department', '')
-    selected_year = request.args.get('year', '')
+    selected_year = request.args.get('academic_year', '')
     print(f"Department received: {department}, Academic Year: {selected_year}")
 
     connection = connect_to_database()
@@ -3626,125 +3728,84 @@ def filter_faculty():
     if connection:
         try:
             with connection.cursor() as cursor:
-                # First check if form_status table exists
-                cursor.execute("""
-                    SELECT COUNT(*)
-                    FROM information_schema.tables
-                    WHERE table_schema = DATABASE()
-                    AND table_name = 'form_status'
-                """)
-                table_exists = cursor.fetchone()[0] > 0
-                
                 sql_params = []
                 
-                if table_exists:
-                    # If table exists, include status in the query along with approval and completion status
-                    if selected_year and selected_year != '':
-                        # Filter by both department and academic year
+                # Base query - get users from total table with the specified department and academic year
+                if selected_year and selected_year != '':
+                    if department and department != '':
+                        # Filter by both department and academic year from total table
                         sql = """
-                            SELECT u.name, u.gmail, u.userid, u.profile_image, 
-                                   CASE 
-                                       WHEN fs.principal_submitted = 1 THEN 'Completed'
-                                       ELSE 'Pending'
-                                   END as status,
-                                   CASE 
-                                       WHEN a.userid IS NOT NULL THEN 'Approved'
-                                       ELSE 'Pending'
-                                   END as approval_status,
+                            SELECT DISTINCT u.name, u.gmail, u.userid, u.profile_image,
                                    CASE 
                                        WHEN t.hodtotal IS NOT NULL AND t.hodtotal != '' THEN 'Completed'
                                        ELSE 'Incomplete'
-                                   END as completion_status
-                            FROM users u
-                            LEFT JOIN form_status fs ON u.userid = fs.userid
-                            LEFT JOIN acad_years ay ON u.userid = ay.user_id
-                            LEFT JOIN appraisals a ON u.userid = a.userid
-                            LEFT JOIN total t ON u.userid = t.user_id
-                            WHERE u.dept = %s AND u.role = 'Faculty'
-                            AND (ay.acad_years = %s OR ay.acad_years IS NULL)
+                                   END as completion_status,
+                                   CASE 
+                                       WHEN a.userid IS NOT NULL THEN 'Approved'
+                                       ELSE 'Pending'
+                                   END as approval_status
+                            FROM total t
+                            JOIN users u ON t.user_id = u.userid
+                            LEFT JOIN appraisals a ON u.userid = a.userid 
+                                AND CONVERT(a.acad_year USING utf8mb4) COLLATE utf8mb4_unicode_ci = CONVERT(t.acad_years USING utf8mb4) COLLATE utf8mb4_unicode_ci
+                                AND a.form_id = t.form_id
+                            WHERE u.dept = %s AND CONVERT(t.acad_years USING utf8mb4) COLLATE utf8mb4_unicode_ci = %s AND u.role = 'Faculty'
                         """
                         sql_params = [department, selected_year]
                     else:
-                        # Filter by department only
+                        # Filter by academic year only from total table
                         sql = """
-                            SELECT u.name, u.gmail, u.userid, u.profile_image, 
-                                   CASE 
-                                       WHEN fs.principal_submitted = 1 THEN 'Completed'
-                                       ELSE 'Pending'
-                                   END as status,
-                                   CASE 
-                                       WHEN a.userid IS NOT NULL THEN 'Approved'
-                                       ELSE 'Pending'
-                                   END as approval_status,
+                            SELECT DISTINCT u.name, u.gmail, u.userid, u.profile_image,
                                    CASE 
                                        WHEN t.hodtotal IS NOT NULL AND t.hodtotal != '' THEN 'Completed'
                                        ELSE 'Incomplete'
-                                   END as completion_status
-                            FROM users u
-                            LEFT JOIN form_status fs ON u.userid = fs.userid
-                            LEFT JOIN appraisals a ON u.userid = a.userid
-                            LEFT JOIN total t ON u.userid = t.user_id
-                            WHERE u.dept = %s AND u.role = 'Faculty'
+                                   END as completion_status,
+                                   CASE 
+                                       WHEN a.userid IS NOT NULL THEN 'Approved'
+                                       ELSE 'Pending'
+                                   END as approval_status
+                            FROM total t
+                            JOIN users u ON t.user_id = u.userid
+                            LEFT JOIN appraisals a ON u.userid = a.userid 
+                                AND CONVERT(a.acad_year USING utf8mb4) COLLATE utf8mb4_unicode_ci = CONVERT(t.acad_years USING utf8mb4) COLLATE utf8mb4_unicode_ci
+                                AND a.form_id = t.form_id
+                            WHERE CONVERT(t.acad_years USING utf8mb4) COLLATE utf8mb4_unicode_ci = %s AND u.role = 'Faculty'
                         """
-                        sql_params = [department]
+                        sql_params = [selected_year]
                 else:
-                    # If table doesn't exist, just get basic user info with 'Pending' status
-                    print("form_status table doesn't exist, using default 'Pending' status")
-                    if selected_year and selected_year != '':
-                        # Filter by both department and academic year
+                    # No academic year specified - get all faculty users
+                    if department and department != '':
                         sql = """
-                            SELECT u.name, u.gmail, u.userid, u.profile_image, 
-                                   'Pending' as status,
-                                   CASE 
-                                       WHEN a.userid IS NOT NULL THEN 'Approved'
-                                       ELSE 'Pending'
-                                   END as approval_status,
-                                   CASE 
-                                       WHEN t.hodtotal IS NOT NULL AND t.hodtotal != '' THEN 'Completed'
-                                       ELSE 'Incomplete'
-                                   END as completion_status
+                            SELECT u.name, u.gmail, u.userid, u.profile_image,
+                                   'Incomplete' as completion_status,
+                                   'Pending' as approval_status
                             FROM users u
-                            LEFT JOIN acad_years ay ON u.userid = ay.user_id
-                            LEFT JOIN appraisals a ON u.userid = a.userid
-                            LEFT JOIN total t ON u.userid = t.user_id
-                            WHERE u.dept = %s AND u.role = 'Faculty'
-                            AND (ay.acad_years = %s OR ay.acad_years IS NULL)
-                        """
-                        sql_params = [department, selected_year]
-                    else:
-                        # Filter by department only
-                        sql = """
-                            SELECT u.name, u.gmail, u.userid, u.profile_image, 
-                                   'Pending' as status,
-                                   CASE 
-                                       WHEN a.userid IS NOT NULL THEN 'Approved'
-                                       ELSE 'Pending'
-                                   END as approval_status,
-                                   CASE 
-                                       WHEN t.hodtotal IS NOT NULL AND t.hodtotal != '' THEN 'Completed'
-                                       ELSE 'Incomplete'
-                                   END as completion_status
-                            FROM users u
-                            LEFT JOIN appraisals a ON u.userid = a.userid
-                            LEFT JOIN total t ON u.userid = t.user_id
                             WHERE u.dept = %s AND u.role = 'Faculty'
                         """
                         sql_params = [department]
+                    else:
+                        sql = """
+                            SELECT u.name, u.gmail, u.userid, u.profile_image,
+                                   'Incomplete' as completion_status,
+                                   'Pending' as approval_status
+                            FROM users u
+                            WHERE u.role = 'Faculty'
+                        """
+                        sql_params = []
                 
                 cursor.execute(sql, tuple(sql_params))
                 users_raw = cursor.fetchall()
                 
-                # Process profile images like in facultylist route
+                # Process profile images
                 users = []
                 if users_raw:
                     for u_tuple in users_raw:
-                        if len(u_tuple) == 7:  # With all status fields
-                            name, gmail, userid, profile_image_db, status, approval_status, completion_status = u_tuple
+                        if len(u_tuple) == 6:  # With status fields
+                            name, gmail, userid, profile_image_db, completion_status, approval_status = u_tuple
                         else:  # Fallback case
                             name, gmail, userid, profile_image_db = u_tuple[:4]
-                            status = 'Pending'
-                            approval_status = 'Pending'
                             completion_status = 'Incomplete'
+                            approval_status = 'Pending'
                         
                         processed_profile_image = None
                         if profile_image_db and isinstance(profile_image_db, str):
@@ -3758,7 +3819,7 @@ def filter_faculty():
                             else:
                                 processed_profile_image = temp_image_path
                         
-                        users.append([name, gmail, userid, processed_profile_image, status, approval_status, completion_status])
+                        users.append([name, gmail, userid, processed_profile_image, '', approval_status, completion_status])
                 
                 print(f"Users fetched from DB (processed): {users}")
                 
@@ -4562,15 +4623,23 @@ def give_appraisal():
                     if not user_data:
                         return jsonify({'status': 'error', 'message': 'User not found.'}), 404
 
-                    save_sql = '''
-                        INSERT INTO appraisals (userid, form_id, acad_year, status, approval_date)
-                        VALUES (%s, %s, %s, 'approved', NOW())
-                        ON DUPLICATE KEY UPDATE
-                            status = 'approved',
-                            approval_date = NOW()
-                    '''
-                    cursor.execute(save_sql, (user_id, form_id, acad_years))
-                    connection.commit()
+                    try:
+                        form_id = int(form_id) if form_id else None
+    
+                        save_sql = '''
+                            INSERT INTO appraisals (userid, form_id, acad_year, status, approval_date)
+                            VALUES (%s, %s, %s, 'approved', NOW())
+                            ON DUPLICATE KEY UPDATE
+                                form_id = VALUES(form_id),
+                                acad_year = VALUES(acad_year),
+                                status = 'approved',
+                                approval_date = NOW()
+                        '''
+                        cursor.execute(save_sql, (user_id, form_id, acad_years))
+                        connection.commit()
+                    except Exception as e:
+                        print(f"Error inserting into appraisals: {str(e)}")
+                        connection.rollback()
 
                     appraisal_html = generate_appraisal_html(user_id, form_id=form_id, acad_years=acad_years)
                     return jsonify({'message': 'Assessment approved and email sent!', 'redirect_url': '/principlefaculty?approved=1'})
@@ -5510,7 +5579,7 @@ def save_form3_data():
                 ))
             print(f"Inserted {len(training_entries)} training records")
 
-        # ===== PROCESS MOOCS DATA =====
+          # ===== PROCESS MOOCS DATA =====
         moocs_entries = []
         for key in request.form.keys():
             if key.startswith('moocs[') and key.endswith(']'):
@@ -5521,45 +5590,44 @@ def save_form3_data():
                     print(f"Processed moocs entry from key: {key}, index: {index}")
                 except json.JSONDecodeError as e:
                     print(f"Error parsing moocs entry: {e}")
+        
         # Gather files
         moocs_files = {}
         for file_key in request.files.keys():
             if file_key.startswith('moocs_') and file_key.endswith('_file'):
-                # pattern moocs_<srno>_file
                 parts = file_key.split('_')
                 if len(parts) >= 2:
                     srno = parts[1]
                     moocs_files[srno] = request.files[file_key]
+        
         if moocs_entries:
             cursor.execute("SELECT srno, upload FROM moocs WHERE form_id = %s", (form_id,))
             old_moocs_uploads = {str(row[0]): row[1] for row in cursor.fetchall() if row[0] is not None}
             cursor.execute("DELETE FROM moocs WHERE form_id = %s", (form_id,))
+            
             for index, item in moocs_entries:
                 srno = str(item.get('srno', index))
                 upload_path = None
-                # file by srno
+                
+                # Enhanced file handling for MOOCS
                 if srno in moocs_files:
                     file = moocs_files[srno]
-                    if file and allowed_file(file.filename):
-                        try:
-                            filename = secure_filename(file.filename)
-                            timestamp = str(int(time.time()))
-                            name, ext = os.path.splitext(filename)
-                            unique_filename = f"moocs_{form_id}_{timestamp}_{srno}_{name}{ext}"
-                            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                            file.save(file_path)
-                            upload_path = f"uploads/{unique_filename}"
-                            print(f"Saved MOOCS file {unique_filename}")
-                        except Exception as e:
-                            print(f"Error saving MOOCS file: {e}")
+                    upload_path, success, error = validate_and_save_file(
+                        file, "moocs", form_id, srno
+                    )
+                    if not success and error and "No file selected" not in error:
+                        file_errors.append(f"MOOCS {srno}: {error}")
+                
                 if not upload_path:
                     upload_path = old_moocs_uploads.get(srno, None)
+                    print(f"No new file for MOOCS srno '{srno}', using previous upload: {upload_path}")
+                
                 # Map frontend keys to DB columns
                 name = item.get('name_of_moocs_course_undertaken', '') or item.get('name', '')
                 month = item.get('month/year', '') or item.get('month', '')
                 duration = item.get('duration_of_course', '') or item.get('duration', '')
                 completion = item.get('certification_status', '') or item.get('completion', '')
+                
                 cursor.execute("""
                     INSERT INTO moocs (srno, name, month, duration, completion, form_id, upload)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -5585,6 +5653,7 @@ def save_form3_data():
                     print(f"Processed swayam entry from key: {key}, index: {index}")
                 except json.JSONDecodeError as e:
                     print(f"Error parsing swayam entry: {e}")
+        
         swayam_files = {}
         for file_key in request.files.keys():
             if file_key.startswith('swayam_') and file_key.endswith('_file'):
@@ -5592,35 +5661,35 @@ def save_form3_data():
                 if len(parts) >= 2:
                     srno = parts[1]
                     swayam_files[srno] = request.files[file_key]
+        
         if swayam_entries:
             cursor.execute("SELECT srno, upload FROM swayam WHERE form_id = %s", (form_id,))
             old_swayam_uploads = {str(row[0]): row[1] for row in cursor.fetchall() if row[0] is not None}
             cursor.execute("DELETE FROM swayam WHERE form_id = %s", (form_id,))
+            
             for index, item in swayam_entries:
                 srno = str(item.get('srno', index))
                 upload_path = None
+                
+                # Enhanced file handling for SWAYAM
                 if srno in swayam_files:
                     file = swayam_files[srno]
-                    if file and allowed_file(file.filename):
-                        try:
-                            filename = secure_filename(file.filename)
-                            timestamp = str(int(time.time()))
-                            name, ext = os.path.splitext(filename)
-                            unique_filename = f"swayam_{form_id}_{timestamp}_{srno}_{name}{ext}"
-                            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                            file.save(file_path)
-                            upload_path = f"uploads/{unique_filename}"
-                            print(f"Saved SWAYAM file {unique_filename}")
-                        except Exception as e:
-                            print(f"Error saving SWAYAM file: {e}")
+                    upload_path, success, error = validate_and_save_file(
+                        file, "swayam", form_id, srno
+                    )
+                    if not success and error and "No file selected" not in error:
+                        file_errors.append(f"SWAYAM {srno}: {error}")
+                
                 if not upload_path:
                     upload_path = old_swayam_uploads.get(srno, None)
+                    print(f"No new file for SWAYAM srno '{srno}', using previous upload: {upload_path}")
+                
                 # Map frontend keys to DB columns
                 name = item.get('name_of_swayam_course_undertaken', '') or item.get('name', '')
                 month = item.get('month/year', '') or item.get('month', '')
                 duration = item.get('duration_of_course', '') or item.get('duration', '')
                 completion = item.get('certification_status', '') or item.get('completion', '')
+                
                 cursor.execute("""
                     INSERT INTO swayam (srno, name, month, duration, completion, form_id, upload)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -6748,8 +6817,12 @@ def principlefaculty():
     # Get selected year from query parameters or default to current academic year
     selected_year = request.args.get('year', acad_year_options[0])
     
+    # Check if there's an approved parameter in the URL
+    approved = request.args.get('approved', None)
+    
     return render_template('principlefaculty.html', acad_year_options=acad_year_options, selected_year=selected_year)
 
+    
 @app.route('/filter_staff', methods=['GET'])
 def filter_staff():
     department = request.args.get('department', '')
