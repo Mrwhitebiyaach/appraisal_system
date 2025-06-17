@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('/static/bgs.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .logo img {
+            width: 100px; /* Adjust logo size as needed */
+        }
+        .back-arrow-circle-login {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.7); /* Slightly transparent white for contrast */
+            color: #007bff; /* Blue color for the arrow */
+            font-size: 24px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-arrow-circle-login:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            transform: scale(1.1);
+        }
+
+        .heading-box {
+            background: rgba(255, 255, 255, 0.15); /* Slightly transparent white background */
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px; /* Space between heading box and login box */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px); /* Optional: add a blur effect */
+            -webkit-backdrop-filter: blur(5px); /* For Safari */
+            width: 100%;
+            max-width: 600px; /* Adjust max-width as needed */
+            text-align: center;
+        }
+
+        .appraisal-system-heading {
+            color: #2196F3; /* A soft blue shade */
+            font-size: 2.5em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 0; /* Remove margin from heading itself as it's handled by the box */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .login-container {
+            display: flex;
+            flex-direction: column; /* Changed to column to stack heading and login box */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .login-links a {
+            display: block;
+            margin: 5px 0;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .login-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo -->
+    <div class="logo">
+        <button class="btn btn-link">
+            <img src="/static/logo.png" alt="Logo">
+        </button>
+    </div>
+
+    <!-- Back to Home Button -->
+    <a href="/" class="back-arrow-circle-login" aria-label="Back to home page">
+        &#8592;
+    </a>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <div class="translucent-container" style="background: rgba(56, 55, 55, 0.5); padding: 40px; border-radius: 15px; margin-bottom: 30px; max-width: 600px; width: 100%; text-align: center;">
+            <h1 style="font-size: 48px; margin-bottom: 0; color: white;">Performance-Based Appraisal System for Educators</h1>
+        </div>
+        <div class="login-box">
+            <h3 class="text-center">Login</h3>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  {% if category == 'danger' %}
+                    <div class="alert alert-danger" role="alert">
+                      {{ message }}
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form action="/login" method="post">
+                <div class="form-group">
+                    <label for="loginId">Email</label>
+                    <div class="input-group">
+                        <input type="text" name="loginId" class="form-control" id="loginId" placeholder="Enter your username" required>
+                        <div class="input-group-append">
+                            <span class="input-group-text">@apsit.edu.in</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" name="password" class="form-control" id="password" placeholder="Enter Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+                <a href="/register" class="btn btn-secondary btn-block mt-2">Sign Up</a>
+            </form>
+            <div class="login-links">
+                <a href="/forgotpass">Forgot Password?</a> <!-- Added link here -->
+            </div>
+        </div>
+    </div>
+<script>
+    // Check the status query parameter to show an alert if redirected
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+
+    if (status === 'reset_success') {
+        alert('Password reset successful! Please log in.');
+    }
+</script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
