@@ -91,7 +91,7 @@
     <!-- Main Content Container -->
     <div class="container">
         <h2>Select Academic Year</h2>
-        <h2>Viewing past forms for Faculty name: {{ user_name }} (User ID: {{ user_id }})</h2> <!-- Display name and user ID together -->
+        <h2>Viewing past forms for Faculty name: {{ user_name }} (Faculty ID: {{ user_id }})</h2> <!-- Display name and user ID together -->
 
         <form id="principle" method="POST" action="/principle_pastforms" onsubmit="return validateForm()">
 
@@ -104,12 +104,12 @@
     </div>
 <pre></pre>
 
-    <!-- User Details Container - Always show basic user info -->
+    <!-- Faculty Details Container - Always show basic faculty info -->
     <div class="container" style="width: 500px; margin: 20px auto;">
-        <h2 class="text-center mb-4">User Details</h2>
+        <h2 class="text-center mb-4">Faculty Details</h2>
         <table class="table table-bordered">
             <tr>
-                <th>User ID</th>
+                <th>Faculty ID</th>
                 <td>{{ user_id }}</td>
             </tr>
             <tr>

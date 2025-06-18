@@ -116,7 +116,7 @@
     <!-- Main Content Container -->
     <div class="container">
         <h2>Select Academic Year</h2>
-        <h2>Viewing past forms for Faculty name: {{ user_name }} (User ID: {{ user_id }})</h2> <!-- Display name and user ID together -->
+        <h2>Viewing past forms for Faculty name: {{ user_name }} (Faculty ID: {{ user_id }})</h2> <!-- Display name and user ID together -->
 
         <form id="principle" method="POST" action="/principle_pastforms" onsubmit="return validateForm()">
 
@@ -129,12 +129,12 @@
     </div>
 <pre></pre>
 
-    <!-- User Details Container - Always show basic user info -->
+    <!-- Faculty Details Container - Always show basic faculty info -->
     <div class="container" style="width: 500px; margin: 20px auto;">
-        <h2 class="text-center mb-4">User Details</h2>
+        <h2 class="text-center mb-4">Faculty Details</h2>
         <table class="table table-bordered">
             <tr>
-                <th>User ID</th>
+                <th>Faculty ID</th>
                 <td>{{ user_id }}</td>
             </tr>
             <tr>
@@ -1026,11 +1026,11 @@
           {% for row in special_mentions_data %}
           <tr>
               <td>{{ loop.index }}</td>
-              <td>{{ row.name if row.name else 'N/A' }}</td>
-              <td>{{ row.roles if row.roles else 'N/A' }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
               <td>
-                  {% if row.uploads %}
-                      <a href="{{ url_for('uploaded_file', filename=row.uploads.split('/')[-1]) }}"
+                  {% if row[3] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
                          target="_blank" class="btn btn-primary">
                          View Document
                       </a>
@@ -1066,11 +1066,11 @@
           {% for row in conference_committee_data %}
           <tr>
               <td>{{ loop.index }}</td>
-              <td>{{ row.name if row.name else 'N/A' }}</td>
-              <td>{{ row.designation if row.designation else 'N/A' }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
               <td>
-                  {% if row.upload %}
-                      <a href="{{ url_for('uploaded_file', filename=row.upload.split('/')[-1]) }}"
+                  {% if row[3] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
                          target="_blank" class="btn btn-primary">
                          View Document
                       </a>

@@ -110,14 +110,13 @@
     </div>
  <pre></pre>
 
-<!-- User Details Container - Only show when user_data is available -->
+<!-- Faculty Details Container - Only show when faculty_data is available -->
 {% if user_data %}
 <div class="container">
-    
-    <h2>User Details</h2>
+    <h2>Faculty Details</h2>
     <table>
         <tr>
-            <th>User ID</th>
+            <th>Faculty ID</th>
             <td>{{ user_data[0] }}</td>
         </tr>
         <tr>
@@ -947,11 +946,11 @@
                 {% for row in special_mentions_data %}
                 <tr>
                     <td>{{ loop.index }}</td>
-                    <td>{{ row.name if row.name else 'N/A' }}</td>
-                    <td>{{ row.roles if row.roles else 'N/A' }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
                     <td>
-                        {% if row.uploads %}
-                            <a href="{{ url_for('uploaded_file', filename=row.uploads.split('/')[-1]) }}"
+                        {% if row[3] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
                                target="_blank" class="btn btn-primary">
                                View Document
                             </a>
@@ -987,11 +986,11 @@
                 {% for row in conference_committee_data %}
                 <tr>
                     <td>{{ loop.index }}</td>
-                    <td>{{ row.name if row.name else 'N/A' }}</td>
-                    <td>{{ row.designation if row.designation else 'N/A' }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
                     <td>
-                        {% if row.upload %}
-                            <a href="{{ url_for('uploaded_file', filename=row.upload.split('/')[-1]) }}"
+                        {% if row[3] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
                                target="_blank" class="btn btn-primary">
                                View Document
                             </a>

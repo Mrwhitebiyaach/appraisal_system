@@ -1735,7 +1735,7 @@ def render_pastforms():
                 committee_data = process_rows(cursor.fetchall())
                 
                 # Fetch conference committee data with uploads
-                cursor.execute("SELECT srno, name, roles, designation, upload FROM mem_conf WHERE form_id = %s ORDER BY srno ASC", (form_id,))
+                cursor.execute("SELECT srno, name, designation, upload FROM members_conference WHERE form_id = %s ORDER BY srno ASC", (form_id,))
                 conference_committee_data = process_rows(cursor.fetchall())
                 
                 # Fetch external projects data with uploads
@@ -2120,6 +2120,7 @@ def search_pastforms():
                     FROM members_conference WHERE form_id = %s ORDER BY srno
                 """, (form_id,))
                 conference_committee_data = process_rows(cursor.fetchall())
+                print("Conference Committee Data:", conference_committee_data)
 
                 # External projects data
                 cursor.execute("SELECT * FROM external_projects WHERE form_id = %s", (form_id,))
@@ -2138,6 +2139,7 @@ def search_pastforms():
                     FROM special_mentions WHERE form_id = %s ORDER BY srno
                 """, (form_id,))
                 special_mentions_data = process_rows(cursor.fetchall())
+                print("Special Mentions Data:", special_mentions_data)
 
                 # Self-assessment marks
                 cursor.execute("""
@@ -3040,6 +3042,7 @@ def search_pastforms2():
                     FROM members_conference WHERE form_id = %s ORDER BY srno
                 """, (form_id,))
                 conference_committee_data = process_rows(cursor.fetchall())
+                print("Conference Committee Data:", conference_committee_data)
 
                 # External projects data
                 cursor.execute("SELECT * FROM external_projects WHERE form_id = %s", (form_id,))
@@ -3058,6 +3061,7 @@ def search_pastforms2():
                     FROM special_mentions WHERE form_id = %s ORDER BY srno
                 """, (form_id,))
                 special_mentions_data = process_rows(cursor.fetchall())
+                print("Special Mentions Data:", special_mentions_data)
 
                 # Self-assessment marks
                 cursor.execute("""
@@ -4198,6 +4202,7 @@ def principle_pastforms():
                     FROM members_conference WHERE form_id = %s ORDER BY srno
                 """, (form_id,))
                 conference_committee_data = process_rows(cursor.fetchall())
+                print("Conference Committee Data:", conference_committee_data)
 
                 # External projects data
                 cursor.execute("SELECT * FROM external_projects WHERE form_id = %s", (form_id,))
@@ -4216,6 +4221,7 @@ def principle_pastforms():
                     FROM special_mentions WHERE form_id = %s ORDER BY srno
                 """, (form_id,))
                 special_mentions_data = process_rows(cursor.fetchall())
+                print("Special Mentions Data:", special_mentions_data)
 
                 # Self-assessment marks
                 cursor.execute("""

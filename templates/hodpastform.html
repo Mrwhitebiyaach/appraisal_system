@@ -117,12 +117,12 @@
     </div>
 <pre></pre>
 
-    <!-- User Details Container - Always show basic user info -->
+    <!-- Faculty Details Container - Always show basic faculty info -->
     <div class="container" style="width: 500px; margin: 20px auto;">
-        <h2 class="text-center mb-4">User Details</h2>
+        <h2 class="text-center mb-4">Faculty Details</h2>
         <table class="table table-bordered">
             <tr>
-                <th>User ID</th>
+                <th>Faculty ID</th>
                 <td>{% if user_data %}{{ user_data[0] }}{% else %}{{ user_id }}{% endif %}</td>
             </tr>
             <tr>
@@ -139,11 +139,6 @@
                 <th>Email</th>
                 <td>{{ user_data[1] }}</td>
             </tr>
-            <!-- Name is already displayed above, so we don't need to repeat it here -->
-            <!-- <tr>
-                <th>Name</th>
-                <td>{{ user_data[3] }}</td>
-            </tr> -->
             <tr>
                 <th>Designation</th>
                 <td>{{ user_data[4] }}</td>
@@ -164,18 +159,14 @@
                 <th>Experience</th>
                 <td>{{ user_data[8] }}</td>
             </tr>
+            {% endif %}
         </table>
-
         {% if form_id %}
         <h2 class="text-center mt-4 mb-3">Form Information</h2>
         <div class="text-center">
             <p><strong>Form ID:</strong> {{ form_id }}</p>
             <p><strong>Academic Year:</strong> {{ selected_year }}</p>
         </div>
-        {% endif %}
-        
-        {% if user_data %}
-        <!-- Close the if user_data condition -->
         {% endif %}
     </div>
 
@@ -974,80 +965,80 @@
     <!-- Special Mentions -->
     {% if special_mentions_data %}
     <div class="table-container">
-        <h3>Special Mentions for Academic Year: {{ selected_year }}</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Sr. No.</th>
-                    <th>Name</th>
-                    <th>Roles and Responsibilities</th>
-                    <th>Document</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in special_mentions_data %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ row.name if row.name else 'N/A' }}</td>
-                    <td>{{ row.roles if row.roles else 'N/A' }}</td>
-                    <td>
-                        {% if row.uploads %}
-                            <a href="{{ url_for('uploaded_file', filename=row.uploads.split('/')[-1]) }}"
-                               target="_blank" class="btn btn-primary">
-                               View Document
-                            </a>
-                        {% else %}
-                            <span class="text-muted">No Document</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="no-data">No special mentions available for the selected academic year.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <h3>Special Mentions for Academic Year: {{ selected_year }}</h3>
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Sr. No.</th>
+                  <th>Name</th>
+                  <th>Roles and Responsibilities</th>
+                  <th>Document</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for row in special_mentions_data %}
+              <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                  <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                  <td>
+                      {% if row[3] %}
+                          <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
+                             target="_blank" class="btn btn-primary">
+                             View Document
+                          </a>
+                      {% else %}
+                          <span class="text-muted">No Document</span>
+                      {% endif %}
+                  </td>
+              </tr>
+              {% else %}
+              <tr>
+                  <td colspan="4" class="no-data">No special mentions available for the selected academic year.</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
     </div>
     {% endif %}
 
     <!-- Conference/Journal Committee -->
     {% if conference_committee_data %}
     <div class="table-container">
-        <h3>Member of Conference/Journal Committee for Academic Year: {{ selected_year }}</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Sr. No.</th>
-                    <th>Conference/Journal Name</th>
-                    <th>Designation</th>
-                    <th>Document</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in conference_committee_data %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ row.name if row.name else 'N/A' }}</td>
-                    <td>{{ row.designation if row.designation else 'N/A' }}</td>
-                    <td>
-                        {% if row.upload %}
-                            <a href="{{ url_for('uploaded_file', filename=row.upload.split('/')[-1]) }}"
-                               target="_blank" class="btn btn-primary">
-                               View Document
-                            </a>
-                        {% else %}
-                            <span class="text-muted">No Document</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="no-data">No conference/journal committee memberships available for the selected academic year.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <h3>Member of Conference/Journal Committee for Academic Year: {{ selected_year }}</h3>
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Sr. No.</th>
+                  <th>Conference/Journal Name</th>
+                  <th>Designation</th>
+                  <th>Document</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for row in conference_committee_data %}
+              <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                  <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                  <td>
+                      {% if row[3] %}
+                          <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
+                             target="_blank" class="btn btn-primary">
+                             View Document
+                          </a>
+                      {% else %}
+                          <span class="text-muted">No Document</span>
+                      {% endif %}
+                  </td>
+              </tr>
+              {% else %}
+              <tr>
+                  <td colspan="4" class="no-data">No conference/journal committee memberships available for the selected academic year.</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
     </div>
     {% endif %}
 
@@ -1926,5 +1917,4 @@ window.onload = generateAcademicYears;
         });
     </script>
 </body>
-{% endif %}
 </html>
