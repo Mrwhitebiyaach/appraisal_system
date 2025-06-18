@@ -293,14 +293,26 @@
             });
         }
 
-        // Check for success flag in the URL parameters
+        // Check for success flag and initialize page on load
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('success') === '1') {
                 alert('Appraisal email sent successfully!');
                 console.log('Appraisal email sent successfully!');
             }
+            
+            // Check if academic year dropdown has options
+            const academicYearDropdown = document.getElementById('academicYear');
+            console.log('Academic year dropdown options count:', academicYearDropdown ? academicYearDropdown.options.length : 0);
+            
+            // If no options are present, redirect to principlestaff to refresh the page
+            if (academicYearDropdown && academicYearDropdown.options.length <= 1) {
+                console.log('No academic year options found, redirecting to principlestaff...');
+                window.location.href = '/principlestaff';
+            }
         };
+        
+        // No additional functions needed - direct redirect handles the academic year options loading
     </script>
 </body>
 </html>

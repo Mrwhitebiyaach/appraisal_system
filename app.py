@@ -3713,7 +3713,27 @@ def principlestaff():
     # Get selected year from query parameters or default to current academic year
     selected_year = request.args.get('year', acad_year_options[0])
     
-    return render_template('principlestaff.html', acad_year_options=acad_year_options, selected_year=selected_year)
+    # Get department from query parameters if available
+    department = request.args.get('department', '')
+    
+    # Initialize user_data as None - this will prevent the template from trying to access undefined variables
+    user_data = None
+    
+    # Get user_name from session if available
+    user_name = session.get('user_name', '')
+    
+    # Initialize points_data dictionary with default values
+    points_data = {
+        'teaching': 0,
+        'feedback': 0,
+        'dept': 0,
+        'institute': 0,
+        'acr': 0,
+        'society': 0
+    }
+    
+    # Instead of trying to render principlestaff.html directly, redirect to principlefaculty route
+    return redirect(url_for('principlefaculty', year=selected_year, department=department))
 
 
 @app.route('/filter_faculty', methods=['GET'])
