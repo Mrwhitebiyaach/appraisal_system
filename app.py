@@ -50,12 +50,17 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'your-email@gmail.com'  # Replace with your actual email
-app.config['MAIL_PASSWORD'] = 'your-app-password'  # Replace with your app password
-app.config['MAIL_DEFAULT_SENDER'] = ('APSIT Appraisal System', 'your-email@gmail.com')  # Replace with your email
+app.config['MAIL_USERNAME'] = 'appraisal.system.apsit@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'your-app-specific-password'  # Your Gmail App Password
+app.config['MAIL_DEFAULT_SENDER'] = ('APSIT Appraisal System', 'appraisal.system.apsit@gmail.com')
 
-# Initialize Flask-Mail
-mail = Mail(app)
+# Add error handling for email configuration
+try:
+    mail = Mail(app)
+    print("Email configuration initialized successfully")
+except Exception as e:
+    print(f"Error initializing email configuration: {e}")
+    mail = None
 
 # Set allowed file extensions
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif'}
@@ -136,6 +141,10 @@ def generate_verification_token(email):
 # Function to send verification email
 def send_verification_email(email, token):
     try:
+        if not mail:
+            print("Email system not initialized")
+            return False
+            
         verify_url = url_for('verify_email', token=token, _external=True)
         msg = Message('Confirm Your APSIT Appraisal System Registration',
                      recipients=[email])
@@ -149,9 +158,11 @@ This link will expire in 24 hours.
 If you did not register for an account, please ignore this email.
 '''
         mail.send(msg)
+        print(f"Verification email sent successfully to {email}")
         return True
     except Exception as e:
         print(f"Error sending verification email: {e}")
+        return False
         return False
 
 # Function to store verification token in database
@@ -562,39 +573,56 @@ def form_page(form_id):
     department = request.args.get('department')
 
     connection = connect_to_database()
-    with connection.cursor() as cursor:
-        # Fetch department if not provided
-        if not department:
-            cursor.execute("SELECT dept FROM users WHERE userid = %s", (user_id,))
-            dept_result = cursor.fetchone()
-            department = dept_result[0] if dept_result else None
+    try:
+        with connection.cursor() as cursor:
+            # Fetch department if not provided
+            if not department:
+                cursor.execute("SELECT dept FROM users WHERE userid = %s", (user_id,))
+                dept_result = cursor.fetchone()
+                department = dept_result[0] if dept_result else None
 
-        # Fetch teaching process data
-        cursor.execute("""
-            SELECT semester, course_code, classes_scheduled, classes_held,
-                   (classes_held / classes_scheduled) * 5 AS totalpoints
-            FROM teaching_process WHERE form_id = %s
-        """, (form_id,))
-        teaching_data = cursor.fetchall()
+            # Fetch teaching process data
+            cursor.execute("""
+                SELECT semester, course_code, classes_scheduled, classes_held,
+                       (classes_held / classes_scheduled) * 5 AS totalpoints
+                FROM teaching_process WHERE form_id = %s
+            """, (form_id,))
+            teaching_data = cursor.fetchall()
 
-        # Fetch feedback data
-        cursor.execute("""
-            SELECT semester, course_code, total_points, points_obtained, uploads
-            FROM students_feedback WHERE form_id = %s
-        """, (form_id,))
-        feedback_data = cursor.fetchall()
+            # Fetch feedback data
+            cursor.execute("""
+                SELECT semester, course_code, total_points, points_obtained, uploads
+                FROM students_feedback WHERE form_id = %s
+            """, (form_id,))
+            feedback_data = cursor.fetchall()
 
-    # Fetch academic review data
-    cursor.execute("""
-        SELECT srno, academic_review1, academic_review2, avg_score
-        FROM numeric_points_attained
-        WHERE form_id = %s
-        ORDER BY srno
-    """, (form_id,))
-    academic_review_data = cursor.fetchall()
+            # Fetch academic review data
+            cursor.execute("""
+                SELECT srno, academic_review1, academic_review2, avg_score
+                FROM numeric_points_attained
+                WHERE form_id = %s
+                ORDER BY srno
+            """, (form_id,))
+            academic_review_data = cursor.fetchall()
 
-    print('Fetched academic_review_data:', academic_review_data)
-    connection.close()
+            print('Fetched academic_review_data:', academic_review_data)
+
+            return render_template(
+                'from.html',
+                form_id=form_id,
+                user_id=user_id,
+                department=department,
+                teaching_data=teaching_data,
+                feedback_data=feedback_data,
+                academic_review_data=academic_review_data
+            )
+
+    except Exception as e:
+        print(f"Error in form_page: {e}")
+        return "Error loading form data", 500
+    finally:
+        if connection:
+            connection.close()
 
     return render_template(
         'from.html',
@@ -898,6 +926,8 @@ def save_total_point():
         teaching = data['teaching']
         feedback = data['feedback']
 
+        session['current_form_id'] = form_id
+
         connection = connect_to_database()
         cursor = connection.cursor()
 
@@ -924,6 +954,9 @@ def save_total_point():
 
 @app.route('/form2/<int:form_id>')
 def form2_page(form_id):
+
+    session['current_form_id'] = form_id
+
     connection = connect_to_database()
     cursor = connection.cursor()
 
@@ -4522,9 +4555,9 @@ def submit_forgot_password():
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # SMTP server for Gmail
 app.config['MAIL_PORT'] = 587  # Use port 587 for TLS
 app.config['MAIL_USE_TLS'] = True  # Enable TLS
-app.config['MAIL_USERNAME'] = 'mayanksalvi312@gmail.com'  # Your Gmail address
-app.config['MAIL_PASSWORD'] = 'lefj dkdj vkxq mhiu'  # Use an App Password if you have 2FA enabled
-app.config['MAIL_DEFAULT_SENDER'] = 'mayanksalvi312@gmail.com'  # Default sender address
+app.config['MAIL_USERNAME'] = 'facultyappraisal14@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'vydx kmna cxgs yjxp'  # Use an App Password if you have 2FA enabled
+app.config['MAIL_DEFAULT_SENDER'] = 'facultyappraisal14@gmail.com'  # Default sender address
 
 mail = Mail(app)
 
