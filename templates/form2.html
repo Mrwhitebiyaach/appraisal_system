@@ -206,9 +206,29 @@
 <body>
     <!-- Top Right Links -->
     <div class="top-bar">
-       
+        <a href="{{ url_for('form_page', form_id=form_id) }}" class="btn btn-secondary" id="topBackButton">Back to Form 1</a>
         <a href="/logout">Logout</a>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const topBackButton = document.getElementById('topBackButton');
+            if (topBackButton) {
+                topBackButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Get form_id from the URL parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const formId = urlParams.get('form_id');
+                    if (formId) {
+                        window.location.href = '/form/' + formId;
+                    } else {
+                        console.error('Form ID not found in URL parameters');
+                        // Fallback to using the form_id from template rendering
+                        window.location.href = '{{ url_for("form_page", form_id=form_id) }}';
+                    }
+                });
+            }
+        });
+    </script>
 
     <!-- Logo -->
     <a href="/landing" class="logo-link">
@@ -1066,8 +1086,21 @@ function recalculateInstituteRowNumbers() {
         </div>
     </div>
     <div class="text-center my-4">
-        <a href="/form/{{ form_id }}" class="btn btn-secondary">Back to Form 1</a>
+        <a href="{{ url_for('form_page', form_id=form_id) }}" class="btn btn-secondary" id="backToForm1">Back to Form 1</a>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const backButton = document.getElementById('backToForm1');
+                const formIdInput = document.getElementById('formId');
+                if (backButton && formIdInput) {
+                    backButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.location.href = '/form/' + formIdInput.value;
+                    });
+                }
+            });
+        </script>
     </div>
+    <input type="hidden" id="formId" value="{{ form_id }}">
 </body>
 
 </html>
