@@ -97,6 +97,38 @@
     transition: color 0.3s, background-color 0.3s; /* Smooth transition for color changes */
 }
 
+        /* View button styling */
+        .btn-view {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 4px;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .btn-view:hover {
+            background-color: #138496;
+            border-color: #117a8b;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .d-flex {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .file-upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
 
         .total-box span {
             font-size: 24px;
@@ -402,10 +434,14 @@ input[required]:invalid {
                     <td><input type="number" class="form-control total-points" value="{{ row[2] }}" readonly></td>
                     <td><input type="number" class="form-control points-obtained" value="{{ row[3] }}" min="0" max="5" oninput="calculateFeedbackTotal()" required></td>
                     <td>
-                        {% if row.uploads %}
-                        <a href="{{ url_for('static', filename=row.uploads) }}" target="_blank">View Upload</a>
-                        {% endif %}
-                        <input type="file" class="form-control-file">
+                        <div class="file-upload-section">
+                            <input type="file" name="feedback_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                            {% if row[4] and row[4].strip() %}
+                                <button class="btn btn-view" onclick="window.open('/{{ row[4] }}', '_blank')" title="View uploaded document">View</button>
+                            {% else %}
+                                <button class="btn btn-view" disabled title="No document uploaded yet" style="opacity: 0.5; cursor: not-allowed;">View</button>
+                            {% endif %}
+                        </div>
                     </td>
                     <td>
                         <button class="btn btn-danger" onclick="deleteRow(this, 'feedback')">-</button>
