@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appraisal forms</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+.confirmation-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.no-print {
+    display: none !important;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
+
+
+        body {
+            background: url('/static/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+        }
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .top-bar a {
+            margin-left: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .top-bar a:hover {
+            text-decoration: underline;
+            color: #ff9800;
+        }
+        .logo-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .logo-link img {
+            width: 90px;
+            height: auto;
+        }
+        .container {
+            margin-top: 150px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+        }
+        .table-container {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            margin: 0 auto;
+        }
+        .assessment-box {
+            margin-top: 10px;
+        }
+        /* Rating circles styling */
+        .rating-circle {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            text-align: center;
+            line-height: 28px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .rating-circle.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Right Links -->
+    <div class="top-bar">
+        <a href="/principledash">Dashboard</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Logo -->
+    <a href="/principlefaculty" class="logo-link">
+        <img src="/static/logo.png" alt="Logo">
+    </a>
+
+    <!-- Main Content Container -->
+    <div class="container">
+        <h2>Select Academic Year</h2>
+        <h2>Viewing past forms for Faculty name: {{ user_name }} (Faculty ID: {{ user_id }})</h2> <!-- Display name and user ID together -->
+
+        <form id="principle" method="POST" action="/principle_pastforms" onsubmit="return validateForm()">
+
+            <div class="form-group">
+                <label for="academicYear">Academic Year:</label>
+                <select class="form-control" id="academicYear" name="academicYear"></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+<pre></pre>
+
+    <!-- Faculty Details Container - Always show basic faculty info -->
+    <div class="container" style="width: 500px; margin: 20px auto;">
+        <h2 class="text-center mb-4">Faculty Details</h2>
+        <table class="table table-bordered">
+            <tr>
+                <th>Faculty ID</th>
+                <td>{{ user_id }}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ user_name }}</td>
+            </tr>
+            <!-- Always show department from request if available -->
+            <tr>
+                <th>Department</th>
+                <td>{% if user_data is not none %}{{ user_data[2] }}{% elif department %}{{ department }}{% else %}Not Available{% endif %}</td>
+            </tr>
+            
+            <!-- Show additional details if user_data is available -->
+            {% if user_data is not none %}
+            <tr>
+                <th>Email</th>
+                <td>{{ user_data[1] }}</td>
+            </tr>
+            <tr>
+                <th>Designation</th>
+                <td>{{ user_data[4] }}</td>
+            </tr>
+            <tr>
+                <th>Date of Joining</th>
+                <td>{{ user_data[5] }}</td>
+            </tr>
+            <tr>
+                <th>Date of Birth</th>
+                <td>{{ user_data[6] }}</td>
+            </tr>
+            <tr>
+                <th>Educational Qualification</th>
+                <td>{{ user_data[7] }}</td>
+            </tr>
+            <tr>
+                <th>Experience</th>
+                <td>{{ user_data[8] }}</td>
+            </tr>
+            {% endif %}            
+        </table>
+
+        {% if form_id %}
+        <h2 class="text-center mt-4 mb-3">Form Information</h2>
+        <div class="text-center">
+            <p><strong>Form ID:</strong> {{ form_id }}</p>
+            <p><strong>Academic Year:</strong> {{ selected_year }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Display Teaching Data with Assessment -->
+    {% if teaching_data %}
+    <div class="table-container">
+       <!-- <h3 style="color: red; font-weight: bold; text-align: center;">Give assessment according to the marking scheme</h3>-->
+
+
+        <h3>Teaching Process for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Semester</th>
+                    <th>Course Code/Name</th>
+                    <th>Classes Scheduled (S)</th>
+                    <th>Classes Held (H)</th>
+                    <th>Points (H/S) * 5</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in teaching_data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ "%.1f"|format(row[4]|float) if row[4] is not none else '0.0' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">No data available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if academic_review_data %}
+        <div class="table-container">
+            <div class="table-box">
+                <h3 class="table-title">Numeric Points Attained on basis of Academic Review (Max Marks: 20)</h3>
+                <div class="instructions">
+                   
+                </div>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Sr. No.</th>
+                            <th>Academic Review 1</th>
+                            <th>Academic Review 2</th>
+                            <th>Average Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="academicReviewTable">
+                        {% for row in academic_review_data %}
+                        <tr>
+                            <td>{{ row[0] }}</td>
+                            <td>{{ row[1] }}</td>
+                            <td>{{ row[2] }}</td>
+                            <td>{{ row[3] }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">No academic review data available for the selected academic year.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background-color: #ffffff; font-weight: bold;">
+                            
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <tr style="background-color: #f5c6d1; font-weight: bold;">
+            <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+                 Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.teaching }}</span>
+            </td>
+        </tr>
+<pre></pre>
+        <!-- Assessment Input Box -->
+        <div class="assessment-box">
+            <label>Assessment by HOD:</label>
+            <p class="form-control">{{ assessments['hodas1'] }}</p>
+            <div class="mt-2">
+                <label>HOD Remarks:</label>
+                <p class="form-control">{{ assessments['hodfeed1'] }}</p>
+            </div>
+        </div>
+        
+        <div class="assessment-box mt-3">
+            <label>Assessment by Principal:</label>
+            <input type="number" class="form-control" id="prinas1" name="prinas1" min="0" max="25" value="{{ assessments['prinas1'] }}">
+            <div class="mt-2">
+                <label>Principal Remarks:</label>
+                <textarea class="form-control" id="prinfeed1" name="prinfeed1" rows="2">{{ assessments['prinfeed1'] }}</textarea>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+<pre></pre>
+{% if feedback_data %}
+<div class="table-container">
+    <h3>Student Feedback for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Semester</th>
+                <th>Course Code/Name</th>
+                <th>Total Points</th>
+                <th>Points Obtained</th>
+                <th>Uploaded Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in feedback_data %}
+            <tr>
+                <td>{{ row[0] }}</td> <!-- Semester -->
+                <td>{{ row[1] }}</td> <!-- Course Code/Name -->
+                <td>{{ row[2] }}</td> <!-- Total Points -->
+                <td>{{ row[3] }}</td> <!-- Points Obtained -->
+                <td>
+                    {% if row[4] %}
+                        <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}" 
+                           target="_blank" class="btn btn-primary">
+                           View Document
+                        </a>
+                    {% else %}
+                        No Document
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <tr style="background-color: #f5c6d1; font-weight: bold;">
+        <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.feedback }}</span>
+        </td>
+    </tr>
+    <pre></pre>
+        <!-- Assessment Input Box -->
+        <div class="assessment-box">
+            <label>Assessment by HOD:</label>
+            <p class="form-control">{{ assessments['hodas2'] }}</p>
+            <div class="mt-2">
+                <label>HOD Remarks:</label>
+                <p class="form-control">{{ assessments['hodfeed2'] }}</p>
+            </div>
+        </div>
+        
+        <div class="assessment-box mt-3">
+            <label>Assessment by Principal:</label>
+            <input type="number" class="form-control" id="prinas2" name="prinas2" min="0" max="25" value="{{ assessments['prinas2'] }}">
+            <div class="mt-2">
+                <label>Principal Remarks:</label>
+                <textarea class="form-control" id="prinfeed2" name="prinfeed2" rows="2">{{ assessments['prinfeed2'] }}</textarea>
+            </div>
+        </div>
+</div>
+{% endif %}
+
+<pre></pre>
+
+{% if dept_act_data %}
+<div class="table-container">
+    <h3>Department Activities for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Semester</th>
+                <th>Activity</th>
+                <th>Points</th>
+                <th>Order Copy</th>
+                <th>Uploaded Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in dept_act_data %}
+            <tr>
+                <td>{{ row[0] }}</td> <!-- Semester -->
+                <td>{{ row[1] }}</td> <!-- Activity -->
+                <td>{{ row[2] }}</td> <!-- Points -->
+                <td>{{ row[3] }}</td> <!-- Order Copy -->
+                
+                <td>
+                    {% if row[4] %}
+                        <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}" 
+                           target="_blank" class="btn btn-primary">
+                           View Document
+                        </a>
+                    {% else %}
+                        No Document
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No department activities available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <tr style="background-color: #f5c6d1; font-weight: bold;">
+        <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.dept }}</span>
+        </td>
+    </tr>
+    <pre></pre>
+        <!-- Assessment Input Box -->
+        <div class="assessment-box">
+            <label>Assessment by HOD:</label>
+            <p class="form-control">{{ assessments['hodas3'] }}</p>
+            <div class="mt-2">
+                <label>HOD Remarks:</label>
+                <p class="form-control">{{ assessments['hodfeed3'] }}</p>
+            </div>
+        </div>
+        
+        <div class="assessment-box mt-3">
+            <label>Assessment by Principal:</label>
+            <input type="number" class="form-control" id="prinas3" name="prinas3" min="0" max="20" value="{{ assessments['prinas3'] }}">
+            <div class="mt-2">
+                <label>Principal Remarks:</label>
+                <textarea class="form-control" id="prinfeed3" name="prinfeed3" rows="2">{{ assessments['prinfeed3'] }}</textarea>
+            </div>
+        </div>
+</div>
+{% endif %}
+<pre></pre>
+{% if inst_act_data %}
+<div class="table-container">
+    <h3>Institute Activities for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Semester</th>
+                <th>Activity</th>
+                <th>Points</th>
+                <th>Order Copy</th>
+                <th>Uploaded Document</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in inst_act_data %}
+            <tr>
+                <td>{{ row[0] }}</td> <!-- Semester -->
+                <td>{{ row[1] }}</td> <!-- Activity -->
+                <td>{{ row[2] }}</td> <!-- Points -->
+                <td>{{ row[3] }}</td> <!-- Order Copy -->
+                <td>
+                    {% if row[4] %}
+                        <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}" 
+                           target="_blank" class="btn btn-primary">
+                           View Document
+                        </a>
+                    {% else %}
+                        No Document
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No institute activities available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <tr style="background-color: #f5c6d1; font-weight: bold;">
+        <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.institute }}</span>
+        </td>
+    </tr>
+    <pre></pre>
+    <div class="assessment-box">
+        <label>Assessment by HOD:</label>
+        <p class="form-control">{{ assessments['hodas4'] }}</p>
+        <div class="mt-2">
+            <label>HOD Remarks:</label>
+            <p class="form-control">{{ assessments['hodfeed4'] }}</p>
+        </div>
+    </div>
+    
+    <div class="assessment-box mt-3">
+        <label>Assessment by Principal:</label>
+        <input type="number" class="form-control" id="prinas4" name="prinas4" min="0" max="10" value="{{ assessments['prinas4'] }}">
+        <div class="mt-2">
+            <label>Principal Remarks:</label>
+            <textarea class="form-control" id="prinfeed4" name="prinfeed4" rows="2">{{ assessments['prinfeed4'] }}</textarea>
+        </div>
+    </div>
+
+</div>
+{% endif %}
+ <pre></pre>
+
+   <!-- Papers Published in Conference -->
+   {% if self_improvement_data %}
+   <div class="table-container">
+       <h3>Papers Published in National/International Conference for Academic Year: {{ selected_year }}</h3>
+       <table class="table table-striped">
+           <thead>
+               <tr>
+                   <th>Sr. No.</th>
+                   <th>Title of Paper</th>
+                   <th>Month/Year</th>
+                   <th>Conference Name</th>
+                   <th>ISBN/ISSN</th>
+                   <th>Co-authors</th>
+                   <th>Impact Factor</th>
+                   <th>Citations</th>
+                   <th>Rating</th>
+                   <th>Document</th>
+               </tr>
+           </thead>
+           <tbody>
+               {% for row in self_improvement_data %}
+               <tr>
+                   <td>{{ row[0] }}</td>
+                   <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                   <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                   <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                   <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                   <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                   <td>{{ row[6] if row[6] else 'N/A' }}</td>
+                   <td>{{ row[7] if row[7] else 'N/A' }}</td>
+                   <td>{{ row[8] if row[8] else 'N/A' }}</td>
+                   <td>
+                       {% if row[9] %}
+                           <a href="{{ url_for('uploaded_file', filename=row[9].split('/')[-1]) }}"
+                              target="_blank" class="btn btn-primary">
+                              View Document
+                           </a>
+                       {% else %}
+                           <span class="text-muted">No Document</span>
+                       {% endif %}
+                   </td>
+               </tr>
+               {% else %}
+               <tr>
+                   <td colspan="10" class="no-data">No conference papers available for the selected academic year.</td>
+               </tr>
+               {% endfor %}
+           </tbody>
+       </table>
+   </div>
+   {% endif %}
+
+      <pre></pre>
+      
+
+
+<!-- Copyright Published -->
+{% if copyright_data %}
+<div class="table-container">
+  <h3>Copyright Published for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Title Name</th>
+              <th>Month/Year</th>
+              <th>Registration Number</th>
+              <th>Status</th>
+              <th>Category</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in copyright_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>
+                  <span class="badge {% if row[4] == 'Granted' %}bg-success{% elif row[4] == 'Published' %}bg-info{% else %}bg-warning{% endif %}">
+                      {{ row[4] if row[4] else 'N/A' }}
+                  </span>
+              </td>
+              <td>{{ row[5] if row[5] else 'N/A' }}</td>
+              <td>
+                  {% if row[6] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[6].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="7" class="no-data">No copyright records available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Patent Published -->
+{% if patent_data %}
+<div class="table-container">
+  <h3>Patent Published for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Title Name</th>
+              <th>Month/Year</th>
+              <th>Registration Number</th>
+              <th>Status</th>
+              <th>Category</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in patent_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>
+                  <span class="badge {% if row[4] == 'Granted' %}bg-success{% elif row[4] == 'Published' %}bg-info{% else %}bg-warning{% endif %}">
+                      {{ row[4] if row[4] else 'N/A' }}
+                  </span>
+              </td>
+              <td>{{ row[5] if row[5] else 'N/A' }}</td>
+              <td>
+                  {% if row[6] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[6].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="7" class="no-data">No patent records available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Short-term Training Programs/FDPs -->
+{% if training_data %}
+<div class="table-container">
+  <h3>Short-term Training Programs/FDPs for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Program Name</th>
+              <th>Technology</th>
+              <th>Duration</th>
+              <th>Date Range</th>
+              <th>Organizing Institute</th>
+              <th>Mode</th>
+              <th>Certificate</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in training_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>{{ row[4] if row[4] else 'N/A' }}</td>
+              <td>{{ row[5] if row[5] else 'N/A' }}</td>
+              <td>
+                  <span class="badge {% if row[6] == 'Online' %}bg-primary{% else %}bg-success{% endif %}">
+                      {{ row[6] if row[6] else 'N/A' }}
+                  </span>
+              </td>
+              <td>
+                  {% if row[7] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Certificate
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Certificate</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="8" class="no-data">No training programs available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- MOOCS -->
+{% if moocs_data %}
+<div class="table-container">
+  <h3>MOOCS for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Course Name</th>
+              <th>Month/Year</th>
+              <th>Duration</th>
+              <th>Certification Status</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in moocs_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>
+                  <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
+                      {{ row[4] if row[4] else 'N/A' }}
+                  </span>
+              </td>
+              <td>
+                  {% if row[5] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="6" class="no-data">No MOOCS courses available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- SWAYAM NPTEL -->
+{% if swayam_data %}
+<div class="table-container">
+  <h3>SWAYAM NPTEL for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Course Name</th>
+              <th>Month/Year</th>
+              <th>Duration</th>
+              <th>Certification Status</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in swayam_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>
+                  <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
+                      {{ row[4] if row[4] else 'N/A' }}
+                  </span>
+              </td>
+              <td>
+                  {% if row[5] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="6" class="no-data">No SWAYAM NPTEL courses available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Seminars/Webinars -->
+{% if webinar_data %}
+<div class="table-container">
+  <h3>Seminars/Webinars for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Name</th>
+              <th>Technology</th>
+              <th>Duration</th>
+              <th>Date Range</th>
+              <th>Type</th>
+              <th>Institute</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in webinar_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>{{ row[4] if row[4] else 'N/A' }}</td>
+              <td>
+                  <span class="badge {% if row[5] == 'External' %}bg-primary{% else %}bg-info{% endif %}">
+                      {{ row[5] if row[5] else 'N/A' }}
+                  </span>
+              </td>
+              <td>{{ row[6] if row[6] else 'N/A' }}</td>
+              <td>
+                  {% if row[7] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="8" class="no-data">No seminars/webinars available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Global Certification -->
+{% if certification_data %}
+<div class="table-container">
+  <h3>Global Certification for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Certification Name</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in certification_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>
+                  {% if row[2] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[2].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Certificate
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Certificate</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="3" class="no-data">No global certifications available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Resource Person Activities -->
+{% if resource_data %}
+<div class="table-container">
+  <h3>Resource Person in STTP/Training/Lecture Talks for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Topic Name</th>
+              <th>Department</th>
+              <th>Institute Name</th>
+              <th>Participants</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in resource_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>{{ row[4] if row[4] else 'N/A' }}</td>
+              <td>
+                  {% if row[5] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="6" class="no-data">No resource person activities available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- University Committee -->
+{% if committee_data %}
+<div class="table-container">
+  <h3>Member of University Committee for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Committee Name</th>
+              <th>Roles and Responsibilities</th>
+              <th>Designation</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in committee_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>
+                  {% if row[4] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="5" class="no-data">No university committee memberships available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- External Projects -->
+{% if project_data %}
+<div class="table-container">
+  <h3>External Projects/Task Force/Exchange Programs for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Role</th>
+              <th>Description</th>
+              <th>Contribution</th>
+              <th>University</th>
+              <th>Duration</th>
+              <th>Comments</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in project_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>{{ row[3] if row[3] else 'N/A' }}</td>
+              <td>{{ row[4] if row[4] else 'N/A' }}</td>
+              <td>{{ row[5] if row[5] else 'N/A' }}</td>
+              <td>{{ row[6] if row[6] else 'N/A' }}</td>
+              <td>
+                  {% if row[7] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="8" class="no-data">No external projects available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Special Mentions -->
+{% if special_mentions_data %}
+<div class="table-container">
+  <h3>Special Mentions for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Name</th>
+              <th>Roles and Responsibilities</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in special_mentions_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>
+                  {% if row[3] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="4" class="no-data">No special mentions available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Conference/Journal Committee -->
+{% if conference_committee_data %}
+<div class="table-container">
+  <h3>Member of Conference/Journal Committee for Academic Year: {{ selected_year }}</h3>
+  <table class="table table-striped">
+      <thead>
+          <tr>
+              <th>Sr. No.</th>
+              <th>Conference/Journal Name</th>
+              <th>Designation</th>
+              <th>Document</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for row in conference_committee_data %}
+          <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] if row[1] else 'N/A' }}</td>
+              <td>{{ row[2] if row[2] else 'N/A' }}</td>
+              <td>
+                  {% if row[3] %}
+                      <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
+                         target="_blank" class="btn btn-primary">
+                         View Document
+                      </a>
+                  {% else %}
+                      <span class="text-muted">No Document</span>
+                  {% endif %}
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="4" class="no-data">No conference/journal committee memberships available for the selected academic year.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endif %}
+
+            <tr style="background-color: #f5c6d1; font-weight: bold;">
+                <td colspan="5" style="padding: 0; width: 100%;">
+                    <div style="
+                        display: flex;
+                        justify-content: center; /* Align horizontally */
+                        align-items: center; /* Align vertically if needed */
+                        min-height: 50px; /* Optional: Add height */
+                    ">
+                        <div style="
+                            background-color: white;
+                            padding: 10px;
+                            border-radius: 5px;
+                            font-size: 1.2rem;
+                            color: #ed0000;
+                            text-align: center;
+                        ">
+                            ACR Total = <span>{{ points_data.acr }}</span>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <div class="assessment-box d-flex flex-column align-items-center mt-3" 
+     style="
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 400px; /* Fixed width */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional shadow for aesthetics */
+        margin: 0 auto; /* Center horizontally */
+     ">
+     <div class="assessment-box">
+        <label>Assessment by HOD:</label>
+        <p class="form-control">{{ assessments['hodas5'] }}</p>
+        <div class="mt-2">
+            <label>HOD Remarks:</label>
+            <p class="form-control">{{ assessments['hodfeed5'] }}</p>
+        </div>
+    </div>
+    
+    <div class="assessment-box mt-3">
+        <label>Assessment by Principal:</label>
+        <input type="number" class="form-control" id="prinas5" name="prinas5" min="0" max="10" value="{{ assessments['prinas5'] }}">
+        <div class="mt-2">
+            <label>Principal Remarks:</label>
+            <textarea class="form-control" id="prinfeed5" name="prinfeed5" rows="2">{{ assessments['prinfeed5'] }}</textarea>
+        </div>
+    </div>
+</div>
+
+            
+            
+            <pre></pre>
+
+ <!-- Faculty Performance Rating Table -->
+ <div class="table-container" style="margin-top: 30px;">
+    <h3 class="mb-4">Faculty Performance Rating</h3>
+    <div class="alert alert-info">
+        <p>HOD assessment of faculty based on these parameters (5: Excellent, 4: Very Good, 3: Good, 2: Fair, 1: Average)</p>
+    </div>
+    
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th style="width: 5%;">Sr No</th>
+                <th style="width: 45%;">Parameter</th>
+                <th style="width: 10%;">Excellent</th>
+                <th style="width: 10%;">Very Good</th>
+                <th style="width: 10%;">Good</th>
+                <th style="width: 10%;">Fair</th>
+                <th style="width: 10%;">Average</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Openness to adopt/experiment new policies</td>
+                <td class="text-center"><span class="rating-circle" data-row="1" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="1" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="1" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="1" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="1" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Professional knowledge</td>
+                <td class="text-center"><span class="rating-circle" data-row="2" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="2" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="2" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="2" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="2" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Attitude & ownership towards work</td>
+                <td class="text-center"><span class="rating-circle" data-row="3" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="3" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="3" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="3" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="3" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Proactive Initiative in Department Activities</td>
+                <td class="text-center"><span class="rating-circle" data-row="4" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="4" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="4" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="4" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="4" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Written & verbal power of expression</td>
+                <td class="text-center"><span class="rating-circle" data-row="5" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="5" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="5" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="5" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="5" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Potential working in a team</td>
+                <td class="text-center"><span class="rating-circle" data-row="6" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="6" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="6" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="6" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="6" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>Organizing capability</td>
+                <td class="text-center"><span class="rating-circle" data-row="7" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="7" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="7" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="7" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="7" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td>Loyalty towards work and organization</td>
+                <td class="text-center"><span class="rating-circle" data-row="8" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="8" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="8" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="8" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="8" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td>Quality of interaction with students</td>
+                <td class="text-center"><span class="rating-circle" data-row="9" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="9" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="9" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="9" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="9" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td>Regularity and Attendance</td>
+                <td class="text-center"><span class="rating-circle" data-row="10" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="10" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="10" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="10" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle" data-row="10" data-rating="1">1</span></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="7" class="text-right">
+                    <strong>Total Score: <span id="totalRatingScore">0</span></strong>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7" class="text-right">
+                    <strong>Score out of 10 = Total Score/5 = <span id="averageRatingScore">0</span> (This will be considered as assessment by HOD)</strong>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+
+            <pre></pre>
+
+            {% if contribution_data %}
+<div class="table-container">
+<h3>Contributions to Society for Academic Year: {{ selected_year }}</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Semester</th>
+            <th>Activity</th>
+            <th>Points</th>
+            <th>Order Copy</th>
+            <th>Details</th>
+            <th>Uploaded Document</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in contribution_data %}
+        <tr>
+            <td>{{ row[0] }}</td>  <!-- Semester -->
+            <td>{{ row[1] }}</td>  <!-- Activity -->
+            <td>{{ row[2] }}</td>  <!-- Points -->
+            <td>{{ row[3] }}</td>  <!-- Order Copy -->
+            <td>{{ row[4] }}</td>  <!-- Details -->
+            <td>
+                {% if row[5] %}
+                    <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}" target="_blank" class="btn btn-primary">
+                       View Document
+                    </a>
+                {% else %}
+                    No Document
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+                    </tbody>
+                </table>
+                <tr style="background-color: #f5c6d1; font-weight: bold;">
+                    <td colspan="6" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+                         Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.society|float|round(2) }}</span>
+                    </td>
+                </tr>
+                <pre></pre>
+                <div class="assessment-box">
+                    <label>Assessment by HOD:</label>
+                    <p class="form-control">{{ assessments['hodas6']|float|round(2) }}</p>
+                    <div class="mt-2">
+                        <label>HOD Remarks:</label>
+                        <p class="form-control">{{ assessments['hodfeed6'] }}</p>
+                    </div>
+                </div>
+                <div class="assessment-box mt-3">
+                    <label>Assessment by Principal:</label>
+                    <input type="number" class="form-control principal-input" id="prinas6" name="prinas6" min="0" max="10" value="{{ assessments['prinas6'] }}">
+                    <div class="mt-2">
+                        <label>Principal Remarks:</label>
+                        <textarea class="form-control" id="prinfeed6" name="prinfeed6" rows="2">{{ assessments['prinfeed6'] }}</textarea>
+                    </div>
+                </div>
+                
+            </div>
+            {% endif %}
+            
+ <pre></pre>    
+
+
+<style>
+    .rating-circle {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+        text-align: center;
+        line-height: 30px;
+        cursor: default; /* Read-only */
+        font-weight: bold;
+        color: #333;
+    }
+    .rating-circle.selected {
+        background-color: #007bff;
+        color: white;
+    }
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.7);
+        z-index: 1000;
+        display: none;
+    }
+    .loading-overlay.show {
+        display: block;
+    }
+    .loading-overlay .loading-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="loading-overlay">
+    <div class="loading-message">Loading...</div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- All other HTML content should be above this -->
+
+<!-- Move all scripts to the bottom of the body -->
+<script>
+    // Store user_id in a global variable
+    window.USER_ID = '{{ user_id }}';
+    
+    // Initialize when document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Document loaded, user ID:', window.USER_ID);
+        
+        // Initialize loading overlay
+        const loadingOverlay = document.querySelector('.loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
+        
+        // Debug: Log all button clicks
+        document.addEventListener('click', function(e) {
+            console.log('Clicked element:', e.target);
+        });
+        
+        // Set up confirm button
+        const confirmBtn = document.getElementById('confirmApproveBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', generatePDFAndApprove);
+            console.log('Confirm button event listener added');
+        } else {
+            console.error('Confirm button not found!');
+        }
+    });
+
+    // CRITICAL FIX: Use Flask template injection to pass data from backend
+    window.hod_ratings = {{ hod_ratings | tojson | safe }};
+    console.log("Received window.hod_ratings from backend:", window.hod_ratings);
+
+    // Create hodRatings object with proper defaults
+    const hodRatings = {
+        r1: window.hod_ratings.r1 || 0,
+        r2: window.hod_ratings.r2 || 0,
+        r3: window.hod_ratings.r3 || 0,
+        r4: window.hod_ratings.r4 || 0,
+        r5: window.hod_ratings.r5 || 0,
+        r6: window.hod_ratings.r6 || 0,
+        r7: window.hod_ratings.r7 || 0,
+        r8: window.hod_ratings.r8 || 0,
+        r9: window.hod_ratings.r9 || 0,
+        r10: window.hod_ratings.r10 || 0,
+        r_avg: window.hod_ratings.r_avg || 0
+    };
+
+    // Highlight the selected rating circles based on ratings from backend
+    document.addEventListener('DOMContentLoaded', function() {
+        for (let i = 1; i <= 10; i++) {
+            const ratingValue = window.hod_ratings['r' + i] || 0;
+            if (ratingValue > 0) {
+                const selector = '.rating-circle[data-row="' + i + '"][data-rating="' + ratingValue + '"]';
+                const ratingElem = document.querySelector(selector);
+                if (ratingElem) {
+                    ratingElem.classList.add('selected');
+                }
+            }
+        }
+    });
+
+
+    // Function to populate ratings from backend data
+    function populateRatingsFromBackend() {
+        console.log("Populating ratings from backend data:", hodRatings);
+        
+        let totalSum = 0;
+        
+        // Loop through ratings r1 to r10
+        for (let i = 1; i <= 10; i++) {
+            const ratingKey = `r${i}`;
+            let ratingValue = hodRatings[ratingKey];
+            
+            // Convert to number if possible
+            if (ratingValue !== null && ratingValue !== undefined) {
+                ratingValue = parseInt(ratingValue);
+            }
+            
+            if (!isNaN(ratingValue) && ratingValue > 0) {
+                totalSum += ratingValue;
+                
+                // Remove any existing selections for this row
+                document.querySelectorAll(`.rating-circle[data-row="${i}"]`).forEach(circle => {
+                    circle.classList.remove("selected");
+                });
+                
+                // Select the appropriate rating circle
+                const targetCircle = document.querySelector(`.rating-circle[data-row="${i}"][data-rating="${ratingValue}"]`);
+                if (targetCircle) {
+                    targetCircle.classList.add("selected");
+                    console.log(`Set rating for row ${i}: ${ratingValue}`);
+                } else {
+                    console.error(`Could not find circle for row ${i}, rating ${ratingValue}`);
+                }
+            }
+        }
+        
+        // Update the total score display
+        document.getElementById("totalRatingScore").textContent = totalSum;
+        
+        // Use r_avg from backend or calculate from total
+        let avgScore = hodRatings.r_avg;
+        if (avgScore !== null && avgScore !== undefined) {
+            avgScore = parseFloat(avgScore);
+        } else {
+            avgScore = totalSum / 5;
+        }
+        
+        document.getElementById("averageRatingScore").textContent = avgScore.toFixed(1);
+        
+        console.log("Final totals - Sum:", totalSum, "Average:", avgScore);
+    }
+    
+    // Initialize when document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Document ready, initializing faculty ratings...");
+        
+        // Make all rating circles unclickable (read-only mode)
+        document.querySelectorAll(".rating-circle").forEach(circle => {
+            circle.style.cursor = "default";
+        });
+        
+        // Populate ratings from backend data
+        populateRatingsFromBackend();
+    });
+</script>
+<script>
+    // --- ACR HOD Score Calculation and HOD Total Update ---
+    function updateAcrHodScoreAndTotal() { // Wrapped code block in a function for correct JS syntax
+        // Get HOD ACR assessment from backend (Flask injects as JS variable)
+        var hodas5 = (typeof assessments !== 'undefined' && assessments['hodas5']) ? parseFloat(assessments['hodas5']) : 0;
+        // Get averageRatingScore from DOM (set by rating JS)
+        // Get the averageRatingScore as shown to the user (from DOM only)
+        var avgRatingElem = document.getElementById('averageRatingScore');
+        var avgRating = avgRatingElem ? parseFloat(avgRatingElem.textContent) : 0;
+        // ACR HOD score now comes from backend (finalacr_value), so this JS is disabled.
+        // (Old calculation removed)
+        // Debug log removed.
+
+        // Update HOD total (sum all HOD columns, using new acrHodScore for ACR)
+        var hodas = [
+            (typeof assessments !== 'undefined' && assessments['hodas1']) ? parseFloat(assessments['hodas1']) : 0,
+            (typeof assessments !== 'undefined' && assessments['hodas2']) ? parseFloat(assessments['hodas2']) : 0,
+            (typeof assessments !== 'undefined' && assessments['hodas3']) ? parseFloat(assessments['hodas3']) : 0,
+            (typeof assessments !== 'undefined' && assessments['hodas4']) ? parseFloat(assessments['hodas4']) : 0,
+            acrHodScore,
+            (typeof assessments !== 'undefined' && assessments['hodas6']) ? parseFloat(assessments['hodas6']) : 0
+        ];
+        var hodTotal = hodas.reduce((a, b) => a + b, 0);
+        hodTotal = Math.round(hodTotal * 100) / 100;
+        var hodTotalElem = document.getElementById('hodTotalScore');
+        if (hodTotalElem) hodTotalElem.textContent = hodTotal.toFixed(2);
+        // Debug log
+        console.log('ACR HOD Score:', acrHodScore, 'HOD Total:', hodTotal, 'HODAS5:', hodas5, 'r_avg:', avgRating);
+
+    }
+
+    // Ensure this runs after all scores are set
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded');
+        // Initialize acrHodScore if not defined
+        if (typeof acrHodScore === 'undefined') {
+            window.acrHodScore = 0;
+        }
+        setTimeout(updateAcrHodScoreAndTotal, 400); // Wait for avgRatingScore to be set by other JS
+    });
+</script>
+ <pre></pre>
+ 
+ {% if points_data %}
+<div class="table-container">
+    <h3>Final Score:</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Criteria</th>
+                <th>Maximum Points</th>
+                <th>Points Earned</th>
+                <th>Points Given by Head of the Department</th>
+                <th>Points Given by Principal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Teaching Process</td>
+                <td>25</td>
+                <td>{{ points_data['teaching']|float|round(2) }}</td>
+                <td class="hod-score">{{ assessments['hodas1']|float|round(2) }}</td>
+                <td class="principal-score" id="princScore1">{{ assessments['prinas1']|float|round(2) }}</td>
+            </tr>
+            <tr>
+                <td>Students' Feedback</td>
+                <td>25</td>
+                <td>{{ points_data['feedback']|float|round(2) }}</td>
+                <td class="hod-score">{{ assessments['hodas2']|float|round(2) }}</td>
+                <td class="principal-score" id="princScore2">{{ assessments['prinas2']|float|round(2) }}</td>
+            </tr>
+            <tr>
+                <td>Departmental Activities</td>
+                <td>20</td>
+                <td>{{ points_data['dept']|float|round(2) }}</td>
+                <td class="hod-score">{{ assessments['hodas3']|float|round(2) }}</td>
+                <td class="principal-score" id="princScore3">{{ assessments['prinas3']|float|round(2) }}</td>
+            </tr>
+            <tr>
+                <td>Institute Activity</td>
+                <td>10</td>
+                <td>{{ points_data['institute']|float|round(2) }}</td>
+                <td class="hod-score">{{ assessments['hodas4']|float|round(2) }}</td>
+                <td class="principal-score" id="princScore4">{{ assessments['prinas4']|float|round(2) }}</td>
+            </tr>
+            <tr>
+                <td>ACR</td>
+                <td>10</td>
+                <td>{{ points_data['acr']|float|round(2) }}</td>
+                <td class="hod-score">{{ finalacr_value|float|round(2) }}</td>
+                <td class="principal-score" id="princScore5">{{ assessments['prinas5']|float|round(2) }}</td>
+            </tr>
+            <tr>
+                <td>Contribution to Society</td>
+                <td>10</td>
+                <td>{{ points_data['society']|float|round(2) }}</td>
+                <td class="hod-score">{{ assessments['hodas6']|float|round(2) }}</td>
+                <td class="principal-score" id="princScore6">{{ assessments['prinas6']|float|round(2) }}</td>
+            </tr>
+            <tr>
+                <th>Total</th>
+                <th>100</th>
+                <th>{{ (points_data['teaching']|float + points_data['feedback']|float + points_data['dept']|float 
+                    + points_data['institute']|float + points_data['acr']|float + points_data['society']|float)|round(2) }}</th>
+                <th id="hodTotalScore">0.00</th>
+                <th id="princTotalScore">{{ (assessments['prinas1']|float + assessments['prinas2']|float + assessments['prinas3']|float 
+                    + assessments['prinas4']|float + assessments['prinas5']|float + assessments['prinas6']|float)|round(2) }}</th>
+            </tr>
+        </tbody>
+    </table>
+<script>
+function updateHodTotal() {
+    // Get all HOD score cells
+    var hodCells = document.querySelectorAll('.hod-score');
+    var total = 0;
+    
+    // Calculate total from cells
+    hodCells.forEach(function(cell) {
+        var val = parseFloat(cell.textContent) || 0;
+        total += val;
+    });
+    
+    // Update the total cell
+    var totalCell = document.getElementById('hodTotalScore');
+    if (totalCell) {
+        totalCell.textContent = total.toFixed(2);
+    }
+}
+
+// Run after a short delay to ensure all content is loaded
+setTimeout(updateHodTotal, 100);
+
+// Also run when the page is fully loaded
+window.addEventListener('load', function() {
+    updateHodTotal();
+});
+
+// Run one more time after everything else has had a chance to run
+setTimeout(updateHodTotal, 500);
+</script>
+
+    <!-- Principal Feedback Section -->
+<div class="assessment-box mt-4">                  
+    <label for="principalFeedback">Overall Principal Feedback:</label>                  
+    <textarea class="form-control" id="principalFeedback" name="principalFeedback" rows="4">{{ assessments['principle_feedback'] }}</textarea>          
+</div>                
+
+<div class="text-center mt-4 mb-4">                  
+    <button type="button" id="savePrincipalAssessment" class="btn btn-primary mr-3">Save Assessment</button>                  
+    <button type="button" id="submitPrincipalAssessment" class="btn btn-success mr-3">Submit Final Assessment</button>                  
+    <button type="button" id="printButton" class="btn btn-info" onclick="window.print()">Print Assessment</button>          
+</div>           
+
+<!-- HOD Feedback Section -->           
+<div class="container mt-5">              
+    <div class="assessment-box">                      
+        <label>Feedback by Head of the Department:</label>                      
+        <p>{{ assessments['hod_feedback'] }}</p>              
+    </div>      
+</div>
+
+
+    <div class="text-center mt-4">
+    <!-- Approve button is NOT inside a form -->
+    <button type="button" class="btn btn-primary" id="approveBtn" style="
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;">
+        <i class="fas fa-check"></i> Approve
+    </button>
+<script>
+// Attach only ONE event handler for Approve button (no inline onclick)
+document.getElementById('approveBtn').onclick = function(event) {
+    if (event) event.preventDefault();
+    const btn = this;
+    console.log('Approve clicked');
+    btn.disabled = true; // Prevent double click
+    fetch('/giveappraisal', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            user_id: "{{ user_id }}",
+            form_id: "{{ form_id }}",
+            acad_years: "{{ selected_year }}"
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(data => {
+        console.log(data);
+        btn.disabled = false;
+        if (data.status === 'success' || (data.message && data.message.includes('email sent'))) {
+            alert('Appraisal approved and email sent!');
+        } else {
+            alert(' ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        alert('Error: ' + err);
+    });
+};
+</script>
+<!-- Ensure there is NO other approveAndEmail or similar handler attached anywhere else -->
+        <a href="/principlefaculty" class="btn btn-primary">
+            <i class="fas fa-home"></i> Home
+        </a>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 5px; text-align: center;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-2">Processing your request...</p>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <!-- Confirmation Dialog -->
+    <!-- Confirmation Dialog (initially hidden) -->
+    <div id="confirmDialog" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;" class="confirmation-dialog">
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; margin: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+            <div style="font-size: 48px; color: #f39c12; margin-bottom: 15px;">⚠️</div>
+            <h3 style="color: #2c3e50; margin-bottom: 20px; font-size: 22px; font-weight: 600;">Confirm Approval</h3>
+            <p style="font-size: 16px; color: #34495e; margin-bottom: 20px; line-height: 1.5;">
+                Are you sure you want to approve this appraisal?
+            </p>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: left;">
+                <p style="font-weight: 600; color: #2c3e50; margin-bottom: 10px;">This action will:</p>
+                <ul style="margin: 0; padding-left: 20px; color: #34495e;">
+                    <li style="margin-bottom: 8px; position: relative; padding-left: 10px;">
+                        <i class="fas fa-file-pdf" style="color: #e74c3c; margin-right: 8px;"></i>
+                        Generate a PDF of this page
+                    </li>
+                    <li style="margin-bottom: 8px; position: relative; padding-left: 10px;">
+                        <i class="fas fa-paper-plane" style="color: #3498db; margin-right: 8px;"></i>
+                        Email the PDF to the faculty member
+                    </li>
+                    <li style="margin-bottom: 8px; position: relative; padding-left: 10px;">
+                        <i class="fas fa-check-circle" style="color: #2ecc71; margin-right: 8px;"></i>
+                        Mark the appraisal as officially approved
+                    </li>
+                </ul>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
+                <button id="confirmApproveBtn" style="
+                    background: #2ecc71;
+                    color: white;
+                    border: none;
+                    padding: 12px 25px;
+                    border-radius: 6px;
+                    font-size: 16px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.3s ease;
+                    margin-right: 10px;
+                " type="button">
+                    <i class="fas fa-check-circle"></i>
+                    Approve & Send
+                </button>
+
+                <button onclick="hideConfirmDialog()" style="
+                    background: #95a5a6;
+                    color: white;
+                    border: none;
+                    padding: 12px 25px;
+                    border-radius: 6px;
+                    font-size: 16px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.3s ease;
+                ">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay no-print" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 10px;">Generating PDF and sending email...</p>
+    </div>
+
+
+{% endif %}
+<pre></pre>
+<script>
+    // Ensure USER_ID is available globally
+    window.USER_ID = window.USER_ID || '{{ user_id }}';
+
+    function showConfirmDialog(userId) {
+        console.log('showConfirmDialog called with userId:', userId);
+        if (confirm('Are you sure you want to approve this assessment? A PDF will be generated and emailed to the faculty member.')) {
+            // Proceed directly 
+            hideConfirmDialog();
+        }
+    }
+
+    function hideConfirmDialog() {
+        const dialog = document.getElementById('confirmDialog');
+        if (dialog) {
+            dialog.style.opacity = '0';
+            setTimeout(() => {
+                dialog.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    // Initialize when DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded - initializing event listeners');
+        
+        // 1. Handle Approve button click
+        const approveBtn = document.getElementById('approveBtn');
+        if (approveBtn) {
+            console.log('Approve button found, adding click handler');
+            approveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Approve button clicked');
+                const userId = this.dataset.userId || window.USER_ID || '{{ user_id }}';
+                console.log('User ID:', userId);
+                showConfirmDialog(userId);
+                return false;
+            });
+        } else {
+            console.error('Approve button not found in DOM');
+        }
+        
+        // 2. Handle Confirm Approve button in dialog
+        const confirmApproveBtn = document.getElementById('confirmApproveBtn');
+        if (confirmApproveBtn) {
+            console.log('Confirm Approve button found, adding click handler');
+            confirmApproveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Confirm Approve button clicked');
+                generatePDFAndApprove();
+                return false;
+            });
+        } else {
+            console.error('Confirm Approve button not found in DOM');
+        }
+        
+        // 3. Handle dialog close events
+        const dialog = document.getElementById('confirmDialog');
+        if (dialog) {
+            // Close when clicking outside dialog
+            dialog.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    console.log('Clicked outside dialog, closing');
+                    hideConfirmDialog();
+                }
+            });
+            
+            // Close with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    console.log('Escape key pressed, closing dialog');
+                    hideConfirmDialog();
+                }
+            });
+        } else {
+            console.error('Confirmation dialog not found in DOM');
+        }
+    });
+
+    function collectAssessmentData() {
+        console.log('Starting to collect assessment data...');
+        // Collect principal assessments
+        const principalAssessments = {};
+        for (let i = 1; i <= 6; i++) {
+            const scoreElement = document.getElementById(`prinas${i}`);
+            const remarksElement = document.getElementById(`prinfeed${i}`);
+            principalAssessments[`assessment_${i}`] = {
+                score: scoreElement ? scoreElement.value : '',
+                remarks: remarksElement ? remarksElement.value : ''
+            };
+        }
+        console.log('Collected principal assessments:', principalAssessments);
+
+        // Collect faculty performance ratings
+        const ratings = {};
+        try {
+            document.querySelectorAll('.rating-circle.selected').forEach(circle => {
+                const row = circle.getAttribute('data-row');
+                const rating = circle.getAttribute('data-rating');
+                if (row && rating) {
+                    ratings[`rating_${row}`] = parseInt(rating);
+                }
+            });
+            console.log('Collected ratings:', ratings);
+
+            // Calculate total and average ratings
+            const ratingValues = Object.values(ratings);
+            const totalRating = ratingValues.reduce((sum, val) => sum + val, 0);
+            const averageRating = ratingValues.length > 0 ? (totalRating / 5).toFixed(1) : 0;
+            
+            ratings.total = totalRating;
+            ratings.average = averageRating;
+        } catch (e) {
+            console.warn('Error collecting ratings:', e);
+        }
+
+        // Helper function to find table by header text
+        const findTableByHeader = (headerText) => {
+            const tables = document.getElementsByTagName('table');
+            for (const table of tables) {
+                const headers = table.getElementsByTagName('th');
+                for (const header of headers) {
+                    if (header.textContent.includes(headerText)) {
+                        return table;
+                    }
+                }
+            }
+            return null;
+        };
+
+        // Collect teaching data (if available)
+        const teachingData = [];
+        try {
+            const teachingTable = findTableByHeader('Course Code/Name');
+            if (teachingTable) {
+                const rows = teachingTable.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 5) {
+                        teachingData.push([
+                            cells[0].textContent.trim(),
+                            cells[1].textContent.trim(),
+                            cells[2].textContent.trim(),
+                            cells[3].textContent.trim(),
+                            cells[4].textContent.trim()
+                        ]);
+                    }
+                });
+            }
+            console.log('Collected teaching data:', teachingData);
+        } catch (e) {
+            console.warn('Error collecting teaching data:', e);
+        }
+
+        // Collect feedback data (if available)
+        const feedbackData = [];
+        try {
+            const feedbackTable = findTableByHeader('Feedback');
+            if (feedbackTable) {
+                const rows = feedbackTable.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 4) {
+                        feedbackData.push([
+                            cells[0].textContent.trim(),
+                            cells[1].textContent.trim(),
+                            cells[2].textContent.trim(),
+                            cells[3].textContent.trim()
+                        ]);
+                    }
+                });
+            }
+            console.log('Collected feedback data:', feedbackData);
+        } catch (e) {
+            console.warn('Error collecting feedback data:', e);
+        }
+
+        return {
+            principal_assessments: principalAssessments,
+            ratings: ratings,
+            teaching: teachingData.length > 0 ? teachingData : null,
+            feedback: feedbackData.length > 0 ? feedbackData : null,
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    async function approveAndEmail(userId) {
+        console.log('approveAndEmail called with userId:', userId);
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        try {
+            const response = await fetch('/giveappraisal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    user_id: userId,
+                    action: 'approve_and_email'
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                console.log('Approval and email successful:', result);
+                alert(result.message || 'Assessment approved and email sent successfully!');
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = result.redirect_url || '/principlefaculty?approved=1';
+                }, 1500);
+            } else {
+                console.error('Approval failed:', response.status, result);
+                throw new Error(result.message || 'Failed to approve assessment');
+            }
+        } catch (error) {
+            console.error('Error in approveAndEmail:', error);
+            alert('Error: ' + (error.message || 'Failed to process approval. Please try again.'));
+        } finally {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    }
+
+
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function generateAcademicYears() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0 = January, 5 = June
+    const day = now.getDate();
+    const dropdown = document.getElementById('academicYear');
+
+    // Determine the start year of the current academic year (switch after June 10th)
+    const academicStartYear = (month > 5 || (month === 5 && day >= 10)) ? year : year - 1;
+
+    // Generate options for the current and last 4 academic years
+    for (let i = 0; i <= 4; i++) {
+        const startYear = academicStartYear - i;
+        const endYear = startYear + 1;
+        const option = document.createElement('option');
+        option.value = `${startYear}/${endYear.toString().slice(-2)}`;
+        option.text = `${startYear}/${endYear.toString().slice(-2)}`;
+        dropdown.appendChild(option);
+    }
+}
+
+// Call the function to populate the dropdown when the page loads
+window.onload = generateAcademicYears;
+
+
+function validateForm() {
+    const year = document.getElementById('academicYear').value;
+    if (!year) {
+        alert("Please select an academic year.");
+        return false;
+    }
+    return true;  // Ensure this returns true to allow form submission
+}
+
+// Calculate principal score total
+function updatePrincipalTotal() {
+    const score1 = parseInt($("#prinas1").val()) || 0;
+    const score2 = parseInt($("#prinas2").val()) || 0;
+    const score3 = parseInt($("#prinas3").val()) || 0;
+    const score4 = parseInt($("#prinas4").val()) || 0;
+    const score5 = parseInt($("#prinas5").val()) || 0;
+    const score6 = parseInt($("#prinas6").val()) || 0;
+    
+    const totalScore = score1 + score2 + score3 + score4 + score5 + score6;
+    $("#princTotalScore").text(totalScore);
+}
+
+// This function is for saving principal assessment data
+function savePrincipalAssessment(isSubmitting = false) {
+    // Gather form data
+    const formData = {
+        user_id: "{{ user_id }}",
+        acad_years: "{{ selected_year }}",
+        prinas1: $("#prinas1").val() || 0,
+        prinas2: $("#prinas2").val() || 0,
+        prinas3: $("#prinas3").val() || 0,
+        prinas4: $("#prinas4").val() || 0,
+        prinas5: $("#prinas5").val() || 0,
+        prinas6: $("#prinas6").val() || 0,
+        prinfeed1: $("#prinfeed1").val() || '',
+        prinfeed2: $("#prinfeed2").val() || '',
+        prinfeed3: $("#prinfeed3").val() || '',
+        prinfeed4: $("#prinfeed4").val() || '',
+        prinfeed5: $("#prinfeed5").val() || '',
+        prinfeed6: $("#prinfeed6").val() || '',
+        feedback: $("#principalFeedback").val() || '',
+        is_final_submit: isSubmitting
+    };
+
+    // AJAX request to save the assessment
+    $.ajax({
+        url: "/save_principal_assessment", 
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(formData),
+        success: function(response) {
+            updatePrincipalTotal();
+            
+            if (!isSubmitting) {
+                alert("Principal assessment saved successfully!");
+            } else {
+                alert("Assessment submitted successfully!");
+                window.location.href = "/principlefaculty";
+            }
+        },
+        error: function(xhr, status, error) {
+            alert("Error saving assessment: " + error);
+        }
+    });
+}
+
+// Event handlers
+$(document).ready(function() {
+    // Calculate the total score on page load
+    updatePrincipalTotal();
+    
+    // Save button click
+    $("#savePrincipalAssessment").on("click", function() {
+        // Validate that we have a feedback entry
+        const feedback = $("#principalFeedback").val();
+        if (!feedback || feedback.trim() === '') {
+            alert("Please provide feedback before saving.");
+            return;
+        }
+        
+        savePrincipalAssessment(false);
+    });
+    
+    // Submit button click
+    $("#submitPrincipalAssessment").on("click", function() {
+        // Validate that we have a feedback entry
+        const feedback = $("#principalFeedback").val();
+        if (!feedback || feedback.trim() === '') {
+            alert("Please provide feedback before submitting.");
+            return;
+        }
+        
+        if (confirm("Are you sure you want to submit the final assessment? This action cannot be undone.")) {
+            savePrincipalAssessment(true);
+        }
+    });
+});
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.11/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,3220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms3</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Debug information -->
+    <script>
+        // Show debug info in console
+        console.log("Form ID: {{ form_id }}");
+        console.log("Self improvement data count: {{ self_improvement_data|length if self_improvement_data else 0 }}");
+        console.log("Certification data count: {{ certification_data|length if certification_data else 0 }}");
+        console.log("Copyright data count: {{ copyright_data|length if copyright_data else 0 }}");
+        console.log("Resource data count: {{ resource_data|length if resource_data else 0 }}");
+        console.log("Committee data count: {{ committee_data|length if committee_data else 0 }}");
+        console.log("Project data count: {{ project_data|length if project_data else 0 }}");
+        console.log("Contribution data count: {{ contribution_data|length if contribution_data else 0 }}");
+        console.log("Self assessment marks: {{ self_assessment_marks }}");
+    </script>
+    <style>
+        /* Custom Table Styles */
+        .btn-custom {
+            margin: 0 2px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-remove {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-edit {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-info-custom {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .column-edit {
+            cursor: pointer;
+            margin-left: 5px;
+            color: #6c757d;
+        }
+        
+        .column-edit:hover {
+            color: #007bff;
+        }
+        
+        .file-upload-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .file-name {
+            margin-left: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .action-cell {
+            width: 120px;
+        }
+        
+        body {
+            background: url('/static/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin-bottom: 20px;
+        }
+
+        .acr-container,
+        .teaching-process-container {
+            margin-top: 150px;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .top-bar a {
+            margin-left: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .top-bar a:hover {
+            text-decoration: underline;
+        }
+
+        .logo-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .logo-link img {
+            width: 90px;
+            height: auto;
+        }
+
+        .table-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-bottom: 50px;
+            padding: 20px;
+            width: 100%; /* Ensure full width */
+        }
+    
+        .table-box {
+            background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 100%; /* Allow full viewport width */
+            text-align: center;
+            margin-bottom: 40px;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .table-box:hover {
+            transform: scale(1.02);
+        }
+
+        .table-title {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #00796b;
+            transition: color 0.3s;
+        }
+
+        .table-title:hover {
+            color: #004d40;
+        }
+
+        .total-box {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            transition: color 0.3s;
+        }
+
+        /* Spacing between forms */
+        .form-section {
+            margin-bottom: 50px;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .self-assessment-container {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .self-assessment-container label {
+            font-weight: bold;
+            color: #00796b;
+        }
+
+        /* Small input for 2-digit marks */
+        .self-assessment-container input {
+            width: 60px;
+            display: inline-block;
+        }
+
+        .instructions {
+            font-weight: bold;
+            text-align: left;
+            margin-left: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .total-box {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            color: rgb(248, 254, 254);
+            background-color: rgba(72, 69, 69, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            transition: color 0.3s, background-color 0.3s;
+        }
+
+        .upload-download-buttons {
+            display: none;
+            margin-left: 20px;
+        }
+        .acr-container {
+            background-color: #85ccc4; /* White background for ACR section */
+            padding: 20px; /* Padding inside the ACR container */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+            margin-bottom: 20px; /* Space below the ACR section */
+        }
+
+        /* Make input fields expand vertically with content */
+        input.form-control {
+            height: auto;
+            min-height: calc(1.5em + .75rem + 2px);
+            overflow: visible;
+            resize: vertical;
+            white-space: normal;
+            text-overflow: clip;
+        }
+
+        /* Ensure table cells expand to fit content */
+        .table td {
+            vertical-align: middle;
+            height: auto;
+            min-height: 50px;
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        /* Make textual form inputs auto-expand */
+        textarea.form-control, 
+        input[type="text"].form-control, 
+        input[type="url"].form-control {
+            overflow: hidden;
+            resize: vertical;
+            min-height: 38px;
+            height: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Fix for vertical 'View' button */
+        .d-flex > .btn, .d-flex > .btn-info {
+            writing-mode: horizontal-tb !important;
+            min-width: 64px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Right Links -->
+    <div class="top-bar">
+       
+        <a href="/logout">Logout</a>
+    </div>
+
+<!-- Logo -->
+<a href="/landing" class="logo-link">
+    <img src="/static/logo.png" alt="Logo">
+</a>
+
+<div class="table-container acr-container">
+    <h3 class="table-title">Annual Confidential Report (ACR)</h3>
+    <div class="instructions">
+        <p>
+            1. Standard editable templates are provided for both options. Please download the appropriate template and complete it as required.<br><br>
+            2. You may modify the format and include additional information as necessary in the Word document. Ensure that all provided details are accurate and supported by valid documentation.<br><br>
+            3. Once completed, upload the file in PDF format (file size must not exceed 1 MB).<br><br>
+            4. The maximum score for each option is 10. At the end, the average of the scores from both options will be calculated, and the final marks will be awarded out of 10.
+        </p>
+    </div>
+
+    <!-- Checkboxes for options -->
+    <div class="checkboxes">
+        <label>
+            <input type="checkbox" id="selfImprovementInitiatives" onchange="toggleUploadDownload('selfImprovementInitiatives')"> Self-Improvement Initiatives
+        </label>
+        <label>
+            <input type="checkbox" id="representingCollege" onchange="toggleUploadDownload('representingCollege')"> Representing College in External Environment
+        </label>
+    </div>
+
+    <!-- Container for Self-Improvement Initiatives -->
+    <div id="selfImprovementTableContainer" style="display: none;">
+    <div class="table-box">
+        <h4>Papers Published in National/International Conference</h4>
+        <table class="table table-bordered" id="selfImprovementTable">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Title of paper published in National/International conference</th>
+                    <th>Month/year</th>
+                    <th>Name of conference</th>
+                    <th>ISBN/ISSN Number</th>
+                    <th>Name of Co-authors</th>
+                    <th>Impact Factor of Conference</th>
+                    <th>Number of citations</th>
+                    <th>Rating</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if self_improvement_data and self_improvement_data|length > 0 %}
+                    {% for item in self_improvement_data %}
+                    <tr>
+                        <td>{{ item.0 }}</td>
+                        <td><textarea class="form-control" title="Enter Title of paper" name="title" rows="2">{{ item.1 }}</textarea></td>
+                        <td><input type="text" class="form-control" title="Enter Month/Year" name="month" value="{{ item.2 }}"></td>
+                        <td><textarea class="form-control" title="Enter Name of conference" name="name_of_conf" rows="2">{{ item.3 }}</textarea></td>
+                        <td><input type="text" class="form-control" title="Enter ISBN/ISSN Number" name="issn" value="{{ item.4 }}"></td>
+                        <td><textarea class="form-control" title="Enter Name of Co-authors" name="co_auth" rows="2">{{ item.5 }}</textarea></td>
+                        <td><input type="text" class="form-control" title="Enter Impact Factor" name="imp_conference" value="{{ item.6 }}"></td>
+                        <td><input type="text" class="form-control" title="Enter Number of citations" name="num_of_citations" value="{{ item.7 }}"></td>
+                        <td><input type="text" class="form-control" title="Enter Rating" name="rating" value="{{ item.8 }}"></td>
+                        <td>
+    <div class="d-flex">
+        <input type="file" name="selfImprovement_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+        {% if item is defined and item.9 %}
+            <button class="btn btn-info ml-2" onclick="window.open('/{{ item.9 }}', '_blank')">View</button>
+        {% endif %}
+    </div>
+</td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'selfImprovementTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea class="form-control" title="Enter Title of paper" name="title" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" title="Enter Month/Year" name="month"></td>
+                        <td><textarea class="form-control" title="Enter Name of conference" name="name_of_conf" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" title="Enter ISBN/ISSN Number" name="issn"></td>
+                        <td><textarea class="form-control" title="Enter Name of Co-authors" name="co_auth" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" title="Enter Impact Factor" name="imp_conference"></td>
+                        <td><input type="text" class="form-control" title="Enter Number of citations" name="num_of_citations"></td>
+                        <td><input type="text" class="form-control" title="Enter Rating" name="rating"></td>
+                        <td>
+    <div class="d-flex">
+        <input type="file" name="selfImprovement_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
+            <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+        {% endif %}
+    </div>
+</td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'selfImprovementTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addSelfImprovementRow()">+</button>
+    </div>
+
+    <div class="table-box">
+        <!-- Copyright table -->
+        <h4>Copyright Published</h4>
+        <table class="table table-bordered" id="CopyrightTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Name of the Title</th>
+                    <th>Month/year</th>
+                    <th>Registration Number</th>
+                    <th>Filled / Published / Granted</th>
+                    <th>Category</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if copyright_data and copyright_data|length > 0 %}
+                    {% for item in copyright_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea name="copyright[{{ loop.index0 }}][name]" class="form-control" title="Enter Name of the Title" rows="2">{{ item.1 }}</textarea></td>
+                        <td><input type="text" name="copyright[{{ loop.index0 }}][month]" class="form-control" title="Enter Month/Year" value="{{ item.2 }}"></td>
+                        <td><input type="text" name="copyright[{{ loop.index0 }}][reg_no]" class="form-control" title="Enter Registration Number" value="{{ item.3 }}"></td>
+                        <td>
+                            <select name="copyright[{{ loop.index0 }}][filed_pub_grant]" class="form-control" title="Filed / Published / Granted">
+                                <option value="">Select</option>
+                                <option value="Filed" {% if item.4 == 'Filed' %}selected{% endif %}>Filed</option>
+                                <option value="Published" {% if item.4 == 'Published' %}selected{% endif %}>Published</option>
+                                <option value="Granted" {% if item.4 == 'Granted' %}selected{% endif %}>Granted</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="copyright[{{ loop.index0 }}][category]" class="form-control" title="Category">
+                                <option value="">Select</option>
+                                <option value="National" {% if item.5 == 'National' %}selected{% endif %}>National</option>
+                                <option value="International" {% if item.5 == 'International' %}selected{% endif %}>International</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="copyright_{{ loop.index0 }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                                {% if item.6 %}
+                                    <a href="/{{ item.6 }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                    <small class="ml-2">Current: {{ item.6.split('/')[-1] }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><button type="button" class="btn btn-danger" onclick="removeRow(this, 'CopyrightTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea name="copyright[0][name]" class="form-control" title="Enter Name of the Title" rows="2"></textarea></td>
+                        <td><input type="text" name="copyright[0][month]" class="form-control" title="Enter Month/Year"></td>
+                        <td><input type="text" name="copyright[0][reg_no]" class="form-control" title="Enter Registration Number"></td>
+                        <td>
+                            <select name="copyright[0][filed_pub_grant]" class="form-control" title="Filed / Published / Granted">
+                                <option value="">Select</option>
+                                <option value="Filed">Filed</option>
+                                <option value="Published">Published</option>
+                                <option value="Granted">Granted</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="copyright[0][category]" class="form-control" title="Category">
+                                <option value="">Select</option>
+                                <option value="National">National</option>
+                                <option value="International">International</option>
+                            </select>
+                        </td>
+                        <td><input type="file" name="copyright_0_file" class="form-control" accept=".pdf,.doc,.docx"></td>
+                        <td><button type="button" class="btn btn-danger" onclick="removeRow(this, 'CopyrightTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-success" onclick="addCopyrightTableRow()">+</button>
+        
+        <script>
+        function addCopyrightTableRow() {
+            const table = document.querySelector('#CopyrightTable tbody');
+            const rows = table.querySelectorAll('tr');
+            const newRow = rows[rows.length - 1].cloneNode(true);
+            const newIndex = rows.length;
+            
+            // Update indices in the new row
+            newRow.querySelectorAll('[name^="copyright["]').forEach(input => {
+                const oldName = input.getAttribute('name');
+                const newName = oldName.replace(/\[\d+\]/, `[${newIndex}]`);
+                input.setAttribute('name', newName);
+                input.value = '';
+            });
+            
+            // Update file input
+            const fileInput = newRow.querySelector('input[type="file"]');
+            if (fileInput) {
+                const oldName = fileInput.getAttribute('name');
+                const newName = oldName.replace(/\d+/, newIndex);
+                fileInput.setAttribute('name', newName);
+                fileInput.value = '';
+            }
+            
+            // Reset select elements
+            newRow.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+            
+            // Update row number
+            newRow.cells[0].textContent = newIndex + 1;
+            
+            // Add delete button
+            const deleteButton = newRow.querySelector('button');
+            if (deleteButton) {
+                deleteButton.onclick = function() {
+                    removeRow(this, 'CopyrightTable');
+                };
+            }
+            
+            table.appendChild(newRow);
+            
+            // Renumber all rows
+            const allRows = table.querySelectorAll('tr');
+            allRows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+        }
+        </script>
+    </div>
+
+    <div class="table-box">
+        <!-- Patent table -->
+        <h4>Patent Published</h4>
+        <table class="table table-bordered" id="patentTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Name of the Title</th>
+                    <th>Month/year</th>
+                    <th>Registration Number</th>
+                    <th>Filled / Published / Granted</th>
+                    <th>Category</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if patent_data and patent_data|length > 0 %}
+                    {% for item in patent_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea name="patent[{{ loop.index0 }}][name]" class="form-control" title="Enter Name of the Title" rows="2">{{ item.1 }}</textarea></td>
+                        <td><input type="text" name="patent[{{ loop.index0 }}][month]" class="form-control" title="Enter Month/Year" value="{{ item.2 }}"></td>
+                        <td><input type="text" name="patent[{{ loop.index0 }}][reg_no]" class="form-control" title="Enter Registration Number" value="{{ item.3 }}"></td>
+                        <td>
+                            <select name="patent[{{ loop.index0 }}][filed_pub_grant]" class="form-control" title="Filed / Published / Granted">
+                                <option value="">Select</option>
+                                <option value="Filed" {% if item.4 == 'Filed' %}selected{% endif %}>Filed</option>
+                                <option value="Published" {% if item.4 == 'Published' %}selected{% endif %}>Published</option>
+                                <option value="Granted" {% if item.4 == 'Granted' %}selected{% endif %}>Granted</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="patent[{{ loop.index0 }}][category]" class="form-control" title="Category">
+                                <option value="">Select</option>
+                                <option value="National" {% if item.5 == 'National' %}selected{% endif %}>National</option>
+                                <option value="International" {% if item.5 == 'International' %}selected{% endif %}>International</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="patent_{{ loop.index0 }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                                {% if item.6 %}
+                                    <a href="/{{ item.6 }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                    <small class="ml-2">Current: {{ item.6.split('/')[-1] }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><button type="button" class="btn btn-danger" onclick="removeRow(this, 'patentTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea name="patent[0][name]" class="form-control" title="Enter Name of the Title" rows="2"></textarea></td>
+                        <td><input type="text" name="patent[0][month]" class="form-control" title="Enter Month/Year"></td>
+                        <td><input type="text" name="patent[0][reg_no]" class="form-control" title="Enter Registration Number"></td>
+                        <td>
+                            <select name="patent[0][filed_pub_grant]" class="form-control" title="Filed / Published / Granted">
+                                <option value="">Select</option>
+                                <option value="Filed">Filed</option>
+                                <option value="Published">Published</option>
+                                <option value="Granted">Granted</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select name="patent[0][category]" class="form-control" title="Category">
+                                <option value="">Select</option>
+                                <option value="National">National</option>
+                                <option value="International">International</option>
+                            </select>
+                        </td>
+                        <td><input type="file" name="patent_0_file" class="form-control" accept=".pdf,.doc,.docx"></td>
+                        <td><button type="button" class="btn btn-danger" onclick="removeRow(this, 'patentTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-success" onclick="addPatentTableRow()">+</button>
+        <script>
+        function addPatentTableRow() {
+            const table = document.querySelector('#patentTable tbody');
+            const rows = table.querySelectorAll('tr');
+            const newRow = rows[rows.length - 1].cloneNode(true);
+            const newIndex = rows.length;
+            
+            // Update indices in the new row
+            newRow.querySelectorAll('[name^="patent["]').forEach(input => {
+                const oldName = input.getAttribute('name');
+                const newName = oldName.replace(/\[\d+\]/, `[${newIndex}]`);
+                input.setAttribute('name', newName);
+                input.value = '';
+            });
+            
+            // Update file input
+            const fileInput = newRow.querySelector('input[type="file"]');
+            if (fileInput) {
+                const oldName = fileInput.getAttribute('name');
+                const newName = oldName.replace(/\d+/, newIndex);
+                fileInput.setAttribute('name', newName);
+                fileInput.value = '';
+            }
+            
+            // Reset select elements
+            newRow.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+            
+            // Update row number
+            newRow.cells[0].textContent = newIndex + 1;
+            
+            // Add delete button
+            const deleteButton = newRow.querySelector('button');
+            if (deleteButton) {
+                deleteButton.onclick = function() {
+                    removeRow(this, 'patentTable');
+                };
+            }
+            
+            table.appendChild(newRow);
+            
+            // Renumber all rows
+            const allRows = table.querySelectorAll('tr');
+            allRows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+        }
+        </script>
+    </div>
+
+    <div class="table-box">
+        <!-- Short-term Training Programs/FDPs -->
+        <h4>Short-term Training Programs/FDPs</h4>
+        <table class="table table-bordered" id="trainingTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Name of the Program</th>
+                    <th>Technology</th>
+                    <th>Duration</th>
+                    <th>Date (From-To)</th>
+                    <th>Organizing Institute</th>
+                    <th>Mode (Online/Offline)</th>
+                    <th>Upload Certificate</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if training_data and training_data|length > 0 %}
+                    {% for item in training_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea class="form-control" name="name" title="Enter Name of the Program" rows="2">{{ item[1] }}</textarea></td>
+                        <td><input type="text" class="form-control" name="technology" title="Enter Technology" value="{{ item[2] }}"></td>
+                        <td><input type="text" class="form-control" name="duration" title="Enter Duration" value="{{ item[3] }}"></td>
+                        <td><input type="text" class="form-control" name="date" title="Enter Date range" value="{{ item[4] }}"></td>
+                        <td><textarea class="form-control" name="organizing_institute" title="Enter Organizing Institute" rows="2">{{ item[5] }}</textarea></td>
+                        <td>
+                            <select class="form-control" name="mode" title="Select Mode">
+                                <option value="">Select</option>
+                                <option value="Online" {% if item[6] == 'Online' %}selected{% endif %}>Online</option>
+                                <option value="Offline" {% if item[6] == 'Offline' %}selected{% endif %}>Offline</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="training_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+    <input type="hidden" name="uploads" value="{{ item[7] }}">
+    {% if item[7] %}
+        <a href="/uploads/{{ item[7].split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+    {% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'trainingTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea class="form-control" name="name" title="Enter Name of the Program" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" name="technology" title="Enter Technology"></td>
+                        <td><input type="text" class="form-control" name="duration" title="Enter Duration"></td>
+                        <td><input type="text" class="form-control" name="date" title="Enter Date range"></td>
+                        <td><textarea class="form-control" name="organizing_institute" title="Enter Organizing Institute" rows="2"></textarea></td>
+                        <td>
+                            <select class="form-control" name="mode" title="Select Mode">
+                                <option value="">Select</option>
+                                <option value="Online">Online</option>
+                                <option value="Offline">Offline</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="training_1_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="uploads" value="">
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'trainingTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addTrainingRow()">+</button>
+    </div>
+
+    <div class="table-box">
+        <!-- Table for MOOCS -->
+        <h4>MOOCS</h4>
+        <table class="table table-bordered" id="moocsTable">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Name of MOOCS course undertaken</th>
+                    <th>Month/year</th>
+                    <th>Duration of course</th>
+                    <th>Certification Completed (Yes/No)</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if moocs_data and moocs_data|length > 0 %}
+                    {% for item in moocs_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea class="form-control" name="name" rows="2">{{ item.1 }}</textarea></td>
+                        <td><input type="text" class="form-control" name="month" title="month/year" value="{{ item.2 }}"></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration" value="{{ item.3 }}"></td>
+                        <td>
+                            <select class="form-control" name="completion" title="certification status">
+                                <option value="">Select</option>
+                                <option value="Yes" {% if item.4 == 'Yes' %}selected{% endif %}>Yes</option>
+                                <option value="No" {% if item.4 == 'No' %}selected{% endif %}>No</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="moocs_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="moocs_{{ loop.index }}_uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+                                {% if item is defined and item.5 %}
+                                    <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'moocsTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea class="form-control" name="name" title="name of moocs course" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" name="month" title="month/year"></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration"></td>
+                        <td>
+                            <select class="form-control" name="completion" title="certification status">
+                                <option value="">Select</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="moocs_1_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="moocs_1_uploads" value="">
+                                {% if item is defined and item.5 %}
+                                    <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'moocsTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addMoocsRow()">+</button>
+    </div>
+
+    <div class="table-box">
+        <!-- Table for SWAYAM NPTEL -->
+        <h4>SWAYAM NPTEL</h4>
+        <table class="table table-bordered" id="swayamTable">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Name of Swayam course undertaken</th>
+                    <th>Month/year</th>
+                    <th>Duration of course</th>
+                    <th>Certification Completed (Yes/No)</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if swayam_data and swayam_data|length > 0 %}
+                    {% for item in swayam_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea class="form-control" name="name" rows="2">{{ item.1 }}</textarea></td>
+                        <td><input type="text" class="form-control" name="month" title="month/year" value="{{ item.2 }}"></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration" value="{{ item.3 }}"></td>
+                        <td>
+                            <select class="form-control" name="completion" title="certification status">
+                                <option value="">Select</option>
+                                <option value="Yes" {% if item.4 == 'Yes' %}selected{% endif %}>Yes</option>
+                                <option value="No" {% if item.4 == 'No' %}selected{% endif %}>No</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="swayam_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="swayam_{{ loop.index }}_uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+                                {% if item is defined and item.5 %}
+                                    <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'swayamTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea class="form-control" name="name" title="name of swayam course" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" name="month" title="month/year"></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration"></td>
+                        <td>
+                            <select class="form-control" name="completion" title="certification status">
+                                <option value="">Select</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="swayam_1_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="swayam_1_uploads" value="">
+                                {% if item is defined and item.5 %}
+                                    <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'swayamTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addSwayamRow()">+</button>
+    </div>
+
+    <div class="table-box">
+        <!-- Table for Seminars/Webinars -->
+        <h4>Seminars/Webinars</h4>
+        <table class="table table-bordered" id="seminarTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Name of seminars/webinars attended</th>
+                    <th>Technology</th>
+                    <th>Duration of course</th>
+                    <th>Date (From- to)</th>
+                    <th>Internal/ External</th>
+                    <th>Name of the Institute where attended</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if webinar_data and webinar_data|length > 0 %}
+                    {% for item in webinar_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea class="form-control" name="name" title="name of seminar/webinar" rows="2">{{ item[1] }}</textarea></td>
+                        <td><textarea class="form-control" title="technology" rows="2">{{ item[2] }}</textarea></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration" value="{{ item[3] }}"></td>
+                        <td><input type="text" class="form-control" name="date" title="date range" value="{{ item[4] }}"></td>
+                        <td>
+                            <select class="form-control" name="int_ext" title="internal/external">
+                                <option value="">Select</option>
+                                <option value="Internal" {% if item[5] == 'Internal' %}selected{% endif %}>Internal</option>
+                                <option value="External" {% if item[5] == 'External' %}selected{% endif %}>External</option>
+                            </select>
+                        </td>
+                        <td><textarea class="form-control" name="name_of_institute" title="institute name" rows="2">{{ item[6] }}</textarea></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="seminar_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="uploads" value="{{ item[7] if item|length > 7 else '' }}">
+                                {% if item|length > 7 and item[7] and item[7].strip() %}
+                                    <a href="/uploads/{{ item[7].split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'seminarTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea class="form-control" name="name" title="name of seminar/webinar" rows="2"></textarea></td>
+                        <td><textarea class="form-control" title="technology" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration"></td>
+                        <td><input type="text" class="form-control" name="date" title="date range"></td>
+                        <td>
+                            <select class="form-control" name="int_ext" title="internal/external">
+                                <option value="">Select</option>
+                                <option value="Internal">Internal</option>
+                                <option value="External">External</option>
+                            </select>
+                        </td>
+                        <td><textarea class="form-control" name="name_of_institute" title="institute name" rows="2"></textarea></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="seminar_1_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="uploads" value="">
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'seminarTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addSeminarRow()">+</button>
+    </div>
+
+    <div class="table-box">
+        <!-- Certification table -->
+        <h4>Global Certification</h4>
+        <table class="table table-bordered" id="certificationTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Name of the Certification</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if certification_data and certification_data|length > 0 %}
+                    {% for item in certification_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea class="form-control" name="name" title="Enter Name of the Certification" rows="2">{{ item.1 }}</textarea></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="selfImprovement_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+    <input type="hidden" name="uploads" value="{{ item.2 }}">
+    {% if item.2 %}
+        <a href="/uploads/{{ item.2.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+    {% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'certificationTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea class="form-control" name="name" title="Enter Name of the Certification" rows="2"></textarea></td>
+                        <td>
+    <div class="d-flex">
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
+            <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+        {% endif %}
+    </div>
+</td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'certificationTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addCertificationRow()">+</button>
+    </div>
+
+    <!-- Container for Representing College in External Environment -->
+    <div id="representingCollegeTableContainer" style="display: none;">
+    <div class="table-box">
+        <!-- Table for Resource person in STTP/Training course/ Lecture Talks -->
+        <h4>Resource person in STTP/Training course/ Lecture Talks</h4>
+        <table class="table table-bordered" id="resourcePersonTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Topic Name</th>
+                    <th>Department</th>
+                    <th>Name of the institute</th>
+                    <th>Number of participants</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if resource_data and resource_data|length > 0 %}
+                    {% for item in resource_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea class="form-control" title="name" rows="2">{{ item.1 }}</textarea></td>
+                        <td><textarea class="form-control" title="dept" rows="2">{{ item.2 }}</textarea></td>
+                        <td><textarea class="form-control" title="name_oi" rows="2">{{ item.3 }}</textarea></td>
+                        <td><input type="number" class="form-control" title="num_op" value="{{ item.4 }}"></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="resource_person_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="uploads" value="{{ item.5 }}">
+                                {% if item.5 %}
+                                    <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'resourcePersonTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea class="form-control" title="name" rows="2"></textarea></td>
+                        <td><textarea class="form-control" title="dept" rows="2"></textarea></td>
+                        <td><textarea class="form-control" title="name_oi" rows="2"></textarea></td>
+                        <td><input type="number" class="form-control" title="num_op"></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="resource_person_1_file" class="form-control" accept=".pdf,.doc,.docx">
+                                <input type="hidden" name="uploads" value="">
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'resourcePersonTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addResourcePersonRow()">+</button>
+    </div>
+
+    <div class="table-box">
+        <!-- Table for Member of University Committee -->
+        <h4>Member of University Committee</h4>
+        <table class="table table-bordered" id="universityCommitteeTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Name of Committee</th>
+                    <th>Roles and Responsibilities</th>
+                    <th>Designation</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if committee_data and committee_data|length > 0 %}
+                    {% for item in committee_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><textarea class="form-control" title="name" rows="2">{{ item.1 }}</textarea></td>
+                        <td><textarea class="form-control" title="roles" rows="2">{{ item.2 }}</textarea></td>
+                        <td><input type="text" class="form-control" title="Enter Designation" value="{{ item.3 }}"></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="university_committee_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+{% if item is defined and item.4 and (item.4.endswith('.pdf') or item.4.endswith('.doc') or item.4.endswith('.docx')) %}
+    <a href="/uploads/{{ item.4.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+{% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'universityCommitteeTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><textarea class="form-control" title="name" rows="2"></textarea></td>
+                        <td><textarea class="form-control" title="roles" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" title="Enter Designation"></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="university_committee_1_file" class="form-control" accept=".pdf,.doc,.docx">
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'universityCommitteeTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addUniversityCommitteeRow()">+</button>
+    </div>
+
+    <div class="table-box">
+        <!-- Table for External Projects -->
+        <h4>External Projects / Task force / Exchange Programs</h4>
+        <table class="table table-bordered" id="externalProjectsTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Role</th>
+                    <th>Description</th>
+                    <th>Contribution</th>
+                    <th>University</th>
+                    <th>Duration</th>
+                    <th>Comments</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if project_data and project_data|length > 0 %}
+                    {% for item in project_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><input type="text" class="form-control" title="role" value="{{ item.1 }}"></td>
+                        <td><textarea class="form-control" title="desc" rows="2">{{ item.2 }}</textarea></td>
+                        <td><textarea class="form-control" title="contribution" rows="2">{{ item.3 }}</textarea></td>
+                        <td><textarea class="form-control" title="university" rows="2">{{ item.4 }}</textarea></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration" value="{{ item.5 }}"></td>
+                        <td><textarea class="form-control" title="Enter Comments" rows="2">{{ item.6 }}</textarea></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="external_projects_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+{% if item is defined and item.7 and (item.7.endswith('.pdf') or item.7.endswith('.doc') or item.7.endswith('.docx')) %}
+    <a href="/uploads/{{ item.7.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+{% endif %}
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'externalProjectsTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><input type="text" class="form-control" title="role"></td>
+                        <td><textarea class="form-control" title="desc" rows="2"></textarea></td>
+                        <td><textarea class="form-control" title="contribution" rows="2"></textarea></td>
+                        <td><textarea class="form-control" title="university" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" name="duration" title="duration"></td>
+                        <td><textarea class="form-control" title="Enter Comments" rows="2"></textarea></td>
+                        <td>
+                            <div class="d-flex">
+                                <input type="file" name="external_projects_1_file" class="form-control" accept=".pdf,.doc,.docx">
+                            </div>
+                        </td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'externalProjectsTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addExternalProjectsRow()">+</button>
+    </div>
+    </div>
+  <!-- Special Mentions Table -->
+  <div class="table-box">
+    <h4>Special Mentions</h4>
+    <table class="table table-bordered" id="specialMentionsTable">
+        <thead>
+            <tr>
+                <th>Sr. No.</th>
+                <th>Name</th>
+                <th>Roles and Responsibilities</th>
+                <th>Upload Document</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if special_mentions_data and special_mentions_data|length > 0 %}
+                {% for item in special_mentions_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><input type="text" class="form-control" name="name" value="{{ item.name }}" placeholder="Name"></td>
+                    <td><input type="text" class="form-control" name="roles" value="{{ item.roles }}" placeholder="Roles and Responsibilities"></td>
+                    <td>
+                        <div class="d-flex">
+                            <input type="file" name="special_mentions_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                            {% if item.uploads %}
+                                <a href="/{{ item.uploads }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                <small class="ml-2">Current: {{ item.uploads.split('/')[-1] }}</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td><button class="btn btn-danger" onclick="deleteSpecialMentionRow(this)">-</button></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td>1</td>
+                    <td><input type="text" class="form-control" name="name" placeholder="Name"></td>
+                    <td><input type="text" class="form-control" name="roles" placeholder="Roles and Responsibilities"></td>
+                    <td><div class="d-flex"><input type="file" name="special_mentions_1_file" class="form-control" accept=".pdf,.doc,.docx"></div></td>
+                    <td><button class="btn btn-danger" onclick="deleteSpecialMentionRow(this)">-</button></td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <button class="btn btn-success" onclick="addSpecialMentionRow()">+</button>
+</div>
+
+<!-- Member of Conference/Journal Committee Table -->
+<div class="table-box">
+    <h4>Member of Conference/Journal Committee</h4>
+    <table class="table table-bordered" id="conferenceCommitteeTable">
+        <thead>
+            <tr>
+                <th>Sr. No.</th>
+                <th>Name of Conference/Journal</th>
+                <th>Designation</th>
+                <th>Upload Document</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if conference_committee_data and conference_committee_data|length > 0 %}
+                {% for item in conference_committee_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><input type="text" class="form-control" name="name" value="{{ item.name }}" placeholder="Name of Conference/Journal"></td>
+                    <td><input type="text" class="form-control" name="designation" value="{{ item.designation }}" placeholder="Designation"></td>
+                    <td>
+                        <div class="d-flex">
+                            <input type="file" name="conference_committee_{{ loop.index }}_file" class="form-control" accept=".pdf,.doc,.docx">
+                            {% if item.upload %}
+                                <a href="/{{ item.upload }}" target="_blank" class="btn btn-info ml-2">View</a>
+                                <small class="ml-2">Current: {{ item.upload.split('/')[-1] }}</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td><button class="btn btn-danger" onclick="deleteConferenceCommitteeRow(this)">-</button></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td>1</td>
+                    <td><input type="text" class="form-control" name="name" placeholder="Name of Conference/Journal"></td>
+                    <td><input type="text" class="form-control" name="designation" placeholder="Designation"></td>
+                    <td><div class="d-flex"><input type="file" name="conference_committee_1_file" class="form-control" accept=".pdf,.doc,.docx"></div></td>
+                    <td><button class="btn btn-danger" onclick="deleteConferenceCommitteeRow(this)">-</button></td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <button class="btn btn-success" onclick="addConferenceCommitteeRow()">+</button>
+</div>
+
+ <!-- Custom Table Section -->
+ <div class="table-box">
+    <h4><i class="fas fa-cogs"></i>Custom Table</h4>
+    
+    <div class="table-controls mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                    <input type="text" id="customTableTitle" class="form-control" placeholder="Enter Table Title" value="Team Members">
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="action-buttons">
+                    <button class="btn btn-custom btn-add" onclick="addCustomTableRow()">
+                        <i class="fas fa-plus-circle"></i> Add Row
+                    </button>
+                    <button class="btn btn-custom btn-primary-custom" onclick="addCustomTableColumn()">
+                        <i class="fas fa-columns"></i> Add Column
+                    </button>
+                    <button class="btn btn-custom btn-remove" onclick="deleteCustomTableRow()">
+                        <i class="fas fa-minus-circle"></i> Delete Row
+                    </button>
+                    <button class="btn btn-custom btn-edit" onclick="deleteCustomTableColumn()">
+                        <i class="fas fa-trash-alt"></i> Delete Column
+                    </button>
+                    <button class="btn btn-custom btn-info-custom" onclick="addUploadColumn()">
+                        <i class="fas fa-file-upload"></i> Add Upload Column
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="alert alert-info mb-3">
+        <i class="fas fa-info-circle"></i> Tip: Double-click on any column header to edit its name. You can also click the <i class="fas fa-edit"></i> icon next to each header.
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover" id="customTable">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>
+                        <div class="column-header">
+                            <span>Name</span>
+                            <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="column-header">
+                            <span>Role</span>
+                            <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                        </div>
+                    </th>
+                    <th>
+                        <div class="column-header">
+                            <span>Document</span>
+                            <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                        </div>
+                    </th>
+                    <th class="action-cell">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td><input type="text" class="form-control" value="John Smith"></td>
+                    <td><input type="text" class="form-control" value="Project Manager"></td>
+                    <td>
+                        <div class="file-upload-container">
+                            <input type="file" class="form-control">
+                            <span class="file-name"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><input type="text" class="form-control" value="Sarah Johnson"></td>
+                    <td><input type="text" class="form-control" value="Design Lead"></td>
+                    <td>
+                        <div class="file-upload-container">
+                            <input type="file" class="form-control">
+                            <span class="file-name"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<!-- Self-Assessment Marks Input -->
+<div class="self-assessment">
+    <h4>Self-Assessment Marks</h4>
+    <input type="number" class="form-control" id="selfAssessmentMarks" min="0" max="10" placeholder="Enter marks (0-10)" value="{{ self_assessment_marks if self_assessment_marks else '' }}">
+    <small class="form-text text-muted">Please enter your self-assessment marks out of 10.</small>
+</div>
+
+
+</div>
+</div>
+      <!-- Contribution to Society Form -->
+<div class="table-container teaching-process-container">
+    <div class="table-box">
+        <h3 class="table-title">Contribution to Society</h3>
+
+        <div class="instructions">
+            <p>
+                1. The faculty member will earn 5 points per semester for different initiatives by AICTE (Induction programme, NSS activities,
+                Unnat Bharat Abhiyaan, Yoga Classes, Blood donation, awareness activities for environment protection/ethics and other similar activities)
+                having a direct impact on society.<br><br>
+                2. The claim should be supported by an office order/ official communication from Head of Institute.
+            </p>
+        </div>
+
+        <table class="table table-bordered" id="contributionTable">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Semester</th>
+                    <th>Activity</th>
+                    <th>Points</th>
+                    <th>Order Copy</th>
+                    <th>Details</th>
+                    <th>Upload Document</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if contribution_data and contribution_data|length > 0 %}
+                    {% for item in contribution_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <select class="form-control" title="Select Semester">
+                                <option value="">Select</option>
+                                <option value="I" {% if item.0 == 'I' %}selected{% endif %}>I</option>
+                                <option value="II" {% if item.0 == 'II' %}selected{% endif %}>II</option>
+                                <option value="III" {% if item.0 == 'III' %}selected{% endif %}>III</option>
+                                <option value="IV" {% if item.0 == 'IV' %}selected{% endif %}>IV</option>
+                                <option value="V" {% if item.0 == 'V' %}selected{% endif %}>V</option>
+                                <option value="VI" {% if item.0 == 'VI' %}selected{% endif %}>VI</option>
+                                <option value="VII" {% if item.0 == 'VII' %}selected{% endif %}>VII</option>
+                                <option value="VIII" {% if item.0 == 'VIII' %}selected{% endif %}>VIII</option>
+                            </select>
+                        </td>
+                        <td><textarea class="form-control" title="Enter Activity" rows="2">{{ item.1 }}</textarea></td>
+                        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" value="{{ item.2 }}"></td>
+                        <td><textarea class="form-control" title="Enter Order Copy" rows="2">{{ item.3 }}</textarea></td>
+                        <td><textarea class="form-control" title="Enter Details" rows="2">{{ item.4 }}</textarea></td>
+                        <td>
+    <div class="d-flex">
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
+            <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+        {% endif %}
+    </div>
+</td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'contributionTable')">-</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td>
+                            <select class="form-control" title="Select Semester">
+                                <option value="">Select</option>
+                                <option value="I">I</option>
+                                <option value="II">II</option>
+                                <option value="III">III</option>
+                                <option value="IV">IV</option>
+                                <option value="V">V</option>
+                                <option value="VI">VI</option>
+                                <option value="VII">VII</option>
+                                <option value="VIII">VIII</option>
+                            </select>
+                        </td>
+                        <td><textarea class="form-control" title="Enter Activity" rows="2"></textarea></td>
+                        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points"></td>
+                        <td><textarea class="form-control" title="Enter Order Copy" rows="2"></textarea></td>
+                        <td><textarea class="form-control" title="Enter Details" rows="2"></textarea></td>
+                        <td>
+    <div class="d-flex">
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
+            <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+        {% endif %}
+    </div>
+</td>
+                        <td><button class="btn btn-danger" onclick="removeRow(this, 'contributionTable')">-</button></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addContributionRow()">+</button>
+    </div>
+    <div class="total-box">
+        Total Points: <span id="totalsocietyPoints">0</span>/10
+    </div>
+</div>
+
+
+
+<!-- Hidden element to store data counts -->
+<div id="formData" 
+     data-self-improvement-count="{{ self_improvement_data|length if self_improvement_data else 0 }}"
+     data-certification-count="{{ certification_data|length if certification_data else 0 }}"
+     data-copyright-count="{{ copyright_data|length if copyright_data else 0 }}"
+     data-resource-count="{{ resource_data|length if resource_data else 0 }}"
+     data-committee-count="{{ committee_data|length if committee_data else 0 }}"
+     data-project-count="{{ project_data|length if project_data else 0 }}"
+     data-contribution-count="{{ contribution_data|length if contribution_data else 0 }}"
+     data-moocs-count="{{ moocs_data|length if moocs_data else 0 }}"
+     data-swayam-count="{{ swayam_data|length if swayam_data else 0 }}"
+     data-webinar-count="{{ webinar_data|length if webinar_data else 0 }}"
+     style="display: none;">
+</div>
+
+<input type="hidden" id="formId" value="{{ form_id }}">
+
+    <!-- Reset and Next Buttons -->
+    <div class="button-container">
+        <input type="hidden" id="formId" value="{{ form_id }}">
+        <button id="resetButton" class="btn btn-warning" onclick="resetAll()">Reset</button>
+        <button id="saveButton" class="btn btn-primary" onclick="saveFormData()">Save</button>
+        <button id="nextButton" class="btn btn-success" onclick="goToNext()">Proceed to Next Step</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const formId = "{{ form_id }}"; // Get form_id passed from the Flask route
+        console.log("formId:", formId);
+    </script>
+
+    <script>
+function toggleSelfImprovementTable() {
+        const selfImprovementContainer = document.getElementById('selfImprovementTableContainer');
+        selfImprovementContainer.style.display = selfImprovementContainer.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleRepresentingCollegeTable() {
+        const representingCollegeContainer = document.getElementById('representingCollegeTableContainer');
+        representingCollegeContainer.style.display = representingCollegeContainer.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function removeRow(button, tableId) {
+        const row = button.parentNode.parentNode;
+        const table = document.getElementById(tableId);
+        table.deleteRow(row.rowIndex);
+    }
+
+    function addSelfImprovementRow() {
+        const table = document.getElementById('selfImprovementTable');
+        const rowCount = table.rows.length;
+        const row = table.insertRow(rowCount);
+
+        const cell1 = row.insertCell(0);
+        cell1.innerHTML = rowCount;
+
+        const cell2 = row.insertCell(1);
+        cell2.innerHTML = '<textarea class="form-control" title="Enter Title of paper" name="title" rows="2"></textarea>';
+
+        const cell3 = row.insertCell(2);
+        cell3.innerHTML = '<input type="text" class="form-control" title="Enter Month/Year" name="month">';
+
+        const cell4 = row.insertCell(3);
+        cell4.innerHTML = '<textarea class="form-control" title="Enter Name of conference" name="name_of_conf" rows="2"></textarea>';
+
+        const cell5 = row.insertCell(4);
+        cell5.innerHTML = '<input type="text" class="form-control" title="Enter ISBN/ISSN Number" name="issn">';
+
+        const cell6 = row.insertCell(5);
+        cell6.innerHTML = '<textarea class="form-control" title="Enter Name of Co-authors" name="co_auth" rows="2"></textarea>';
+
+        const cell7 = row.insertCell(6);
+        cell7.innerHTML = '<input type="text" class="form-control" title="Enter Impact Factor" name="imp_conference">';
+
+        const cell8 = row.insertCell(7);
+        cell8.innerHTML = '<input type="text" class="form-control" title="Enter Number of citations" name="num_of_citations">';
+
+        const cell9 = row.insertCell(8);
+        cell9.innerHTML = '<input type="text" class="form-control" title="Enter Rating" name="rating">';
+
+        const cell10 = row.insertCell(9);
+        cell10.innerHTML = `
+            <div class="d-flex">
+                <input type="file" name="selfImprovement_${rowCount}_file" class="form-control" accept=".pdf,.doc,.docx">
+            </div>`;
+
+        const cell11 = row.insertCell(10);
+        cell11.innerHTML = '<button class="btn btn-danger" onclick="removeRow(this, \'selfImprovementTable\')">-</button>';
+    }
+
+    function addCertificationRow() {
+        const table = document.getElementById('certificationTable');
+        const rowCount = table.rows.length;
+        const rowIndex = rowCount; // ensure unique index for file input
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount}</td>
+            <td><textarea class="form-control" name="name" title="Enter Name of the Certification" rows="2"></textarea></td>
+            <td>
+                <div class="d-flex">
+                    <input type="file" name="certification_${rowIndex}_file" class="form-control" accept=".pdf,.doc,.docx">
+                    <input type="hidden" name="uploads" value="">
+                </div>
+            </td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'certificationTable')">-</button></td>
+        `;
+    }
+
+    // Add row to Short-term Training Programs/FDPs table
+    function addTrainingRow() {
+        const table = document.getElementById('trainingTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount}</td>
+            <td><textarea class="form-control" name="name" title="Enter Name of the Program" rows="2"></textarea></td>
+            <td><input type="text" class="form-control" name="technology" title="Enter Technology"></td>
+            <td><input type="text" class="form-control" name="duration" title="Enter Duration"></td>
+            <td><input type="text" class="form-control" name="date" title="Enter Date range"></td>
+            <td><textarea class="form-control" name="organizing_institute" title="Enter Organizing Institute" rows="2"></textarea></td>
+            <td>
+                <select class="form-control" name="mode" title="Select Mode">
+                    <option value="">Select</option>
+                    <option value="Online">Online</option>
+                    <option value="Offline">Offline</option>
+                </select>
+            </td>
+            <td><input type="file" class="form-control" name="certificate" accept=".pdf,.doc,.docx"></td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'trainingTable')">-</button></td>
+        `;
+    }
+
+    function addCopyrightTableRow() {
+        const table = document.getElementById('CopyrightTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount}</td>
+            <td><textarea class="form-control" title="name" rows="2"></textarea></td>
+            <td><input type="text" class="form-control" title="month"></td>
+            <td><input type="text" class="form-control" title="reg_no"></td>
+            <td>
+                <select class="form-control" title="Filed / Published / Granted">
+                    <option value="">Select</option>
+                    <option value="Filed">Filed</option>
+                    <option value="Published">Published</option>
+                    <option value="Granted">Granted</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" title="Category">
+                    <option value="">Select</option>
+                    <option value="National">National</option>
+                    <option value="International">International</option>
+                </select>
+            </td>
+            <td><input type="file" class="form-control file-upload" accept=".pdf,.doc,.docx"></td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'CopyrightTable')">-</button></td>
+        `;
+        
+        // Add event listener for file upload
+        const fileInput = newRow.querySelector('.file-upload');
+        fileInput.addEventListener('change', function() {
+            uploadDocument(this);
+        });
+    }
+    
+    function addpatentTableRow() {
+        const table = document.getElementById('patentTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount}</td>
+            <td><textarea class="form-control" title="Enter Name of the Title" rows="2"></textarea></td>
+            <td><input type="text" class="form-control" title="Enter Month/Year"></td>
+            <td><input type="text" class="form-control" title="Enter Registration Number"></td>
+            <td>
+                <select class="form-control" title="Filed / Published / Granted">
+                    <option value="">Select</option>
+                    <option value="Filed">Filed</option>
+                    <option value="Published">Published</option>
+                    <option value="Granted">Granted</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" title="Category">
+                    <option value="">Select</option>
+                    <option value="National">National</option>
+                    <option value="International">International</option>
+                </select>
+            </td>
+            <td>
+    <div class="d-flex">
+        <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
+        {% if item is defined and item.5 %}
+            <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+        {% endif %}
+    </div>
+</td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'patentTable')">-</button></td>
+        `;
+    }
+
+    function addResourcePersonRow() {
+        const table = document.getElementById('resourcePersonTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount }</td>
+            <td><textarea class="form-control" title="name" rows="2"></textarea></td>
+            <td><textarea class="form-control" title="dept" rows="2"></textarea></td>
+            <td><textarea class="form-control" title="name_oi" rows="2"></textarea></td>
+            <td><input type="number" class="form-control" title="num_op"></td>
+            <td>
+                <div class="d-flex">
+                    <input type="file" name="resource_person_${rowCount}_file" class="form-control" accept=".pdf,.doc,.docx">
+                </div>
+            </td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'resourcePersonTable')">-</button></td>
+        `;
+    }
+
+    function addUniversityCommitteeRow() {
+        const table = document.getElementById('universityCommitteeTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount }</td>
+            <td><textarea class="form-control" title="name" rows="2"></textarea></td>
+            <td><textarea class="form-control" title="roles" rows="2"></textarea></td>
+            <td><input type="text" class="form-control" title="Enter Designation"></td>
+            <td>
+                <div class="d-flex">
+                    <input type="file" name="university_committee_${rowCount}_file" class="form-control" accept=".pdf,.doc,.docx">
+                </div>
+            </td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'universityCommitteeTable')">-</button></td>
+        `;
+    }
+
+    function addExternalProjectsRow() {
+        const table = document.getElementById('externalProjectsTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount }</td>
+            <td><input type="text" class="form-control" title="role"></td>
+            <td><textarea class="form-control" title="desc" rows="2"></textarea></td>
+            <td><textarea class="form-control" title="contribution" rows="2"></textarea></td>
+            <td><textarea class="form-control" title="university" rows="2"></textarea></td>
+            <td><input type="text" class="form-control" name="duration" title="duration"></td>
+            <td><textarea class="form-control" title="Enter Comments" rows="2"></textarea></td>
+            <td>
+                <div class="d-flex">
+                    <input type="file" name="external_projects_${rowCount}_file" class="form-control" accept=".pdf,.doc,.docx">
+                </div>
+            </td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'externalProjectsTable')">-</button></td>
+        `;
+    }
+
+    // Add row to MOOCS table
+    function addMoocsRow() {
+        const table = document.getElementById('moocsTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount}</td>
+            <td><textarea class="form-control" name="name" title="name of moocs course" rows="2"></textarea></td>
+            <td><input type="text" class="form-control" name="month" title="month/year"></td>
+            <td><input type="text" class="form-control" name="duration" title="duration"></td>
+            <td>
+                <select class="form-control" name="completion" title="certification status">
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </td>
+            <td>
+                <div class="d-flex">
+                    <input type="file" name="moocs_${rowCount}_file" class="form-control" accept=".pdf,.doc,.docx" onchange="updateMoocsUpload(this, ${rowCount})">
+                <input type="hidden" name="moocs_${rowCount}_uploads" id="moocs_upload_${rowCount}">
+                <span id="moocs_view_${rowCount}" class="ml-2"></span>
+                </div>
+            </td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'moocsTable')">-</button></td>
+        `;
+    }
+
+    // Add row to SWAYAM NPTEL table
+    function addSwayamRow() {
+        const table = document.getElementById('swayamTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount}</td>
+            <td><textarea class="form-control" name="name" title="name of swayam course" rows="2"></textarea></td>
+            <td><input type="text" class="form-control" name="month" title="month/year"></td>
+            <td><input type="text" class="form-control" name="duration" title="duration"></td>
+            <td>
+                <select class="form-control" name="completion" title="certification status">
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </td>
+            <td>
+                <div class="d-flex">
+                    <input type="file" name="swayam_${rowCount}_file" class="form-control" accept=".pdf,.doc,.docx" onchange="updateSwayamUpload(this, ${rowCount})">
+                <input type="hidden" name="swayam_${rowCount}_uploads" id="swayam_upload_${rowCount}">
+                <span id="swayam_view_${rowCount}" class="ml-2"></span>
+                </div>
+            </td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'swayamTable')">-</button></td>
+        `;
+    }
+
+    // Add row to Seminar/Webinar table
+    function updateSeminarUpload(input, rowIndex) {
+        const file = input.files[0];
+        if (file) {
+            const fileName = file.name;
+            const uploadInput = document.getElementById(`seminar_upload_${rowIndex}`);
+            const viewSpan = document.getElementById(`seminar_view_${rowIndex}`);
+            
+            // Update the hidden input with the file name
+            uploadInput.value = fileName;
+            
+            // Show view button
+            viewSpan.innerHTML = `
+                <a href="#" class="btn btn-info" 
+                   onclick="event.preventDefault(); 
+                            const fileUrl = URL.createObjectURL(document.querySelector('input[name=\'seminar_${rowIndex}_file\']').files[0]);
+                            window.open(fileUrl, '_blank');">
+                    View
+                </a>
+            `;
+        }
+    }
+
+    // Helper to update file upload display for MOOCS rows
+    function updateMoocsUpload(input, rowIndex) {
+        const file = input.files[0];
+        if (file) {
+            const fileName = file.name;
+            const uploadInput = document.getElementById(`moocs_upload_${rowIndex}`);
+            const viewSpan = document.getElementById(`moocs_view_${rowIndex}`);
+            if (uploadInput) uploadInput.value = fileName;
+            if (viewSpan) {
+                viewSpan.innerHTML = `<a href="#" class="btn btn-info" onclick="event.preventDefault(); const fileUrl = URL.createObjectURL(document.querySelector('input[name=\\'moocs_${rowIndex}_file\\']').files[0]); window.open(fileUrl, '_blank');">View</a>`;
+            }
+        }
+    }
+
+    // Helper to update file upload display for SWAYAM rows
+    function updateSwayamUpload(input, rowIndex) {
+        const file = input.files[0];
+        if (file) {
+            const fileName = file.name;
+            const uploadInput = document.getElementById(`swayam_upload_${rowIndex}`);
+            const viewSpan = document.getElementById(`swayam_view_${rowIndex}`);
+            if (uploadInput) uploadInput.value = fileName;
+            if (viewSpan) {
+                viewSpan.innerHTML = `<a href="#" class="btn btn-info" onclick="event.preventDefault(); const fileUrl = URL.createObjectURL(document.querySelector('input[name=\\'swayam_${rowIndex}_file\\']').files[0]); window.open(fileUrl, '_blank');">View</a>`;
+            }
+        }
+    }
+
+    function addSeminarRow() {
+        const table = document.getElementById('seminarTable');
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(rowCount);
+        newRow.innerHTML = `
+            <td>${rowCount}</td>
+            <td><textarea class="form-control" name="name" title="name of seminar/webinar" rows="2"></textarea></td>
+            <td><textarea class="form-control" title="technology" rows="2"></textarea></td>
+            <td><input type="text" class="form-control" name="duration" title="duration"></td>
+            <td><input type="text" class="form-control" name="date" title="date range"></td>
+            <td>
+                <select class="form-control" name="int_ext" title="internal/external">
+                    <option value="">Select</option>
+                    <option value="Internal">Internal</option>
+                    <option value="External">External</option>
+                </select>
+            </td>
+            <td><textarea class="form-control" name="name_of_institute" title="institute name" rows="2"></textarea></td>
+            <td>
+                <div class="d-flex">
+                    <input type="file" name="seminar_${rowCount}_file" class="form-control" accept=".pdf,.doc,.docx" onchange="updateSeminarUpload(this, ${rowCount})">
+                    <input type="hidden" name="seminar_upload_${rowCount}" id="seminar_upload_${rowCount}">
+                    <span id="seminar_view_${rowCount}" class="ml-2"></span>
+                </div>
+            </td>
+            <td><button class="btn btn-danger" onclick="removeRow(this, 'seminarTable')">-</button></td>
+        `;
+    }
+
+    function addSpecialMentionRow() {
+        const table = document.getElementById('specialMentionsTable').getElementsByTagName('tbody')[0];
+        const row = table.insertRow();
+        row.innerHTML = `
+            <td></td>
+            <td><input type="text" class="form-control" name="name" placeholder="Name"></td>
+            <td><input type="text" class="form-control" name="roles" placeholder="Roles and Responsibilities"></td>
+            <td><div class="d-flex"><input type="file" name="special_mentions_${table.rows.length}_file" class="form-control" accept=".pdf,.doc,.docx"></div></td>
+            <td><button class="btn btn-danger" onclick="deleteSpecialMentionRow(this)">-</button></td>
+        `;
+        updateSrNo('specialMentionsTable');
+    }
+
+    function deleteSpecialMentionRow(btn) {
+        const row = btn.closest('tr');
+        row.parentNode.removeChild(row);
+        updateSrNo('specialMentionsTable');
+    }
+
+    function addConferenceCommitteeRow() {
+        const table = document.getElementById('conferenceCommitteeTable').getElementsByTagName('tbody')[0];
+        const row = table.insertRow();
+        row.innerHTML = `
+            <td></td>
+            <td><input type="text" class="form-control" name="name" placeholder="Name of Conference/Journal"></td>
+            <td><input type="text" class="form-control" name="designation" placeholder="Designation"></td>
+            <td><div class="d-flex"><input type="file" name="conference_committee_${table.rows.length}_file" class="form-control" accept=".pdf,.doc,.docx"></div></td>
+            <td><button class="btn btn-danger" onclick="deleteConferenceCommitteeRow(this)">-</button></td>
+        `;
+        updateSrNo('conferenceCommitteeTable');
+    }
+
+    function deleteConferenceCommitteeRow(btn) {
+        const row = btn.closest('tr');
+        row.parentNode.removeChild(row);
+        updateSrNo('conferenceCommitteeTable');
+    }
+
+    function updateSrNo(tableId) {
+        const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+        Array.from(table.rows).forEach((row, idx) => {
+            row.cells[0].innerText = idx + 1;
+        });
+    }
+
+function updateRowNumbers(tableId) {
+    const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+    const rows = table.rows;
+    for (let i = 0; i < rows.length; i++) {
+        rows[i].cells[0].innerText = i + 1; // Update the Sr No. cell
+    }
+}
+
+
+        // Add new row to Contribution to Society form
+        function addContributionRow() {
+            const tableBody = document.getElementById('contributionTable').querySelector('tbody');
+            const rowCount = tableBody.rows.length + 1; // Sr No. starts at 1
+            const newRow = tableBody.insertRow();
+            newRow.innerHTML = `
+                <td>${rowCount}</td>
+                <td>
+                    <select class="form-control" title="Select Semester">
+                        <option value="">Select</option>
+                        <option value="I">I</option>
+                        <option value="II">II</option>
+                        <option value="III">III</option>
+                        <option value="IV">IV</option>
+                        <option value="V">V</option>
+                        <option value="VI">VI</option>
+                        <option value="VII">VII</option>
+                        <option value="VIII">VIII</option>
+                    </select>
+                </td>
+                <td><textarea class="form-control" title="Enter Activity" rows="2"></textarea></td>
+                <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points"></td>
+                <td><textarea class="form-control" title="Enter Order Copy" rows="2"></textarea></td>
+                <td><textarea class="form-control" title="Enter Details" rows="2"></textarea></td>
+                <td>
+                    <div class="d-flex">
+                        <input type="file" name="contribution_${rowCount}_file" class="form-control" accept=".pdf,.doc,.docx">
+                    </div>
+                </td>
+                <td><button class="btn btn-danger" onclick="removeRow(this, 'contributionTable')">-</button></td>
+            `;
+            updateRowNumbers('contributionTable');
+        }
+
+        // Remove row from Contribution to Society form
+        function removeRow(button, tableId) {
+            let table = document.getElementById(tableId);
+            table.deleteRow(button.parentNode.parentNode.rowIndex - 0);
+            calculateTeachingTotal();
+        }
+
+        // Calculate the total points for Contribution to Society
+        function calculateTeachingTotal() {
+            let total = 0;
+            const points = document.querySelectorAll('.points');
+            
+            points.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                total += value;
+            });
+            
+            // Cap at 10 points if needed
+            total = Math.min(total, 10);
+            
+            // If total exceeds 10, adjust the last changed input
+            if (total > 10) {
+                // Find the currently focused or last changed input
+                const activeInput = document.activeElement;
+                if (activeInput && activeInput.classList.contains('points')) {
+                    // Calculate how much we need to reduce this input
+                    const currentValue = parseFloat(activeInput.value) || 0;
+                    const excess = total - 10;
+                    const newValue = Math.max(0, currentValue - excess);
+                    
+                    // Update the input value
+                    activeInput.value = newValue;
+                    
+                    // Recalculate the total
+                    total = 10;
+                }
+            }
+            
+            document.getElementById('totalsocietyPoints').textContent = total.toFixed(2);
+        }
+
+        // Toggle display of upload/download buttons
+        function toggleUploadDownload(section) {
+            console.log(`Toggling section: ${section}`);
+            if (section === 'selfImprovementInitiatives') {
+                const container = document.getElementById('selfImprovementTableContainer');
+                const checkbox = document.getElementById('selfImprovementInitiatives');
+                container.style.display = checkbox.checked ? 'block' : 'none';
+            } else if (section === 'representingCollege') {
+                const container = document.getElementById('representingCollegeTableContainer');
+                const checkbox = document.getElementById('representingCollege');
+                container.style.display = checkbox.checked ? 'block' : 'none';
+            }
+        }
+
+        // Reset all inputs
+        function resetAll() {
+            if (confirm('Are you sure you want to reset all fields?')) {
+                const formId = document.getElementById('formId').value; // Get form_id from hidden field
+                
+                // Send an API request to reset the form in the database
+                fetch('/reset-form3', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `formId=${encodeURIComponent(formId)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Clear all tables
+                        document.querySelectorAll('table tbody').forEach(tbody => {
+                            tbody.innerHTML = ''; // Clear all table bodies
+                        });
+                        
+                        // Reset totals
+                        document.getElementById("totalsocietyPoints").textContent = "0";
+                        
+                        alert('Form reset successfully!');
+                        // Reload the page to refresh all tables
+                        window.location.reload();
+                    } else {
+                        alert('Failed to reset the form: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error resetting the form:', error);
+                    alert('An error occurred while resetting the form.');
+                });
+            }
+        }
+
+        // Add this before the saveFormData function
+        function debugFormData() {
+            const tables = {
+                'selfImprovementTable': 'Self Improvement',
+                'certificationTable': 'Certifications',
+                'moocsTable': 'MOOCS',
+                'swayamTable': 'SWAYAM',
+                'seminarTable': 'Seminars',
+                'CopyrightTable': 'Copyright',
+                'patentTable': 'Patent',
+                'resourcePersonTable': 'Resource Person',
+                'universityCommitteeTable': 'University Committee',
+                'externalProjectsTable': 'External Projects'
+            };
+
+            console.log('=== Form Debug Info ===');
+            console.log('Form ID:', document.getElementById('formId').value);
+            console.log('Self Assessment Marks:', document.getElementById('selfAssessmentMarks').value);
+
+            for (const [tableId, tableName] of Object.entries(tables)) {
+                const table = document.getElementById(tableId);
+                if (table) {
+                    const rows = table.querySelectorAll('tbody tr');
+                    console.log(`${tableName} table:`, {
+                        found: true,
+                        rowCount: rows.length,
+                        firstRowInputs: rows.length > 0 ? Array.from(rows[0].querySelectorAll('input, textarea, select')).map(input => ({
+                            type: input.type,
+                            name: input.name,
+                            value: input.value,
+                            hasFile: input.type === 'file' ? input.files.length > 0 : 'N/A'
+                        })) : []
+                    });
+                } else {
+                    console.log(`${tableName} table: NOT FOUND`);
+                }
+            }
+        }
+
+       // Fixed JavaScript section for file processing
+function saveFormData() {
+    debugFormData();
+    try {
+        const formData = new FormData();
+
+        // Collect form ID
+        const formId = document.getElementById('formId').value;
+        if (!formId) {
+            console.error('Form ID is missing');
+            alert('Error: Form ID is missing');
+            return;
+        }
+        formData.append('formId', formId);
+        
+        console.log("Saving form data for form ID:", formId);
+
+        // Add self assessment marks
+        const selfAssessmentMarks = document.getElementById('selfAssessmentMarks').value || '0';
+        formData.append('selfAssessmentMarks', selfAssessmentMarks);
+        console.log('Self assessment marks:', selfAssessmentMarks);
+
+        // Process training table specifically (since it has file uploads)
+        const trainingTable = document.getElementById('trainingTable');
+        if (trainingTable) {
+            const rows = trainingTable.querySelectorAll('tbody tr');
+            console.log(`Processing trainingTable: ${rows.length} rows found`);
+            
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea, select');
+                const rowData = {};
+                let hasFile = false;
+                
+                console.log(`\nTraining Row ${index + 1} inputs:`, inputs.length);
+                
+                inputs.forEach(input => {
+                    if (input.type === 'file') {
+                        // Check if file is selected
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            console.log(`File found for training row ${index}:`, file.name);
+                            formData.append(`trainingFile[${index}]`, file);
+                            hasFile = true;
+                        } else {
+                            console.log(`No file selected for training row ${index}`);
+                        }
+                    } else {
+                        const name = input.getAttribute('name');
+                        if (name) {
+                            rowData[name] = input.value;
+                            console.log(`Training Input ${name}:`, input.value);
+                        }
+                    }
+                });
+
+                // Only add row data if there's actual content
+                const hasContent = Object.values(rowData).some(value => value && value.trim());
+                if (hasContent || hasFile) {
+                    // Add srno to rowData
+                    rowData.srno = index + 1;
+                    formData.append(`training[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added training entry ${index}:`, rowData);
+                } else {
+                    console.log(`Skipping empty training row ${index}`);
+                }
+            });
+        }
+
+        // -------------------- Self-Improvement Table (handles file uploads) --------------------
+        const selfImprovementTable = document.getElementById('selfImprovementTable');
+        if (selfImprovementTable) {
+            const rows = selfImprovementTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing selfImprovementTable: ${rows.length} rows found`);
+            
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea, select');
+                const rowData = {};
+                let hasFile = false;
+                
+                inputs.forEach(input => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`selfImprovement_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for selfImprovement row ${index + 1}:`, file.name);
+                        }
+                    } else {
+                        const name = input.getAttribute('name');
+                        if (name) {
+                            rowData[name] = input.value;
+                        }
+                    }
+                });
+                
+                const hasContent = Object.values(rowData).some(value => value && value.trim());
+                if (hasContent || hasFile) {
+                    rowData.srno = index + 1;
+                    formData.append(`selfImprovement[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added selfImprovement entry ${index}:`, rowData);
+                } else {
+                    console.log(`Skipping empty selfImprovement row ${index + 1}`);
+                }
+            });
+        }
+
+        // -------------------- MOOCS Table (file uploads) --------------------
+        const moocsTable = document.getElementById('moocsTable');
+        if (moocsTable) {
+            const rows = moocsTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing moocsTable: ${rows.length} rows found`);
+
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea, select');
+                const rowData = {};
+                let hasFile = false;
+
+                inputs.forEach(input => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`moocs_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for MOOCS row ${index + 1}:`, file.name);
+                        }
+                    } else {
+                        const title = input.getAttribute('title');
+                        const nameAttr = input.getAttribute('name');
+                        const key = nameAttr || title || '';
+                        if (key) {
+                            rowData[key.replace(/\s+/g, '_').toLowerCase()] = input.value;
+                        }
+                    }
+                });
+
+                const hasContent = Object.values(rowData).some(v => v && v.trim());
+                if (hasContent || hasFile) {
+                    rowData.srno = index + 1;
+                    formData.append(`moocs[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added MOOCS entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- SWAYAM Table (file uploads) --------------------
+        const swayamTable = document.getElementById('swayamTable');
+        if (swayamTable) {
+            const rows = swayamTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing swayamTable: ${rows.length} rows found`);
+
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea, select');
+                const rowData = {};
+                let hasFile = false;
+                inputs.forEach(input => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`swayam_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for SWAYAM row ${index + 1}:`, file.name);
+                        }
+                    } else {
+                        const title = input.getAttribute('title');
+                        const nameAttr = input.getAttribute('name');
+                        const key = nameAttr || title || '';
+                        if (key) {
+                            rowData[key.replace(/\s+/g, '_').toLowerCase()] = input.value;
+                        }
+                    }
+                });
+                const hasContent = Object.values(rowData).some(v => v && v.trim());
+                if (hasContent || hasFile) {
+                    rowData.srno = index + 1;
+                    formData.append(`swayam[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added SWAYAM entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- Resource Person Table (file uploads) --------------------
+        const resourcePersonTable = document.getElementById('resourcePersonTable');
+        if (resourcePersonTable) {
+            const rows = resourcePersonTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing resourcePersonTable: ${rows.length} rows found`);
+
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea');
+                const rowData = {};
+                let hasFile = false;
+
+                // Map columns by position to keys we need in backend
+                inputs.forEach((input, idx) => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`resource_person_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for ResourcePerson row ${index + 1}:`, file.name);
+                        }
+                    } else {
+                        // Column mapping
+                        switch (idx) {
+                            case 0:
+                                rowData['topic'] = input.value;
+                                break;
+                            case 1:
+                                rowData['department'] = input.value;
+                                break;
+                            case 2:
+                                rowData['institute'] = input.value;
+                                break;
+                            case 3:
+                                rowData['participants'] = input.value;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+
+                const hasContent = Object.values(rowData).some(v => v && v.toString().trim());
+                if (hasContent || hasFile) {
+                    rowData['srno'] = index + 1;
+                    formData.append(`resourcePerson[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added ResourcePerson entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- University Committee Table (file uploads) --------------------
+        const universityCommitteeTable = document.getElementById('universityCommitteeTable');
+        if (universityCommitteeTable) {
+            const rows = universityCommitteeTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing universityCommitteeTable: ${rows.length} rows found`);
+
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea');
+                const rowData = {};
+                let hasFile = false;
+
+                inputs.forEach((input, idx) => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`university_committee_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for UniversityCommittee row ${index + 1}:`, file.name);
+                        }
+                    } else {
+                        switch (idx) {
+                            case 0:
+                                rowData['committee'] = input.value;
+                                break;
+                            case 1:
+                                rowData['responsibilities'] = input.value;
+                                break;
+                            case 2:
+                                rowData['designation'] = input.value;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+
+                const hasContent = Object.values(rowData).some(v => v && v.toString().trim());
+                if (hasContent || hasFile) {
+                    rowData['srno'] = index + 1;
+                    formData.append(`universityCommittee[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added UniversityCommittee entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- External Projects Table (file uploads) --------------------
+        const externalProjectsTable = document.getElementById('externalProjectsTable');
+        if (externalProjectsTable) {
+            const rows = externalProjectsTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing externalProjectsTable: ${rows.length} rows found`);
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea');
+                const rowData = {};
+                let hasFile = false;
+
+                inputs.forEach((input, idx) => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`external_projects_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for ExternalProjects row ${index + 1}:`, file.name);
+                        }
+                    } else {
+                        switch (idx) {
+                            case 0:
+                                rowData['role'] = input.value;
+                                break;
+                            case 1:
+                                rowData['description'] = input.value;
+                                break;
+                            case 2:
+                                rowData['contribution'] = input.value;
+                                break;
+                            case 3:
+                                rowData['university'] = input.value;
+                                break;
+                            case 4:
+                                rowData['duration'] = input.value;
+                                break;
+                            case 5:
+                                rowData['comments'] = input.value;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+                const hasContent = Object.values(rowData).some(v => v && v.toString().trim());
+                if (hasContent || hasFile) {
+                    rowData['srno'] = index + 1;
+                    formData.append(`externalProjects[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added ExternalProjects entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- Special Mentions Table (file uploads) --------------------
+        const specialMentionsTable = document.getElementById('specialMentionsTable');
+        if (specialMentionsTable) {
+            const rows = specialMentionsTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing specialMentionsTable: ${rows.length} rows found`);
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input');
+                const rowData = {};
+                let hasFile = false;
+
+                inputs.forEach((input) => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`special_mentions_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for SpecialMentions row ${index + 1}:`, file.name);
+                        }
+                    } else if (input.name === 'name') {
+                        rowData['name'] = input.value;
+                    } else if (input.name === 'roles') {
+                        rowData['roles'] = input.value;
+                    }
+                });
+
+                const hasContent = Object.values(rowData).some(v => v && v.toString().trim());
+                if (hasContent || hasFile) {
+                    rowData['srno'] = index + 1;
+                    formData.append(`specialMentions[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added SpecialMentions entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- Member of Conference/Journal Committee Table (file uploads) --------------------
+        const conferenceCommitteeTable = document.getElementById('conferenceCommitteeTable');
+        if (conferenceCommitteeTable) {
+            const rows = conferenceCommitteeTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing conferenceCommitteeTable: ${rows.length} rows found`);
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input');
+                const rowData = {};
+                let hasFile = false;
+
+                inputs.forEach((input) => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`conference_committee_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for ConferenceCommittee row ${index + 1}:`, file.name);
+                        }
+                    } else if (input.name === 'name') {
+                        rowData['name'] = input.value;
+                    } else if (input.name === 'designation') {
+                        rowData['designation'] = input.value;
+                    }
+                });
+
+                const hasContent = Object.values(rowData).some(v => v && v.toString().trim());
+                if (hasContent || hasFile) {
+                    rowData['srno'] = index + 1;
+                    formData.append(`conferenceCommittee[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added ConferenceCommittee entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- Contribution to Society Table (file uploads) --------------------
+        const contributionTable = document.getElementById('contributionTable');
+        if (contributionTable) {
+            const rows = contributionTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing contributionTable: ${rows.length} rows found`);
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea, select');
+                const rowData = {};
+                let hasFile = false;
+
+                inputs.forEach((input, idx) => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            const file = input.files[0];
+                            formData.append(`contribution_${index + 1}_file`, file);
+                            hasFile = true;
+                            console.log(`File found for Contribution row ${index + 1}:`, file.name);
+                        }
+                    } else {
+                        switch (idx) {
+                            case 0:
+                                rowData['semester'] = input.value;
+                                break;
+                            case 1:
+                                rowData['activity'] = input.value;
+                                break;
+                            case 2:
+                                rowData['points'] = input.value;
+                                break;
+                            case 3:
+                                rowData['order_cpy'] = input.value;
+                                break;
+                            case 4:
+                                rowData['details'] = input.value;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+                const hasContent = Object.values(rowData).some(v => v && v.toString().trim());
+                if (hasContent || hasFile) {
+                    rowData['srno'] = index + 1;
+                    formData.append(`contribution[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added Contribution entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- Certification table (includes file uploads) --------------------
+        const certificationTable = document.getElementById('certificationTable');
+        if (certificationTable) {
+            const rows = certificationTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing certificationTable: ${rows.length} rows found`);
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea');
+                const rowData = {};
+                let hasFile = false;
+
+                inputs.forEach(input => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            formData.append(`certificationFile[${index}]`, input.files[0]);
+                            hasFile = true;
+                            console.log(`File found for Certification row ${index}:`, input.files[0].name);
+                        }
+                    } else {
+                        const key = input.getAttribute('name') || input.getAttribute('title') || '';
+                        if (key) {
+                            rowData[key] = input.value;
+                            // Also map to standardized 'name' key expected by backend
+                            if (!rowData['name']) {
+                                rowData['name'] = input.value;
+                            }
+                        }
+                    }
+                });
+                const hasContent = Object.values(rowData).some(v => v && v.trim());
+                if (hasContent || hasFile) {
+                    formData.append(`certification[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added Certification entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- Seminar/Webinar table (includes file uploads) --------------------
+        const seminarTable = document.getElementById('seminarTable');
+        if (seminarTable) {
+            const rows = seminarTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing seminarTable: ${rows.length} rows found`);
+
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input, textarea, select');
+                const rowData = {};
+                let hasFile = false;
+
+                inputs.forEach(input => {
+                    if (input.type === 'file') {
+                        if (input.files && input.files.length > 0) {
+                            formData.append(`webinar_${index + 1}_file`, input.files[0]);
+                            hasFile = true;
+                            console.log(`File found for Webinar row ${index + 1}:`, input.files[0].name);
+                        }
+                    } else {
+                        const key = input.getAttribute('name') || input.getAttribute('title') || '';
+                        if (key) {
+                            rowData[key] = input.value;
+                        }
+                    }
+                });
+
+                const hasContent = Object.values(rowData).some(v => v && v.trim());
+                if (hasContent || hasFile) {
+                    rowData.srno = index + 1;
+                    formData.append(`webinar[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added Webinar entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // -------------------- Other tables (without file uploads) --------------------
+        const otherTables = {
+            
+            
+            'resourcePersonTable': 'resourcePerson',
+            'universityCommitteeTable': 'universityCommittee',
+            'externalProjectsTable': 'externalProjects'
+        };
+
+        // Process Copyright Table separately to handle file uploads and special fields
+        const copyrightTable = document.getElementById('CopyrightTable');
+        if (copyrightTable) {
+            const rows = copyrightTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing CopyrightTable: ${rows.length} rows found`);
+
+            rows.forEach((row, index) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 8) return; // Skip incomplete rows
+
+                const rowData = {
+                    name: cells[1].querySelector('textarea')?.value.trim() || '',
+                    month: cells[2].querySelector('input')?.value.trim() || '',
+                    reg_no: cells[3].querySelector('input')?.value.trim() || '',
+                    filed_pub_grant: cells[4].querySelector('select')?.value || '',
+                    category: cells[5].querySelector('select')?.value || '',
+                    srno: index + 1
+                };
+
+                // Handle file upload
+                const fileInput = cells[6].querySelector('input[type="file"]');
+                if (fileInput && fileInput.files.length > 0) {
+                    formData.append(`copyright_${index}_file`, fileInput.files[0]);
+                }
+
+                // Only add if there's any content
+                const hasContent = Object.values(rowData).some(value => value && value.trim());
+                if (hasContent || (fileInput && fileInput.files.length > 0)) {
+                    formData.append(`copyright[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added copyright entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // Process Patent Table (mirrors copyright logic)
+        const patentTable = document.getElementById('patentTable');
+        if (patentTable) {
+            const rows = patentTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing patentTable: ${rows.length} rows found`);
+
+            rows.forEach((row, index) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 8) return; // Skip incomplete rows
+
+                const rowData = {
+                    name: cells[1].querySelector('textarea')?.value.trim() || '',
+                    month: cells[2].querySelector('input')?.value.trim() || '',
+                    reg_no: cells[3].querySelector('input')?.value.trim() || '',
+                    filed_pub_grant: cells[4].querySelector('select')?.value || '',
+                    category: cells[5].querySelector('select')?.value || '',
+                    srno: index + 1
+                };
+
+                // Handle file upload
+                const fileInput = cells[6].querySelector('input[type="file"]');
+                if (fileInput && fileInput.files.length > 0) {
+                    formData.append(`patent_${index}_file`, fileInput.files[0]);
+                }
+
+                // Only add if there's any content
+                const hasContent = Object.values(rowData).some(value => value && value.trim());
+                if (hasContent || (fileInput && fileInput.files.length > 0)) {
+                    formData.append(`patent[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added patent entry ${index}:`, rowData);
+                }
+            });
+        }
+
+        // Process other tables
+        for (const [tableId, formKey] of Object.entries(otherTables)) {
+            const table = document.getElementById(tableId);
+            if (table) {
+                const container = table.closest('.table-container');
+                if (container && container.style.display === 'none') {
+                    console.log(`Skipping ${tableId} as its container is not visible`);
+                    continue;
+                }
+
+                const rows = table.querySelectorAll('tbody tr');
+                console.log(`\nProcessing ${tableId}: ${rows.length} rows found`);
+
+                rows.forEach((row, index) => {
+                    const inputs = row.querySelectorAll('input, textarea, select');
+                    const rowData = {};
+                    
+                    inputs.forEach(input => {
+                        if (input.type !== 'file') {
+                            const name = input.getAttribute('name') || input.getAttribute('title') || '';
+                            if (name) {
+                                rowData[name] = input.value;
+                            }
+                        }
+                    });
+
+                    const hasContent = Object.values(rowData).some(value => value && value.trim());
+                    if (hasContent) {
+                        rowData.srno = index + 1;
+                        formData.append(`${formKey}[${index}]`, JSON.stringify(rowData));
+                        console.log(`Added ${formKey} entry ${index}:`, rowData);
+                    }
+                });
+            }
+        }
+
+        // Log all form data before sending
+        console.log("\nForm data entries:");
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(key, `File: ${value.name} (${value.size} bytes)`);
+            } else {
+                console.log(key, value);
+            }
+        }
+
+        // Send the form data to the server
+        console.log("\nSending form data to server...");
+        document.getElementById("saveButton").disabled = true;
+        document.getElementById("saveButton").textContent = "Saving...";
+        
+        fetch('/save-form3-data', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => {
+            console.log("Server response status:", response.status);
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById("saveButton").disabled = false;
+            document.getElementById("saveButton").textContent = "Save";
+            
+            if (data.status === 'success') {
+                alert('Form data saved successfully');
+                console.log("Save successful:", data);
+            } else {
+                alert('Error: ' + data.message);
+                console.error("Save error:", data);
+            }
+        })
+        .catch(error => {
+            document.getElementById("saveButton").disabled = false;
+            document.getElementById("saveButton").textContent = "Save";
+            
+            console.error('Error:', error);
+            alert('Error saving form data: ' + error);
+        });
+    } catch (error) {
+        console.error('Error in saveFormData:', error);
+        alert('Error preparing form data: ' + error.message);
+    }
+}
+
+// Helper function to debug form data
+function debugFormData() {
+    console.log("=== FORM DATA DEBUG ===");
+    
+    // Check training table specifically
+    const trainingTable = document.getElementById('trainingTable');
+    if (trainingTable) {
+        const rows = trainingTable.querySelectorAll('tbody tr');
+        console.log(`Training table has ${rows.length} rows`);
+        
+        rows.forEach((row, index) => {
+            const fileInput = row.querySelector('input[type="file"]');
+            if (fileInput) {
+                console.log(`Row ${index} file input:`, fileInput.files.length > 0 ? fileInput.files[0].name : 'No file');
+            }
+            
+            const textInputs = row.querySelectorAll('input:not([type="file"]), textarea, select');
+            textInputs.forEach(input => {
+                if (input.value) {
+                    console.log(`Row ${index} ${input.name}:`, input.value);
+                }
+            });
+        });
+    }
+    
+    console.log("=== END DEBUG ===");
+}
+
+
+
+// upload function 
+function uploadDocument(input) {
+    const file = input.files[0];
+    const uploadStatus = input.nextElementSibling;
+
+    if (!file) {
+        alert("Please select a file to upload.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            uploadStatus.textContent = `Error: ${data.error}`;
+            uploadStatus.style.color = 'red';
+        } else {
+            uploadStatus.textContent = `Uploaded: ${data.filename}`;
+            uploadStatus.style.color = 'green';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        uploadStatus.textContent = 'Upload failed!';
+        uploadStatus.style.color = 'red';
+    });
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+function goToNext() {
+    // Fetch input value correctly
+    let totalPoints = parseInt(document.getElementById('selfAssessmentMarks').value);
+    let totalPointsObtained = parseInt(document.getElementById('totalsocietyPoints').innerText);
+
+    console.log("Total acr Points: ", totalPoints);
+    console.log("Total contribution to society Points: ", totalPointsObtained);
+
+    // Ensure form ID is valid
+    let formId = document.getElementById('formId').value;
+
+    if (!formId || isNaN(totalPoints) || isNaN(totalPointsObtained)) {
+        console.error("Invalid form ID or points.");
+        alert("Error: Please ensure all form data is filled correctly.");
+        return;
+    }
+
+    let overallTotal = totalPoints + totalPointsObtained;
+
+    // Log the data being sent
+    console.log(JSON.stringify({
+        form_id: formId,
+        total: overallTotal,
+        acr: totalPoints,
+        society: totalPointsObtained
+    }));
+
+    // Send AJAX request
+    $.ajax({
+        url: '/save-3total-points',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            form_id: formId,
+            total: overallTotal,
+            acr: totalPoints,
+            society: totalPointsObtained
+        }),
+        success: function(response) {
+            // Use the redirect URL from the server response
+            if (response.redirect_url) {
+                window.location.href = response.redirect_url;
+            } else {
+                // Fallback to the old behavior
+                window.location.href = "/review/" + formId;
+            }
+        },
+        error: function(error) {
+            console.error("Error saving total points:", error);
+            alert("There was an error saving the total points. Please try again.");
+        }
+    });
+}
+
+// Document load event listener to initialize the form
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded, initializing form");
+    
+    // Initialize the table visibility based on checkboxes
+    toggleUploadDownload('selfImprovementInitiatives');
+    toggleUploadDownload('representingCollege');
+    
+    // Calculate initial totals for contribution table
+    calculateTeachingTotal();
+    
+    // Get data counts from data attributes
+    const selfImprovementDataCount = document.getElementById('formData').getAttribute('data-self-improvement-count');
+    const certificationDataCount = document.getElementById('formData').getAttribute('data-certification-count');
+    const copyrightDataCount = document.getElementById('formData').getAttribute('data-copyright-count');
+    const moocsDataCount = document.getElementById('formData').getAttribute('data-moocs-count');
+    const swayamDataCount = document.getElementById('formData').getAttribute('data-swayam-count');
+    const webinarDataCount = document.getElementById('formData').getAttribute('data-webinar-count');
+    
+    const resourceDataCount = document.getElementById('formData').getAttribute('data-resource-count');
+    const committeeDataCount = document.getElementById('formData').getAttribute('data-committee-count');
+    const projectDataCount = document.getElementById('formData').getAttribute('data-project-count');
+    
+    console.log("Data counts:", {
+        selfImprovementDataCount,
+        certificationDataCount,
+        copyrightDataCount,
+        moocsDataCount,
+        swayamDataCount,
+        webinarDataCount,
+        resourceDataCount,
+        committeeDataCount,
+        projectDataCount
+    });
+    
+    // Show self-improvement section if it has data
+    if (parseInt(selfImprovementDataCount) > 0 || 
+        parseInt(certificationDataCount) > 0 || 
+        parseInt(copyrightDataCount) > 0 ||
+        parseInt(moocsDataCount) > 0 ||
+        parseInt(swayamDataCount) > 0 ||
+        parseInt(webinarDataCount) > 0) {
+        console.log("Found self-improvement data, showing section");
+        document.getElementById('selfImprovementInitiatives').checked = true;
+        toggleUploadDownload('selfImprovementInitiatives');
+    }
+    
+    // Show representing college section if it has data
+    if (parseInt(resourceDataCount) > 0 || parseInt(committeeDataCount) > 0 || parseInt(projectDataCount) > 0) {
+        console.log("Found representing college data, showing section");
+        document.getElementById('representingCollege').checked = true;
+        toggleUploadDownload('representingCollege');
+    }
+});
+
+        // Enable double-click editing on header text
+        function initCustomTableHeaderEditing() {
+            const headerSpans = document.querySelectorAll('#customTable thead .column-header span');
+            headerSpans.forEach(span => {
+                span.addEventListener('dblclick', function (e) {
+                    const headerDiv = this.parentElement;
+                    const icon = headerDiv.querySelector('.column-edit');
+                    if (icon) {
+                        editColumnName(icon);
+                    }
+                });
+            });
+        }
+        // Initialize header editing once DOM is ready (table already in DOM)
+        // Attach double-click delegation to header spans (works for dynamically added headers)
+        document.addEventListener('DOMContentLoaded', function () {
+            const thead = document.querySelector('#customTable thead');
+            if (thead) {
+                thead.addEventListener('dblclick', function (e) {
+                    const span = e.target.closest('.column-header span');
+                    if (span) {
+                        const icon = span.parentElement.querySelector('.column-edit');
+                        if (icon) {
+                            editColumnName(icon);
+                        }
+                    }
+                });
+            }
+            initCustomTableHeaderEditing(); // still add individual listeners for existing headers
+        });
+    </script>
+    <style>
+        /* Ensure edit icon is visible and clickable */
+        .column-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .column-header span { cursor: pointer; }
+        .column-header .column-edit {
+            color: #007bff;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .column-header .column-edit.editing {
+            color: #28a745;
+        }
+    </style>
+    <div class="text-center my-4">
+        <a href="/form2/{{ form_id }}" class="btn btn-secondary">Back to Form 2</a>
+    </div>
+
+    <!-- Custom Table Section -->
+    
+    <script>
+        // Custom Table Functions
+        function addCustomTableRow() {
+            const table = document.getElementById('customTable');
+            const tbody = table.querySelector('tbody');
+            const headerCells = table.querySelectorAll('thead th');
+            
+            const newRow = tbody.insertRow();
+            
+            // Add row number cell
+            const rowNumberCell = newRow.insertCell(0);
+            rowNumberCell.textContent = tbody.rows.length;
+            
+            // Add data cells based on header columns (skip first and last which are Sr. No. and Action)
+            for (let i = 1; i < headerCells.length - 1; i++) {
+                const headerText = headerCells[i].querySelector('span')?.textContent || 'Field';
+                const newCell = newRow.insertCell(i);
+                
+                if (headerText.toLowerCase() === 'document') {
+                    newCell.innerHTML = `
+                        <div class="file-upload-container">
+                            <input type="file" class="form-control" onchange="updateFileName(this)">
+                            <span class="file-name"></span>
+                        </div>`;
+                } else {
+                    newCell.innerHTML = `
+                        <input type="text" class="form-control" placeholder="${headerText}">`;
+                }
+            }
+            
+            // Add action cell
+            const actionCell = newRow.insertCell(-1);
+            actionCell.className = 'text-center';
+            actionCell.innerHTML = `
+                <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                    <i class="fas fa-trash-alt"></i> Remove
+                </button>`;
+            
+            updateRowNumbers();
+        }
+        
+        // Update file name display
+        function updateFileName(input) {
+            const fileNameSpan = input.nextElementSibling;
+            if (input.files && input.files.length > 0) {
+                fileNameSpan.textContent = input.files[0].name;
+            } else {
+                fileNameSpan.textContent = '';
+            }
+        }
+        
+        // Delete row from Custom Table
+        function deleteRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+            updateRowNumbers();
+        }
+        
+        // Update row numbers in first column
+        function updateRowNumbers() {
+            const table = document.getElementById('customTable');
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+        }
+        
+        // Add column to Custom Table
+        function addCustomTableColumn() {
+            const table = document.getElementById('customTable');
+            const headerRow = table.querySelector('thead tr');
+            const rows = table.querySelectorAll('tbody tr');
+            
+            // Add header cell
+            const newHeaderCell = document.createElement('th');
+            newHeaderCell.innerHTML = `
+                <div class="column-header">
+                    <span>New Column</span>
+                    <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                </div>`;
+            headerRow.insertBefore(newHeaderCell, headerRow.lastElementChild);
+            
+            // Add cells to each row
+            rows.forEach(row => {
+                if (row.cells.length > 1) { // Don't add to header row
+                    const newCell = row.insertCell(row.cells.length - 1);
+                    newCell.innerHTML = '<input type="text" class="form-control">';
+                }
+            });
+        }
+        
+        // Add upload column to Custom Table
+        function addUploadColumn() {
+            const table = document.getElementById('customTable');
+            const headerRow = table.querySelector('thead tr');
+            const rows = table.querySelectorAll('tbody tr');
+            
+            // Add header cell
+            const newHeaderCell = document.createElement('th');
+            newHeaderCell.innerHTML = `
+                <div class="column-header">
+                    <span>Document</span>
+                    <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                </div>`;
+            headerRow.insertBefore(newHeaderCell, headerRow.lastElementChild);
+            
+            // Add file upload cells to each row
+            rows.forEach(row => {
+                if (row.cells.length > 1) { // Don't add to header row
+                    const newCell = row.insertCell(row.cells.length - 1);
+                    newCell.innerHTML = `
+                        <div class="file-upload-container">
+                            <input type="file" class="form-control" onchange="updateFileName(this)">
+                            <span class="file-name"></span>
+                        </div>`;
+                }
+            });
+        }
+        
+        // Delete column from Custom Table
+        function deleteCustomTableColumn() {
+            const table = document.getElementById('customTable');
+            const headerRow = table.querySelector('thead tr');
+            const rows = table.querySelectorAll('tbody tr');
+            const colCount = headerRow.cells.length;
+            
+            if (colCount <= 2) return; // Don't delete if only one column left
+            
+            // Remove header cell (second to last column)
+            headerRow.deleteCell(colCount - 2);
+            
+            // Remove cells from each row (second to last column)
+            rows.forEach(row => {
+                if (row.cells.length > 2) { // Keep at least one data column
+                    row.deleteCell(row.cells.length - 2);
+                }
+            });
+        }
+        
+        // Delete row from Custom Table
+        function deleteCustomTableRow() {
+            const table = document.getElementById('customTable');
+            const tbody = table.querySelector('tbody');
+            const rows = tbody.rows;
+            
+            if (rows.length > 0) {
+                rows[rows.length - 1].remove();
+                updateRowNumbers();
+            }
+        }
+        
+        // Edit column name
+        function editColumnName(icon) {
+            // Check if we're already editing
+            if (icon.classList.contains('editing')) return;
+            
+            const headerDiv = icon.parentElement;
+            const span = headerDiv.querySelector('span');
+            const currentText = span.textContent;
+            
+            // Create input element
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'form-control form-control-sm d-inline-block w-auto';
+            input.value = currentText;
+            
+            // Add editing class to prevent multiple edits
+            icon.classList.add('editing');
+            
+            // Replace span with input
+            headerDiv.replaceChild(input, span);
+            input.focus();
+            
+            // Save function
+            const save = () => {
+                const newText = input.value.trim() || 'Column';
+                const newSpan = document.createElement('span');
+                newSpan.textContent = newText;
+                
+                // Replace input with new span
+                headerDiv.replaceChild(newSpan, input);
+                
+                // Update all input placeholders in this column
+                const headerRow = headerDiv.closest('tr');
+                const columnIndex = Array.from(headerRow.cells).indexOf(headerDiv.closest('th'));
+                const table = document.getElementById('customTable');
+                const inputs = table.querySelectorAll(`tbody tr td:nth-child(${columnIndex + 1}) input[type="text"]`);
+                inputs.forEach(input => {
+                    input.placeholder = newText;
+                });
+                
+                // Re-add the edit icon and remove editing class
+                headerDiv.appendChild(icon);
+                icon.classList.remove('editing');
+                
+                // Stop propagation to prevent immediate re-edit
+                event.stopPropagation();
+            };
+            
+            // Handle save on blur
+            const onBlur = (e) => {
+                // Use setTimeout to let click events process first
+                setTimeout(() => {
+                    if (document.activeElement !== input) {
+                        save();
+                        input.removeEventListener('blur', onBlur);
+                    }
+                }, 200);
+            };
+            
+            // Add event listeners
+            input.addEventListener('blur', onBlur);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    save();
+                } else if (e.key === 'Escape') {
+                    // Restore original text on Escape
+                    const newSpan = document.createElement('span');
+                    newSpan.textContent = currentText;
+                    headerDiv.replaceChild(newSpan, input);
+                    headerDiv.appendChild(icon);
+                    icon.classList.remove('editing');
+                }
+            });
+            
+            // Prevent event propagation to avoid immediate blur
+            input.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
+            // Stop event propagation for the icon click
+            event.stopPropagation();
+        }
+    </script>
+</body>
+
+</html>

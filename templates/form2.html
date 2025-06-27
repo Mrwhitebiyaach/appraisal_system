@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms2</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('/static/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin-bottom: 20px;
+        }
+    
+        .teaching-process-container {
+            margin-top: 150px;
+        }
+    
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    
+        .top-bar a {
+            margin-left: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    
+        .top-bar a:hover {
+            text-decoration: underline;
+        }
+    
+        .logo-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+    
+        .logo-link img {
+            width: 90px;
+            height: auto;
+        }
+    
+        /* Update the container to be wider */
+        .table-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-bottom: 50px;
+            padding: 20px;
+            width: 100%; /* Ensure full width */
+        }
+    
+        .table-box {
+            background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 1200px; /* Increase max-width for wider content */
+            text-align: center;
+            margin-bottom: 40px;
+            transition: transform 0.3s ease-in-out;
+        }
+    
+        .table-box:hover {
+            transform: scale(1.02);
+        }
+    
+        .table-title {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #00796b;
+            transition: color 0.3s;
+        }
+    
+        .table-title:hover {
+            color: #004d40;
+        }
+    
+        .total-box {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            color: rgb(248, 254, 254);
+            background-color: rgba(72, 69, 69, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            transition: color 0.3s, background-color 0.3s;
+        }
+    
+        .total-box span {
+            font-size: 24px;
+            color: #ff9728;
+        }
+    
+        .table th,
+        .table td {
+            text-align: center;
+        }
+    
+        /* Adjust column widths */
+        .table th:nth-child(2),
+        .table td:nth-child(2) {
+            width: 10%;
+        }
+    
+        .table th:nth-child(3),
+        .table td:nth-child(3) {
+            width: 35%; /* Slightly reduce Activity column width */
+        }
+    
+        .table th:nth-child(5),
+        .table td:nth-child(5) {
+            width: 20%; /* Increase Order Copy column width */
+        }
+    
+        .table th:nth-child(6),
+        .table td:nth-child(6) {
+            width: 20%; /* Increase Upload Document column width */
+        }
+    
+        /* Ensure input fields take full width */
+        .table input.form-control {
+            width: 100%;
+        }
+    
+        /* Optional: Set table layout to fixed for stricter width enforcement */
+        .table {
+            table-layout: fixed;
+        }
+    
+        /* Spacing between forms */
+        .form-section {
+            margin-bottom: 50px;
+        }
+    
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    
+        .instructions {
+            font-weight: bold;
+            text-align: left;
+            margin-left: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 10px;
+        }
+    
+        input[required] {
+            border: 1px solid #ccc;
+        }
+    
+        input[required]:invalid {
+            border-color: red;
+        }
+    
+        #flashMessage {
+            padding: 10px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+        }
+
+        /* Make input fields expand vertically with content */
+        input.form-control {
+            height: auto;
+            min-height: calc(1.5em + .75rem + 2px);
+            overflow: visible;
+            resize: vertical;
+            white-space: normal;
+            text-overflow: clip;
+        }
+
+        /* Ensure table cells expand to fit content */
+        .table td {
+            vertical-align: middle;
+            height: auto;
+            min-height: 50px;
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        /* Make textual form inputs auto-expand */
+        textarea.form-control, 
+        input[type="text"].form-control, 
+        input[type="url"].form-control {
+            overflow: hidden;
+            resize: vertical;
+            min-height: 38px;
+            height: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+    
+</head>
+
+<body>
+    <!-- Top Right Links -->
+    <div class="top-bar">
+        <a href="{{ url_for('form_page', form_id=form_id) }}" class="btn btn-secondary" id="topBackButton">Back to Form 1</a>
+        <a href="/logout">Logout</a>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const topBackButton = document.getElementById('topBackButton');
+            if (topBackButton) {
+                topBackButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Get form_id from the URL parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const formId = urlParams.get('form_id');
+                    if (formId) {
+                        window.location.href = '/form/' + formId;
+                    } else {
+                        console.error('Form ID not found in URL parameters');
+                        // Fallback to using the form_id from template rendering
+                        window.location.href = '{{ url_for("form_page", form_id=form_id) }}';
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Logo -->
+    <a href="/landing" class="logo-link">
+        <img src="/static/logo.png" alt="Logo">
+    </a>
+    <div id="flashMessage" style="display:none; color: red; font-weight: bold; margin-bottom: 10px;"></div>
+  <pre></pre>
+   <!-- Department Activities Form with dynamic data loading -->
+<div class="table-container teaching-process-container" style="width: 100%; max-width: 1200px; margin: 0 auto;">
+    <div class="table-box" style="width: 100%;">
+        <h3 class="table-title">Department Activities</h3>
+        <div class="instructions">
+            <p>
+                1. This section summarizes all the responsibilities assigned by Head of the Department to a teacher during the academic year under consideration through a proper office order.<br><br>
+                2. This may include initiatives shown towards responsibilities as various departmental coordinators, Lab I/C, Time Table I/C, accreditation work, sponsored projects related work, other development work, departmental activities, submission of APR, compilation of departmental newsletter etc.<br><br>
+                3. The faculty member will earn 3 points per semester for each activity up to a maximum of 20.<br><br>
+                4. The max file size one can upload is 1MB. Document uploads are optional.
+            </p>
+        </div>
+        <table class="table table-bordered" style="table-layout: fixed; width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">Sr No.</th>
+                    <th style="width: 15%;">Semester</th>
+                    <th style="width: 25%;">Activity</th>
+                    <th style="width: 10%;">Points</th>
+                    <th style="width: 20%;">Order Copy</th>
+                    <th style="width: 20%;">Upload Document</th>
+                    <th style="width: 5%;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="deptTable">
+                {% for row in dept_activities_data %}
+                <tr data-srno="{{ loop.index }}">
+                    <td class="sr-no">{{ loop.index }}</td>
+                    <td>
+                        <select class="form-control" required title="Select Semester">
+                            <option value="">Select</option>
+                            <option value="ODD" {% if row[0] == 'ODD' %}selected{% endif %}>ODD</option>
+                            <option value="EVEN" {% if row[0] == 'EVEN' %}selected{% endif %}>EVEN</option>
+                            <option value="EVEN/ODD" {% if row[0] == 'EVEN/ODD' %}selected{% endif %}>EVEN/ODD</option>
+                        </select>
+                    </td>
+                    <td><textarea class="form-control" required title="Enter Activity" rows="2">{{ row[1] }}</textarea></td>
+                    <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateTeachingTotal()" required title="Enter Points"></td>
+                    <td><textarea class="form-control" required title="Enter Order Copy" rows="2">{{ row[3] }}</textarea></td>
+                    <td>
+                        {% if row[4] %}
+                        <a href="{{ url_for('static', filename=row[4]) }}" target="_blank">View Upload</a>
+                        {% endif %}
+                        <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
+                        <div class="upload-status"></div>
+                    </td>
+                    <td><button class="btn btn-danger" onclick="removeRow(this, 'deptTable')">-</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addTeachingRow()">+</button>
+    </div>
+    <div class="total-box">
+        Total Points: <span id="totaldeptPoints">0</span>/20
+    </div>
+</div>
+
+
+<!-- Institute Activities Form with dynamic data loading -->
+<div class="table-container form-section">
+    <div class="table-box">
+        <h3 class="table-title">Institute activities</h3>
+        <div class="instructions">
+            <p>
+                1. This section summarizes all the responsibilities assigned by Head of the Institute to the faculty member during the academic year under consideration through a proper office order.<br><br>
+                2. This may include responsibilities like Head of Department, Dean, Coordinator, Warden, Sports In charge, Cultural In charge, NBA Coordinator, NAAC Coordinator, Timetable Coordinator, R &amp; D Coordinator, In charge of Industrial collaboration, etc.<br><br>
+                3. The faculty member will earn points per semester for each activity up to a maximum of 10 as specified below.<br><br>
+                4. The max file size one can upload is 1mb. Document uploads are optional.
+            </p>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">Sr No.</th>
+                    <th style="width: 15%;">Semester</th>
+                    <th style="width: 25%;">Activity</th>
+                    <th style="width: 10%;">Points</th>
+                    <th style="width: 20%;">Order Copy</th>
+                    <th style="width: 20%;">Upload Document</th>
+                    <th style="width: 5%;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="instituteTable">
+                {% for row in institute_activities_data %}
+                <tr data-srno="{{ loop.index }}">
+                    <td class="sr-no">{{ loop.index }}</td>
+                    <td>
+                        <select class="form-control" required title="Select Semester">
+                            <option value="">Select</option>
+                            <option value="ODD" {% if row[0] == 'ODD' %}selected{% endif %}>ODD</option>
+                            <option value="EVEN" {% if row[0] == 'EVEN' %}selected{% endif %}>EVEN</option>
+                            <option value="EVEN/ODD" {% if row[0] == 'EVEN/ODD' %}selected{% endif %}>EVEN/ODD</option>
+                        </select>
+                    </td>
+                    <td><textarea class="form-control" required title="Enter Activity" rows="2">{{ row[1] }}</textarea></td>
+                    <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateFeedbackTotal()" required title="Enter Points"></td>
+                    <td><textarea class="form-control" required title="Enter Order Copy" rows="2">{{ row[3] }}</textarea></td>
+                    <td>
+                        {% if row[4] %}
+                        <a href="{{ url_for('static', filename=row[4]) }}" target="_blank">View Upload</a>
+                        {% endif %}
+                        <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
+                        <div class="upload-status"></div>
+                    </td>
+                    <td><button class="btn btn-danger" onclick="removeRow(this, 'instituteTable')">-</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button class="btn btn-success" onclick="addFeedbackRow()">+</button>
+    </div>
+    <div class="total-box">
+        Total Points: <span id="totalinstitutePoints">0</span>/10
+    </div>
+    <div id="flashMessage" style="display:none; color: red; font-weight: bold; margin-bottom: 10px;"></div>
+</div>
+
+
+    <!-- Reset and Next Buttons -->
+    <div class="button-container">
+        <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
+        <button class="btn btn-primary mx-2" onclick="saveFormData()">Save</button> <!-- New Save button -->
+        <button class="btn btn-primary" onclick="goToNext()">Next</button>
+    </div>
+    <input type="hidden" id="formId" value="{{ form_id }}">
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const formId = "{{ form_id }}"; // Get form_id passed from the Flask route
+        console.log("formId:", formId);
+    </script>
+    
+    <script>
+   
+
+// Validation Function for individual fields with better error handling
+function validateField(field) {
+    const value = field.value.trim();
+    const fieldName = field.getAttribute('title') || 'This field';
+    const isOptional = fieldName.toLowerCase().includes('optional');
+    
+    // If the field is optional and empty, it's valid
+    if (isOptional && !value) {
+        field.style.borderColor = '';
+        return true;
+    }
+    
+    if (!value) {
+        field.style.borderColor = 'red';
+        showError(`${fieldName} is required.`);
+        return false;
+    }
+    
+    // Handle different field types
+    if (field.tagName.toLowerCase() === 'textarea' || field.type === 'text') {
+        // For text fields, just check if they're not empty (already done above)
+        field.style.borderColor = '';
+        return true;
+    } else if (field.type === 'number') {
+        const numValue = parseFloat(value);
+        const min = parseFloat(field.min);
+        const max = parseFloat(field.max);
+        
+        if (isNaN(numValue)) {
+            field.style.borderColor = 'red';
+            showError(`${fieldName} must be a valid number.`);
+            return false;
+        }
+        
+        if (numValue < min || numValue > max) {
+            field.style.borderColor = 'red';
+            showError(`${fieldName} must be between ${min} and ${max}.`);
+            return false;
+        }
+    }
+    
+    field.style.borderColor = '';
+    return true;
+}
+
+// Update the showError function to handle success messages too
+function showError(message, isSuccess = false) {
+    if (isSuccess) {
+        // Use alert for success messages
+        alert(message);
+    } else {
+        // Use flashMessage for errors
+        const flashMessage = document.getElementById('flashMessage');
+        flashMessage.textContent = message;
+        flashMessage.style.backgroundColor = '#f8d7da';
+        flashMessage.style.color = '#721c24';
+        flashMessage.style.borderColor = '#f5c6cb';
+        flashMessage.style.display = 'block';
+        
+        setTimeout(() => {
+            flashMessage.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Validate file size before upload - making this truly optional
+function validateFileSize(input, maxSizeMB) {
+    // If no file selected, it's valid (optional upload)
+    if (!input.files.length) {
+        return true;
+    }
+    
+    const fileSize = input.files[0].size / (1024 * 1024); // Convert to MB
+    if (fileSize > maxSizeMB) {
+        showError(`File size must be less than ${maxSizeMB}MB`);
+        input.value = ''; // Clear the file input
+        return false;
+    }
+    return true;
+}
+
+// Add new row to Department activities form with validation
+function addTeachingRow() {
+    let table = document.getElementById("deptTable");
+    let newIndex = table.rows.length + 1;
+    let row = table.insertRow();
+    row.setAttribute('data-srno', newIndex);
+    
+    row.innerHTML = `
+        <td class="sr-no">${newIndex}</td>
+        <td>
+            <select class="form-control" required title="Select Semester">
+                <option value="">Select</option>
+                <option value="ODD">ODD</option>
+                <option value="EVEN">EVEN</option>
+                <option value="EVEN/ODD">EVEN/ODD</option>
+            </select>
+        </td>
+        <td><textarea class="form-control" required title="Enter Activity" rows="2"></textarea></td>
+        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateTeachingTotal()"></td>
+        <td><textarea class="form-control" required title="Enter Order Copy" rows="2"></textarea></td>
+        <td>
+            <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
+            <div class="upload-status"></div>
+        </td>
+        <td><button class="btn btn-danger" onclick="removeRow(this, 'deptTable')">-</button></td>
+    `;
+    updateSerialNumbers('deptTable');
+}
+
+// Add new row to Institute activities form
+function addFeedbackRow() {
+    let table = document.getElementById("instituteTable");
+    let newIndex = table.rows.length + 1;
+    let row = table.insertRow();
+    row.setAttribute('data-srno', newIndex);
+    
+    row.innerHTML = `
+        <td class="sr-no">${newIndex}</td>
+        <td>
+            <select class="form-control" required title="Select Semester">
+                <option value="">Select</option>
+                <option value="ODD">ODD</option>
+                <option value="EVEN">EVEN</option>
+                <option value="EVEN/ODD">EVEN/ODD</option>
+            </select>
+        </td>
+        <td><textarea class="form-control" required title="Enter Activity" rows="2"></textarea></td>
+        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateFeedbackTotal()"></td>
+        <td><textarea class="form-control" required title="Enter Order Copy" rows="2"></textarea></td>
+        <td>
+            <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
+            <div class="upload-status"></div>
+        </td>
+        <td><button class="btn btn-danger" onclick="removeRow(this, 'instituteTable')">-</button></td>
+    `;
+    updateSerialNumbers('instituteTable');
+}
+
+let deletedDeptRows = [];
+let deletedInstituteRows = [];
+
+// Remove row from any table with AJAX deletion logic applied
+function removeRow(button, tableId) {
+    let table = document.getElementById(tableId);
+    let row = button.closest("tr");
+    // Try to get a unique identifier (data-srno) if it exists
+    let srno = row.getAttribute('data-srno');
+    // If a global form ID is used (as in your other code), grab it (optional)
+    let formId = document.getElementById('formId') ? document.getElementById('formId').value : '';
+
+    // First disable the button to prevent multiple clicks
+    button.disabled = true;
+    
+    if (srno) {
+        // Call the appropriate AJAX deletion function if this row exists in the database
+        if (tableId === 'deptTable') {
+            deleteDeptRowFromDatabase(row, formId, srno);
+        } else if (tableId === 'instituteTable') {
+            deleteInstituteRowFromDatabase(row, formId, srno);
+        }
+    } else {
+        // For newly added rows that don't have a database ID yet, just remove from DOM
+        row.remove();
+        // Update serial numbers
+        updateSerialNumbers(tableId);
+        
+        // Recalculate totals
+        if (tableId === 'deptTable') {
+            calculateTeachingTotal();
+        } else if (tableId === 'instituteTable') {
+            calculateFeedbackTotal();
+        }
+    }
+}
+
+// AJAX call to delete a department row from the database
+function deleteDeptRowFromDatabase(row, formId, srno) {
+    // Remove the row from the UI first for better UX
+    row.remove();
+    recalculateTeachingRowNumbers();
+    calculateTeachingTotal();
+
+    // Make AJAX call to delete from database
+    $.ajax({
+        url: '/delete-dept-row',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            form_id: formId,
+            srno: srno
+        }),
+        success: function(response) {
+            console.log('Row deleted successfully from database');
+            // No need to show success message since the UI already reflects the change
+        },
+        error: function(xhr, status, error) {
+            console.error('Error deleting row from database:', error);
+            showError('The row was removed from the page, but there was a problem deleting it from the database.');
+        }
+    });
+}
+
+// AJAX call to delete an institute row from the database
+function deleteInstituteRowFromDatabase(row, formId, srno) {
+    // Remove the row from the UI first for better UX
+    row.remove();
+    recalculateInstituteRowNumbers();
+    calculateFeedbackTotal();
+
+    // Make AJAX call to delete from database
+    $.ajax({
+        url: '/delete-institute-row',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            form_id: formId,
+            srno: srno
+        }),
+        success: function(response) {
+            console.log('Row deleted successfully from database');
+            // No need to show success message since the UI already reflects the change
+        },
+        error: function(xhr, status, error) {
+            console.error('Error deleting row from database:', error);
+            showError('The row was removed from the page, but there was a problem deleting it from the database.');
+        }
+    });
+}
+
+        
+
+// Calculate total points for Department activities
+function calculateTeachingTotal() {
+    // Select all input elements for points in the department activities table
+    let rows = document.querySelectorAll("#deptTable .points");
+    let totalPoints = 0;
+
+    // Loop through each input and sum up the points
+    rows.forEach(function (input) {
+        totalPoints += parseInt(input.value) || 0; // Add points, defaulting to 0 if input is not a number
+    });
+
+    // Attempt to update the total points display
+    let totalElement = document.getElementById("totaldeptPoints");
+    if (totalElement) {
+        totalElement.textContent = totalPoints; // Update total points without decimal places
+    } else {
+        console.error("Element with ID 'totaldeptPoints' not found.");
+    }
+}
+
+
+        // Calculate total points for Institute activities
+        function calculateFeedbackTotal() {
+    let totalPoints = 0;
+
+    // Assuming you are calculating total points from the input fields
+    const inputs = document.querySelectorAll('#instituteTable .points');
+    inputs.forEach(input => {
+        totalPoints += parseInt(input.value) || 0; // Add up the points
+    });
+
+    // Attempt to update the total points display
+    let totalElement = document.getElementById('totalinstitutePoints');
+    if (totalElement) {
+        totalElement.textContent = totalPoints; // Update total points
+    } else {
+        console.error("Element with ID 'totalinstitutePoints' not found.");
+    }
+}
+
+
+        // Validate points input to restrict the maximum value
+        function validatePoints(input, maxPoints) {
+            if (input.value > maxPoints) {
+                input.value = maxPoints;
+            }
+        }
+
+// Update the uploadDocument function
+function uploadDocument(input) {
+    const file = input.files[0];
+    const uploadStatus = input.nextElementSibling;
+
+    if (!file) {
+        showError("Please select a file to upload.");
+        return;
+    }
+
+    // Check file size before uploading
+    if (file.size > 1024 * 1024) { // 1MB
+        showError("File size must be less than 1MB");
+        input.value = ''; // Clear the file input
+        return;
+    }
+
+    // Check file type
+    const allowedTypes = ['.pdf', '.doc', '.docx'];
+    const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    if (!allowedTypes.includes(fileExt)) {
+        showError(`Invalid file type. Allowed types are: ${allowedTypes.join(', ')}`);
+        input.value = '';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Show loading state
+    uploadStatus.textContent = 'Uploading...';
+    uploadStatus.style.color = 'blue';
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            uploadStatus.textContent = `Error: ${data.error}`;
+            uploadStatus.style.color = 'red';
+            input.value = ''; // Clear the file input
+        } else {
+            uploadStatus.textContent = `Uploaded: ${data.filename}`;
+            uploadStatus.style.color = 'green';
+            // Store the filename in a hidden input for form submission
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'uploaded_file';
+            hiddenInput.value = data.filename;
+            input.parentNode.appendChild(hiddenInput);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        uploadStatus.textContent = 'Upload failed!';
+        uploadStatus.style.color = 'red';
+        input.value = ''; // Clear the file input
+    });
+}
+
+
+
+
+// Update the saveFormData function with better debugging
+function saveFormData() {
+    console.log("Save button clicked");
+    const flashMessage = document.getElementById('flashMessage');
+    flashMessage.style.display = 'none';
+    
+    let isValid = true;
+    let totalDeptPoints = 0;
+    let totalInstitutePoints = 0;
+    let totalFileSize = 0;
+    
+    // Validate Department activities
+    document.querySelectorAll('#deptTable tr').forEach(row => {
+        // Validate required fields (excluding file input)
+        const requiredFields = row.querySelectorAll('select, input[type="text"], input[type="number"]');
+        requiredFields.forEach(field => {
+            if (!validateField(field)) {
+                isValid = false;
+            }
+        });
+
+        // Add up points
+        const pointsField = row.querySelector('.points');
+        if (pointsField) {
+            totalDeptPoints += parseFloat(pointsField.value) || 0;
+        }
+
+        // Check file size if a file is selected
+        const fileInput = row.querySelector('input[type="file"]');
+        if (fileInput && fileInput.files.length > 0) {
+            totalFileSize += fileInput.files[0].size;
+        }
+    });
+    
+    // Validate Institute activities
+    document.querySelectorAll('#instituteTable tr').forEach(row => {
+        // Validate required fields (excluding file input)
+        const requiredFields = row.querySelectorAll('select, input[type="text"], input[type="number"]');
+        requiredFields.forEach(field => {
+            if (!validateField(field)) {
+                isValid = false;
+            }
+        });
+
+        // Add up points
+        const pointsField = row.querySelector('.points');
+        if (pointsField) {
+            totalInstitutePoints += parseFloat(pointsField.value) || 0;
+        }
+
+        // Check file size if a file is selected
+        const fileInput = row.querySelector('input[type="file"]');
+        if (fileInput && fileInput.files.length > 0) {
+            totalFileSize += fileInput.files[0].size;
+        }
+    });
+    
+    // Check total points constraints
+    if (totalDeptPoints > 20) {
+        showError('Department activities total points cannot exceed 20');
+        isValid = false;
+    }
+    
+    if (totalInstitutePoints > 10) {
+        showError('Institute activities total points cannot exceed 10');
+        isValid = false;
+    }
+    
+    // Check total file size only if files are uploaded
+    if (totalFileSize > 100 * 1024 * 1024) { // 100MB
+        showError('Total file size exceeds 100MB limit');
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        return;
+    }
+    
+    console.log("Validation passed, preparing form data");
+    
+    // Proceed with form submission if validation passes
+    const formData = new FormData();
+    
+    // Collect and validate department activities data
+    document.querySelectorAll('#deptTable tr').forEach((row, index) => {
+        const srno = row.getAttribute('data-srno') || (index + 1);
+        const semester = row.querySelector('select').value;
+        const activity = row.querySelector('textarea[title="Enter Activity"]').value;
+        const points = row.querySelector('.points').value;
+        const orderCopy = row.querySelector('textarea[title="Enter Order Copy"]').value;
+        const fileInput = row.querySelector('input[type="file"]');
+        const uploadedFile = row.querySelector('input[name="uploaded_file"]');
+        
+        formData.append(`departmentActivities[${index}][srno]`, srno);
+        formData.append(`departmentActivities[${index}][semester]`, semester);
+        formData.append(`departmentActivities[${index}][activity]`, activity);
+        formData.append(`departmentActivities[${index}][points]`, points);
+        formData.append(`departmentActivities[${index}][orderCopy]`, orderCopy);
+        
+        // Only append file data if a file is selected or there's an existing uploaded file
+        if (uploadedFile) {
+            formData.append(`departmentActivities[${index}][uploaded_file]`, uploadedFile.value);
+        }
+        if (fileInput && fileInput.files[0]) {
+            formData.append(`departmentActivities[${index}][file]`, fileInput.files[0]);
+        }
+    });
+    
+    // Collect and validate institute activities data
+    document.querySelectorAll('#instituteTable tr').forEach((row, index) => {
+        const srno = row.getAttribute('data-srno') || (index + 1);
+        const semester = row.querySelector('select').value;
+        const activity = row.querySelector('textarea[title="Enter Activity"]').value;
+        const points = row.querySelector('.points').value;
+        const orderCopy = row.querySelector('textarea[title="Enter Order Copy"]').value;
+        const fileInput = row.querySelector('input[type="file"]');
+        const uploadedFile = row.querySelector('input[name="uploaded_file"]');
+        
+        formData.append(`instituteActivities[${index}][srno]`, srno);
+        formData.append(`instituteActivities[${index}][semester]`, semester);
+        formData.append(`instituteActivities[${index}][activity]`, activity);
+        formData.append(`instituteActivities[${index}][points]`, points);
+        formData.append(`instituteActivities[${index}][orderCopy]`, orderCopy);
+        
+        // Only append file data if a file is selected or there's an existing uploaded file
+        if (uploadedFile) {
+            formData.append(`instituteActivities[${index}][uploaded_file]`, uploadedFile.value);
+        }
+        if (fileInput && fileInput.files[0]) {
+            formData.append(`instituteActivities[${index}][file]`, fileInput.files[0]);
+        }
+    });
+    
+    // Add form ID - CRITICAL PART
+    const formId = document.getElementById('formId').value;
+    console.log("FormID to be sent:", formId);
+    formData.append('formId', formId);
+    
+    console.log("Sending AJAX request to save form data");
+    
+    // Send data to server - use a simpler version first to test
+    $.ajax({
+        url: '/save-form2-data',
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        data: formData,
+        beforeSend: function() {
+            console.log("AJAX request starting");
+            showError('Saving form data...', true);
+        },
+        success: function(response) {
+            console.log("AJAX success:", response);
+            // Use standard JavaScript alert instead of modal
+            alert('Form data saved successfully!');
+            // Recalculate totals to make sure everything is up-to-date
+            calculateTeachingTotal();
+            calculateFeedbackTotal();
+        },
+        error: function(error) {
+            console.error('Error saving form data:', error);
+            let errorMessage = 'Error saving form data. Please try again.';
+            if (error.responseJSON && error.responseJSON.message) {
+                errorMessage = error.responseJSON.message;
+            }
+            showError(errorMessage);
+        }
+    });
+}
+
+
+// Reset all form fields to initial state and remove all rows from both forms
+function resetAll() {
+    if (confirm('Are you sure you want to reset all fields?')) {
+        const formId = document.getElementById('formId').value; // Get form_id from a hidden field
+
+        // Send an API request to reset the form in the database
+        fetch('/reset-form2', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `formId=${encodeURIComponent(formId)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Clear and remove all rows for Department Activities form
+                const deptTableBody = document.getElementById('deptTable');
+                deptTableBody.innerHTML = ''; // Removes all rows from Department Activities table
+
+                // Clear and remove all rows for Institute Activities form
+                const instituteTableBody = document.getElementById('instituteTable');
+                instituteTableBody.innerHTML = ''; // Removes all rows from Institute Activities table
+
+                // Reset totals
+                document.getElementById('totaldeptPoints').innerText = '0';
+                document.getElementById('totalinstitutePoints').innerText = '0';
+
+                alert('Form reset successfully!');
+            } else {
+                alert('Failed to reset the form: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error resetting the form:', error);
+            alert('An error occurred while resetting the form.');
+        });
+    }
+}
+
+
+        function goToNext() {
+    let totalPoints = parseInt(document.getElementById('totaldeptPoints').innerText); // From Teaching Process
+    let totalPointsObtained = parseInt(document.getElementById('totalinstitutePoints').innerText); // From Student Feedback
+    
+    console.log("Total Department Points: ", totalPoints);
+    console.log("Total Institute Points: ", totalPointsObtained);
+
+    let overallTotal = totalPoints + totalPointsObtained;
+    let formId = document.getElementById('formId').value;
+
+    if (!formId || isNaN(overallTotal)) {
+        console.error("Invalid form ID or points.");
+        alert("Error: Please ensure all form data is filled correctly.");
+        return;
+    }
+
+    // Log the data being sent
+    console.log(JSON.stringify({
+        form_id: formId,
+        total: overallTotal,
+        dept: totalPoints,
+        institute: totalPointsObtained
+    }));
+
+    $.ajax({
+        url: '/save-2total-points',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            form_id: formId,
+            total: overallTotal,
+            dept: totalPoints,
+            institute: totalPointsObtained
+        }),
+        success: function(response) {
+            window.location.href = "/form3/" + formId;
+        },
+        error: function(error) {
+            console.error("Error saving total points:", error);
+            alert("There was an error saving the total points. Please try again.");
+        }
+    });
+}
+
+
+        // Undo last action
+        function undoLastAction() {
+            // Undo logic (revert last action)
+            if (lastAction) {
+                lastAction();
+                lastAction = null; // Reset lastAction
+            } else {
+                alert("No action to undo!");
+            }
+        }
+
+       
+
+// Calculate totals when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    calculateTeachingTotal();
+    calculateFeedbackTotal();
+});
+
+// Add the missing updateSerialNumbers function
+function updateSerialNumbers(tableId) {
+    const table = document.getElementById(tableId);
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const srNoCell = rows[i].querySelector('.sr-no');
+        if (srNoCell) {
+            srNoCell.textContent = i + 1;
+            rows[i].setAttribute('data-srno', i + 1);
+        }
+    }
+}
+
+// Add a simple test save function to debug AJAX issues
+function testSave() {
+    console.log("Test save button clicked");
+    
+    var formData = new FormData();
+    formData.append('formId', $("#formId").val());
+    formData.append('testMode', 'true');
+    
+    $.ajax({
+        url: "/save-form2-data",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            console.log("Test save success:", response);
+            alert('Form data saved successfully!');
+        },
+        error: function(xhr, status, error) {
+            console.error("Test save error:", xhr.responseText);
+            showError("Error saving data: " + xhr.responseText);
+        }
+    });
+}
+
+// Attach event listener directly to the save button when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Add debugging to the save button
+    const saveButton = document.querySelector('.btn-primary.mx-2');
+    if (saveButton) {
+        const originalOnClick = saveButton.onclick;
+        saveButton.onclick = function(e) {
+            console.log("Save button clicked manually");
+            try {
+                saveFormData();
+            } catch (error) {
+                console.error("Error in saveFormData:", error);
+                alert("Error saving form: " + error.message);
+                // Try simple save as fallback
+                testSave();
+            }
+        };
+    }
+});
+
+// Add the missing recalculate functions
+function recalculateTeachingRowNumbers() {
+    updateSerialNumbers('deptTable');
+}
+
+function recalculateInstituteRowNumbers() {
+    updateSerialNumbers('instituteTable');
+}
+    
+    </script>
+
+    <!-- Modal for success notification -->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="successModalLabel">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="successMessage">Form data saved successfully!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center my-4">
+        <a href="{{ url_for('form_page', form_id=form_id) }}" class="btn btn-secondary" id="backToForm1">Back to Form 1</a>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const backButton = document.getElementById('backToForm1');
+                const formIdInput = document.getElementById('formId');
+                if (backButton && formIdInput) {
+                    backButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.location.href = '/form/' + formIdInput.value;
+                    });
+                }
+            });
+        </script>
+    </div>
+    <input type="hidden" id="formId" value="{{ form_id }}">
+</body>
+
+</html>

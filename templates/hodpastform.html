@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOD Past Forms</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('/static/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+        }
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .top-bar a {
+            margin-left: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .top-bar a:hover {
+            text-decoration: underline;
+            color: #ff9800;
+        }
+        .logo-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .logo-link img {
+            width: 90px;
+            height: auto;
+        }
+        .container {
+            margin-top: 150px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+        }
+        .table-container {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            margin: 0 auto;
+        }
+        .assessment-box {
+            margin-top: 10px;
+        }
+        
+        /* Print styling */
+        @media print {
+            body {
+                background: none;
+                font-size: 12pt;
+            }
+            .top-bar, .logo-link, .btn, .no-print {
+                display: none !important;
+            }
+            .table-container {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                background: none;
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+            .container {
+                margin-top: 20px;
+                width: 100%;
+                background: none;
+            }
+            textarea, input {
+                border: none;
+                background: none;
+            }
+            #saveAssessment {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Right Links -->
+    <div class="top-bar">
+        <a href="/dashboard{% if department %}?department={{ department }}{% endif %}">Dashboard</a>
+        <a href="/facultylist?department={{ department }}">Staff List</a>
+        <a href="/highlanding">Home</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Logo -->
+    <a href="/highlanding" class="logo-link">
+        <img src="/static/logo.png" alt="Logo">
+    </a>
+
+    <!-- Main Content Container -->
+    <div class="container">
+        <h2>Select Academic Year</h2>
+        <h2>Viewing past forms for Faculty name: {{ user_name }} (User ID: {{ user_id }})</h2> <!-- Display name and user ID together -->
+
+        <form id="academicForm" method="POST" action="/search_pastforms" onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="academicYear">Academic Year:</label>
+                <select class="form-control" id="academicYear" name="academicYear"></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+<pre></pre>
+
+    <!-- Faculty Details Container - Always show basic faculty info -->
+    <div class="container" style="width: 500px; margin: 20px auto;">
+        <h2 class="text-center mb-4">Faculty Details</h2>
+        <table class="table table-bordered">
+            <tr>
+                <th>Faculty ID</th>
+                <td>{% if user_data %}{{ user_data[0] }}{% else %}{{ user_id }}{% endif %}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ user_name }}</td>
+            </tr>
+            <!-- Always show department from request if available -->
+            <tr>
+                <th>Department</th>
+                <td>{% if user_data %}{{ user_data[2] }}{% elif department %}{{ department }}{% else %}Not Available{% endif %}</td>
+            </tr>
+            {% if user_data %}
+            <tr>
+                <th>Email</th>
+                <td>{{ user_data[1] }}</td>
+            </tr>
+            <tr>
+                <th>Designation</th>
+                <td>{{ user_data[4] }}</td>
+            </tr>
+            <tr>
+                <th>Date of Joining</th>
+                <td>{{ user_data[5] }}</td>
+            </tr>
+            <tr>
+                <th>Date of Birth</th>
+                <td>{{ user_data[6] }}</td>
+            </tr>
+            <tr>
+                <th>Educational Qualification</th>
+                <td>{{ user_data[7] }}</td>
+            </tr>
+            <tr>
+                <th>Experience</th>
+                <td>{{ user_data[8] }}</td>
+            </tr>
+            {% endif %}
+        </table>
+        {% if form_id %}
+        <h2 class="text-center mt-4 mb-3">Form Information</h2>
+        <div class="text-center">
+            <p><strong>Form ID:</strong> {{ form_id }}</p>
+            <p><strong>Academic Year:</strong> {{ selected_year }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Display Teaching Data with Assessment -->
+    {% if teaching_data %}
+    <div class="table-container">
+       <!-- <h3 style="color: red; font-weight: bold; text-align: center;">Give assessment according to the marking scheme</h3>-->
+
+
+        <h3>Teaching Process for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Semester</th>
+                    <th>Course Code/Name</th>
+                    <th>Classes Scheduled (S)</th>
+                    <th>Classes Held (H)</th>
+                    <th>Points (H/S) * 5</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in teaching_data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ "%.1f"|format(row[4]|float) if row[4] is not none else '0.0' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">No data available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if academic_review_data %}
+    <div class="table-container">
+        <div class="table-box">
+            <h3 class="table-title">Numeric Points Attained on basis of Academic Review (Max Marks: 20)</h3>
+            <div class="instructions">
+               
+            </div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Sr. No.</th>
+                        <th>Academic Review 1</th>
+                        <th>Academic Review 2</th>
+                        <th>Average Score</th>
+                    </tr>
+                </thead>
+                <tbody id="academicReviewTable">
+                    {% for row in academic_review_data %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No academic review data available for the selected academic year.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #ffffff; font-weight: bold;">
+                        
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+        <tr style="background-color: #f5c6d1; font-weight: bold;">
+            <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+                 Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.teaching|float|round(2) }}</span>
+            </td>
+        </tr>
+
+        
+<pre></pre>
+        <!-- Assessment Input Box -->
+        <div class="assessment-box">
+            <label for="teachingMarks">Assessment by HOD (Teaching process):</label>
+            <input type="number" class="form-control" id="teachingMarks" name="teachingMarks" min="0" max="25" value="{{ assessments.hodas1 }}">
+            <div class="mt-2">
+                <label for="teachingRemarks">Remarks:</label>
+                <textarea class="form-control" id="teachingRemarks" name="teachingRemarks" rows="2">{{ assessments.hodfeed1 }}</textarea>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+<pre></pre>
+{% if feedback_data %}
+<div class="table-container">
+    <h3>Student Feedback for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Semester</th>
+                <th>Course Code/Name</th>
+                <th>Total Points</th>
+                <th>Points Obtained</th>
+                <th>Uploaded Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in feedback_data %}
+            <tr>
+                <td>{{ row[0] }}</td> <!-- Semester -->
+                <td>{{ row[1] }}</td> <!-- Course Code/Name -->
+                <td>{{ row[2] }}</td> <!-- Total Points -->
+                <td>{{ row[3] }}</td> <!-- Points Obtained -->
+                <td>
+                    {% if row[4] %}
+                        <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}" 
+                           target="_blank" class="btn btn-primary">
+                           View Document
+                        </a>
+                    {% else %}
+                        No Document
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <tr style="background-color: #f5c6d1; font-weight: bold;">
+        <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.feedback }}</span>
+        </td>
+    </tr>
+    <pre></pre>
+        <!-- Assessment Input Box -->
+        <div class="assessment-box">
+            <label for="teachingMarks">Assessment by HOD (Student feedback):</label>
+            <input type="number" class="form-control" id="feedbackMarks" name="teachingMarks" min="0" max="25" value="{{ assessments.hodas2 }}">
+            <div class="mt-2">
+                <label for="feedbackRemarks">Remarks:</label>
+                <textarea class="form-control" id="feedbackRemarks" name="feedbackRemarks" rows="2">{{ assessments.hodfeed2 }}</textarea>
+            </div>
+        </div>
+</div>
+{% endif %}
+
+<pre></pre>
+
+{% if dept_act_data %}
+<div class="table-container">
+    <h3>Department Activities for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Semester</th>
+                <th>Activity</th>
+                <th>Points</th>
+                <th>Order Copy</th>
+                <th>Uploaded Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in dept_act_data %}
+            <tr>
+                <td>{{ row[0] }}</td> <!-- Semester -->
+                <td>{{ row[1] }}</td> <!-- Activity -->
+                <td>{{ row[2] }}</td> <!-- Points -->
+                <td>{{ row[3] }}</td> <!-- Order Copy -->
+                
+                <td>
+                    {% if row[4] %}
+                        <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}" 
+                           target="_blank" class="btn btn-primary">
+                           View Document
+                        </a>
+                    {% else %}
+                        No Document
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No department activities available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <tr style="background-color: #f5c6d1; font-weight: bold;">
+        <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.dept }}</span>
+        </td>
+    </tr>
+    <pre></pre>
+        <!-- Assessment Input Box -->
+        <div class="assessment-box">
+            <label for="deptMarks">Assessment by HOD (Department activities):</label>
+            <input type="number" class="form-control" id="deptMarks" name="deptMarks" min="0" max="20" value="{{ assessments.hodas3 }}">
+            <div class="mt-2">
+                <label for="deptRemarks">Remarks:</label>
+                <textarea class="form-control" id="deptRemarks" name="deptRemarks" rows="2">{{ assessments.hodfeed3 }}</textarea>
+            </div>
+        </div>
+</div>
+{% endif %}
+<pre></pre>
+{% if inst_act_data %}
+<div class="table-container">
+    <h3>Institute Activities for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Semester</th>
+                <th>Activity</th>
+                <th>Points</th>
+                <th>Order Copy</th>
+                <th>Uploaded Document</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in inst_act_data %}
+            <tr>
+                <td>{{ row[0] }}</td> <!-- Semester -->
+                <td>{{ row[1] }}</td> <!-- Activity -->
+                <td>{{ row[2] }}</td> <!-- Points -->
+                <td>{{ row[3] }}</td> <!-- Order Copy -->
+                <td>
+                    {% if row[4] %}
+                        <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}" 
+                           target="_blank" class="btn btn-primary">
+                           View Document
+                        </a>
+                    {% else %}
+                        No Document
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No institute activities available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <tr style="background-color: #f5c6d1; font-weight: bold;">
+        <td colspan="5" style="text-align: center; width: 100%; align-content: center; align-items: center;">
+             Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.institute }}</span>
+        </td>
+    </tr>
+    <pre></pre>
+        <!-- Assessment Input Box -->
+        <div class="assessment-box">
+            <label for="instituteMarks">Assessment by HOD (Institute activities):</label>
+            <input type="number" class="form-control" id="instituteMarks" name="instituteMarks" min="0" max="10" value="{{ assessments.hodas4 }}">
+            <div class="mt-2">
+                <label for="instituteRemarks">Remarks:</label>
+                <textarea class="form-control" id="instituteRemarks" name="instituteRemarks" rows="2">{{ assessments.hodfeed4 }}</textarea>
+            </div>
+        </div>
+
+</div>
+{% endif %}
+ <pre></pre>
+
+ 
+         <!-- Papers Published in Conference -->
+         {% if self_improvement_data %}
+         <div class="table-container">
+             <h3>Papers Published in National/International Conference for Academic Year: {{ selected_year }}</h3>
+             <table class="table table-striped">
+                 <thead>
+                     <tr>
+                         <th>Sr. No.</th>
+                         <th>Title of Paper</th>
+                         <th>Month/Year</th>
+                         <th>Conference Name</th>
+                         <th>ISBN/ISSN</th>
+                         <th>Co-authors</th>
+                         <th>Impact Factor</th>
+                         <th>Citations</th>
+                         <th>Rating</th>
+                         <th>Document</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                     {% for row in self_improvement_data %}
+                     <tr>
+                         <td>{{ row[0] }}</td>
+                         <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                         <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                         <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                         <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                         <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                         <td>{{ row[6] if row[6] else 'N/A' }}</td>
+                         <td>{{ row[7] if row[7] else 'N/A' }}</td>
+                         <td>{{ row[8] if row[8] else 'N/A' }}</td>
+                         <td>
+                             {% if row[9] %}
+                                 <a href="{{ url_for('uploaded_file', filename=row[9].split('/')[-1]) }}"
+                                    target="_blank" class="btn btn-primary">
+                                    View Document
+                                 </a>
+                             {% else %}
+                                 <span class="text-muted">No Document</span>
+                             {% endif %}
+                         </td>
+                     </tr>
+                     {% else %}
+                     <tr>
+                         <td colspan="10" class="no-data">No conference papers available for the selected academic year.</td>
+                     </tr>
+                     {% endfor %}
+                 </tbody>
+             </table>
+         </div>
+         {% endif %}
+
+            <pre></pre>
+            
+    
+
+    <!-- Copyright Published -->
+    {% if copyright_data %}
+    <div class="table-container">
+        <h3>Copyright Published for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Title Name</th>
+                    <th>Month/Year</th>
+                    <th>Registration Number</th>
+                    <th>Status</th>
+                    <th>Category</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in copyright_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[4] == 'Granted' %}bg-success{% elif row[4] == 'Published' %}bg-info{% else %}bg-warning{% endif %}">
+                            {{ row[4] if row[4] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>
+                        {% if row[6] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[6].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="no-data">No copyright records available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Patent Published -->
+    {% if patent_data %}
+    <div class="table-container">
+        <h3>Patent Published for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Title Name</th>
+                    <th>Month/Year</th>
+                    <th>Registration Number</th>
+                    <th>Status</th>
+                    <th>Category</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in patent_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[4] == 'Granted' %}bg-success{% elif row[4] == 'Published' %}bg-info{% else %}bg-warning{% endif %}">
+                            {{ row[4] if row[4] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>
+                        {% if row[6] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[6].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="no-data">No patent records available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Short-term Training Programs/FDPs -->
+    {% if training_data %}
+    <div class="table-container">
+        <h3>Short-term Training Programs/FDPs for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Program Name</th>
+                    <th>Technology</th>
+                    <th>Duration</th>
+                    <th>Date Range</th>
+                    <th>Organizing Institute</th>
+                    <th>Mode</th>
+                    <th>Certificate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in training_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[6] == 'Online' %}bg-primary{% else %}bg-success{% endif %}">
+                            {{ row[6] if row[6] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if row[7] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Certificate
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Certificate</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="no-data">No training programs available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- MOOCS -->
+    {% if moocs_data %}
+    <div class="table-container">
+        <h3>MOOCS for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Course Name</th>
+                    <th>Month/Year</th>
+                    <th>Duration</th>
+                    <th>Certification Status</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in moocs_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ row[4] if row[4] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if row[5] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="no-data">No MOOCS courses available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- SWAYAM NPTEL -->
+    {% if swayam_data %}
+    <div class="table-container">
+        <h3>SWAYAM NPTEL for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Course Name</th>
+                    <th>Month/Year</th>
+                    <th>Duration</th>
+                    <th>Certification Status</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in swayam_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ row[4] if row[4] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if row[5] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="no-data">No SWAYAM NPTEL courses available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Seminars/Webinars -->
+    {% if webinar_data %}
+    <div class="table-container">
+        <h3>Seminars/Webinars for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Name</th>
+                    <th>Technology</th>
+                    <th>Duration</th>
+                    <th>Date Range</th>
+                    <th>Type</th>
+                    <th>Institute</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in webinar_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[5] == 'External' %}bg-primary{% else %}bg-info{% endif %}">
+                            {{ row[5] if row[5] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>{{ row[6] if row[6] else 'N/A' }}</td>
+                    <td>
+                        {% if row[7] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="no-data">No seminars/webinars available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Global Certification -->
+    {% if certification_data %}
+    <div class="table-container">
+        <h3>Global Certification for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Certification Name</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in certification_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>
+                        {% if row[2] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[2].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Certificate
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Certificate</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="no-data">No global certifications available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Resource Person Activities -->
+    {% if resource_data %}
+    <div class="table-container">
+        <h3>Resource Person in STTP/Training/Lecture Talks for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Topic Name</th>
+                    <th>Department</th>
+                    <th>Institute Name</th>
+                    <th>Participants</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in resource_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>
+                        {% if row[5] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="no-data">No resource person activities available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- University Committee -->
+    {% if committee_data %}
+    <div class="table-container">
+        <h3>Member of University Committee for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Committee Name</th>
+                    <th>Roles and Responsibilities</th>
+                    <th>Designation</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in committee_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>
+                        {% if row[4] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="no-data">No university committee memberships available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- External Projects -->
+    {% if project_data %}
+    <div class="table-container">
+        <h3>External Projects/Task Force/Exchange Programs for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Role</th>
+                    <th>Description</th>
+                    <th>Contribution</th>
+                    <th>University</th>
+                    <th>Duration</th>
+                    <th>Comments</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in project_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>{{ row[6] if row[6] else 'N/A' }}</td>
+                    <td>
+                        {% if row[7] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="no-data">No external projects available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Special Mentions -->
+    {% if special_mentions_data %}
+    <div class="table-container">
+      <h3>Special Mentions for Academic Year: {{ selected_year }}</h3>
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Sr. No.</th>
+                  <th>Name</th>
+                  <th>Roles and Responsibilities</th>
+                  <th>Document</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for row in special_mentions_data %}
+              <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                  <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                  <td>
+                      {% if row[3] %}
+                          <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
+                             target="_blank" class="btn btn-primary">
+                             View Document
+                          </a>
+                      {% else %}
+                          <span class="text-muted">No Document</span>
+                      {% endif %}
+                  </td>
+              </tr>
+              {% else %}
+              <tr>
+                  <td colspan="4" class="no-data">No special mentions available for the selected academic year.</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Conference/Journal Committee -->
+    {% if conference_committee_data %}
+    <div class="table-container">
+      <h3>Member of Conference/Journal Committee for Academic Year: {{ selected_year }}</h3>
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>Sr. No.</th>
+                  <th>Conference/Journal Name</th>
+                  <th>Designation</th>
+                  <th>Document</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for row in conference_committee_data %}
+              <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                  <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                  <td>
+                      {% if row[3] %}
+                          <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
+                             target="_blank" class="btn btn-primary">
+                             View Document
+                          </a>
+                      {% else %}
+                          <span class="text-muted">No Document</span>
+                      {% endif %}
+                  </td>
+              </tr>
+              {% else %}
+              <tr>
+                  <td colspan="4" class="no-data">No conference/journal committee memberships available for the selected academic year.</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+            <tr style="background-color: #f5c6d1; font-weight: bold;">
+                <td colspan="5" style="padding: 0; width: 100%;">
+                    <div style="
+                        display: flex;
+                        justify-content: center; /* Align horizontally */
+                        align-items: center; /* Align vertically if needed */
+                        min-height: 50px; /* Optional: Add height */
+                    ">
+                        <div style="
+                            background-color: white;
+                            padding: 10px;
+                            border-radius: 5px;
+                            font-size: 1.2rem;
+                            color: #ed0000;
+                            text-align: center;
+                        ">
+                            ACR Total = <span>{{ points_data.acr }}</span>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <div class="assessment-box d-flex flex-column align-items-center mt-3" 
+     style="
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 400px; /* Fixed width */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional shadow for aesthetics */
+        margin: 0 auto; /* Center horizontally */
+     ">
+    <label for="acrMarks" class="mb-2">Assessment by HOD (ACR):</label>
+    <div class="row justify-content-center">
+        <div>
+            <input type="number" class="form-control" id="acrMarks" name="acrMarks" min="0" max="10" value="{{ assessments.hodas5 }}">
+        </div>
+    </div>
+    <div class="row justify-content-center mt-2">
+        <div>
+            <label for="acrRemarks">Remarks:</label>
+            <textarea class="form-control" id="acrRemarks" name="acrRemarks" rows="2">{{ assessments.hodfeed5 }}</textarea>
+        </div>
+    </div>
+</div>
+
+<!-- Numerical Rating Table -->
+<div class="table-container">
+    <h3>Faculty Performance Rating</h3>
+    <div class="alert alert-info">Click on the rating number to select (5: Excellent, 4: Very Good, 3: Good, 2: Fair, 1: Average)</div>
+    <table class="table table-bordered" id="ratingTable">
+        <thead>
+            <tr>
+                <th>Sr No</th>
+                <th>Parameter</th>
+                <th colspan="5" class="text-center">Ratings</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th class="text-center">Excellent</th>
+                <th class="text-center">Very Good</th>
+                <th class="text-center">Good</th>
+                <th class="text-center">Fair</th>
+                <th class="text-center">Average</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Openness to adopt/experiment new policies</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 5 %} selected{% endif %}" data-row="1" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 4 %} selected{% endif %}" data-row="1" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 3 %} selected{% endif %}" data-row="1" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 2 %} selected{% endif %}" data-row="1" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r1'] == 1 %} selected{% endif %}" data-row="1" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Professional knowledge</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 5 %} selected{% endif %}" data-row="2" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 4 %} selected{% endif %}" data-row="2" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 3 %} selected{% endif %}" data-row="2" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 2 %} selected{% endif %}" data-row="2" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r2'] == 1 %} selected{% endif %}" data-row="2" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Attitude & ownership towards work</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 5 %} selected{% endif %}" data-row="3" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 4 %} selected{% endif %}" data-row="3" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 3 %} selected{% endif %}" data-row="3" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 2 %} selected{% endif %}" data-row="3" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r3'] == 1 %} selected{% endif %}" data-row="3" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Proactive Initiative in Department Activities</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 5 %} selected{% endif %}" data-row="4" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 4 %} selected{% endif %}" data-row="4" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 3 %} selected{% endif %}" data-row="4" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 2 %} selected{% endif %}" data-row="4" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r4'] == 1 %} selected{% endif %}" data-row="4" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Written & verbal power of expression</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 5 %} selected{% endif %}" data-row="5" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 4 %} selected{% endif %}" data-row="5" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 3 %} selected{% endif %}" data-row="5" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 2 %} selected{% endif %}" data-row="5" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r5'] == 1 %} selected{% endif %}" data-row="5" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Potential working in a team</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 5 %} selected{% endif %}" data-row="6" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 4 %} selected{% endif %}" data-row="6" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 3 %} selected{% endif %}" data-row="6" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 2 %} selected{% endif %}" data-row="6" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r6'] == 1 %} selected{% endif %}" data-row="6" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>Organizing capability</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 5 %} selected{% endif %}" data-row="7" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 4 %} selected{% endif %}" data-row="7" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 3 %} selected{% endif %}" data-row="7" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 2 %} selected{% endif %}" data-row="7" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r7'] == 1 %} selected{% endif %}" data-row="7" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td>Loyalty towards work and organization</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 5 %} selected{% endif %}" data-row="8" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 4 %} selected{% endif %}" data-row="8" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 3 %} selected{% endif %}" data-row="8" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 2 %} selected{% endif %}" data-row="8" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r8'] == 1 %} selected{% endif %}" data-row="8" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td>Quality of interaction with students</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 5 %} selected{% endif %}" data-row="9" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 4 %} selected{% endif %}" data-row="9" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 3 %} selected{% endif %}" data-row="9" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 2 %} selected{% endif %}" data-row="9" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r9'] == 1 %} selected{% endif %}" data-row="9" data-rating="1">1</span></td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td>Regularity and Attendance</td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 5 %} selected{% endif %}" data-row="10" data-rating="5">5</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 4 %} selected{% endif %}" data-row="10" data-rating="4">4</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 3 %} selected{% endif %}" data-row="10" data-rating="3">3</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 2 %} selected{% endif %}" data-row="10" data-rating="2">2</span></td>
+                <td class="text-center"><span class="rating-circle{% if hod_ratings and hod_ratings['r10'] == 1 %} selected{% endif %}" data-row="10" data-rating="1">1</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="totalRatingScore">Total Score: </label>
+                <span id="totalRatingScore">0</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Score out of 10 = Total Score/5 = </label>
+                <span id="averageRatingScore">0</span> <small>(*shall be considered as assessment by HOD)</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<pre></pre>
+<pre></pre>
+
+{% if contribution_data %}
+<div class="table-container">
+<h3>Contributions to Society for Academic Year: {{ selected_year }}</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Semester</th>
+            <th>Activity</th>
+            <th>Points</th>
+            <th>Order Copy</th>
+            <th>Details</th>
+            <th>Uploaded Document</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in contribution_data %}
+        <tr>
+            <td>{{ row[0] }}</td>  <!-- Semester -->
+            <td>{{ row[1] }}</td>  <!-- Activity -->
+            <td>{{ row[2] }}</td>  <!-- Points -->
+            <td>{{ row[3] }}</td>  <!-- Order Copy -->
+            <td>{{ row[4] }}</td>  <!-- Details -->
+            <td>
+                {% if row[5] %}
+                    <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}" target="_blank" class="btn btn-primary">
+                       View Document
+                    </a>
+                {% else %}
+                    No Document
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<tr style="background-color: #f5c6d1; font-weight: bold;">
+    <td colspan="6" class="text-end" style="padding-right: 20px;">
+        Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.society }}</span>
+    </td>
+</tr>
+<pre></pre>
+        <div class="assessment-box">
+            <label for="deptMarks">Assessment by HOD (Contribution to society):(  /10)</label>
+            <input type="number" class="form-control" id="contriMarks" name="deptMarks" min="0" max="10" value="{{ assessments.hodas6 }}">
+            <div class="mt-2">
+                <label for="contriRemarks">Remarks:</label>
+                <textarea class="form-control" id="contriRemarks" name="contriRemarks" rows="2">{{ assessments.hodfeed6 }}</textarea>
+            </div>
+        </div>
+            </div>
+
+{% endif %}
+            
+ <pre></pre>    
+ 
+ {% if points_data %}
+ <div class="table-container">
+     <h3>Final Score:</h3>
+      <table class="table table-bordered">
+          <thead>
+              <tr>
+                  <th>Criteria</th>
+                  <th>Maximum Points</th>
+                  <th>Points (self assessment)</th>
+                  <th>Points Given by HOD</th>
+              </tr>
+          </thead>
+         <tbody>
+              <tr>
+                  <td>Teaching Process</td>
+                  <td>25</td>
+                  <td>{{ points_data['teaching'] }}</td>
+                  <td>{{ assessments.hodas1 }}</td>
+              </tr>
+              <tr>
+                  <td>Students' Feedback</td>
+                  <td>25</td>
+                  <td>{{ points_data['feedback'] }}</td>
+                  <td>{{ assessments.hodas2 }}</td>
+              </tr>
+              <tr>
+                  <td>Departmental Activities</td>
+                  <td>20</td>
+                  <td>{{ points_data['dept'] }}</td>
+                  <td>{{ assessments.hodas3 }}</td>
+              </tr>
+              <tr>
+                  <td>Institute Activity</td>
+                  <td>10</td>
+                  <td>{{ points_data['institute'] }}</td>
+                  <td>{{ assessments.hodas4 }}</td>
+              </tr>
+              <tr>
+                  <td>ACR</td>
+                  <td>10</td>
+                  <td>{{ points_data['acr'] }}</td>
+                  <td id="finalAcrScore">{{ finalacr_value }}</td>
+              </tr>
+             
+              <tr>
+                  <td>Contribution to Society</td>
+                  <td>10</td>
+                  <td>{{ points_data['society'] }}</td>
+                  <td>{{ assessments.hodas6 }}</td>
+              </tr>
+              <tr>
+                  <th>Total</th>
+                  <th>100</th>
+                  <th>{{ points_data['teaching']|int + points_data['feedback']|int + points_data['dept']|int 
+                      + points_data['institute']|int + points_data['acr']|int + points_data['society']|int }}</th>
+                  <th>{{ assessments.hodas1|int + assessments.hodas2|int + assessments.hodas3|int 
+                      + assessments.hodas4|int + finalacr_value|int + assessments.hodas6|int }}</th>
+              </tr>
+             
+         </tbody>
+     </table>
+     
+     <div class="text-center mt-3 mb-3">
+         <button id="saveAssessment" class="btn btn-success">Save Assessment</button>
+         <button id="printButton" class="btn btn-primary ml-2" onclick="window.print()">Print Page</button>
+     </div>
+
+      <!-- HOD Assessment is now integrated into the main table above -->
+ </div>
+ {% endif %}
+
+<pre></pre>
+    <!-- HOD Feedback Section -->
+    <div class="container mt-5">
+        <h3> Overall Feedback</h3>
+        <textarea class="form-control" name="hodFeedback" rows="4" placeholder="Enter your feedback here...">{{ assessments.feedback }}</textarea>
+    </div>
+    
+
+    <div class="text-center mt-4">
+        <button type="button" class="btn btn-danger mt-3" id="submitAssessmentBtn">Submit Final Assessment</button>
+       
+        <a href="/highlanding" class="btn btn-primary">Home</a>
+    </div>
+<pre></pre>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function generateAcademicYears() {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const month = today.getMonth(); // 0 = January, 11 = December
+    const day = today.getDate();   // 1-31
+    const dropdown = document.getElementById('academicYear');
+
+    // Determine the start year of the academic year
+    // Switch to upcoming academic year if date is after 10 June
+    const academicStartYear = (month > 5 || (month === 5 && day >= 10)) ? currentYear : currentYear - 1;
+
+    // Generate options for the current and last 4 academic years
+    for (let i = 0; i <= 4; i++) {
+        const startYear = academicStartYear - i;
+        const endYear = startYear + 1;
+        const option = document.createElement('option');
+        option.value = `${startYear}/${endYear.toString().slice(-2)}`;
+        option.text = `${startYear}/${endYear.toString().slice(-2)}`;
+        dropdown.appendChild(option);
+    }
+    
+    // Add onchange event to automatically submit form when selection changes
+    dropdown.addEventListener('change', function() {
+        if(validateForm()) {
+            document.getElementById('academicForm').submit();
+        }
+    });
+    
+    // If there's no selected year already (no form data loaded yet), auto-submit with the first option
+    if (!window.location.href.includes('search_pastforms') && dropdown.options.length > 0) {
+        setTimeout(function() {
+            document.getElementById('academicForm').submit();
+        }, 300); // Small delay to ensure DOM is ready
+    }
+}
+
+// Call the function to populate the dropdown when the page loads
+window.onload = generateAcademicYears;
+
+
+        function validateForm() {
+            const selectedYear = document.getElementById('academicYear').value;
+            if (!selectedYear) {
+                alert('Please select an academic year.');
+                return false;
+            }
+            return true;
+        }
+
+        // Remove the submitAssessment function from here as it's now defined in the script below
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.11/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </script>
+
+    <!-- Save and Submit Assessment JavaScript -->
+    <script>
+        $(document).ready(function() {
+            // Load previously saved ratings from the server when page loads
+            loadSavedRatings();
+            
+            // Save Assessment Button Handler
+            // Remove previous click handler if it exists
+            $("#saveAssessment").off('click');
+            
+            // Add a single, reliable click handler for the Save Assessment button
+            $("#saveAssessment").click(function() {
+                console.log("Save Assessment button clicked");
+                saveAssessmentData(false);
+            });
+
+            // Submit Assessment Button Handler
+            $("#submitAssessmentBtn").click(function() {
+                submitAssessment();
+            });
+            
+            // Function to load previously saved ratings
+            function loadSavedRatings() {
+                $.ajax({
+                    url: "/get_saved_ratings",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        user_id: "{{ user_id }}",
+                        acad_years: "{{ selected_year }}"
+                    }),
+                    success: function(response) {
+                        if (response.status === "success" && response.ratings) {
+                            const ratings = response.ratings;
+                            console.log("Loaded saved ratings:", ratings);
+                            
+                            // Set the selected ratings in the UI
+                            for (let i = 1; i <= 10; i++) {
+                                if (ratings[`r${i}`]) {
+                                    const ratingValue = ratings[`r${i}`];
+                                    // Remove any existing selections
+                                    $(`.rating-circle[data-row="${i}"]`).removeClass("selected");
+                                    // Select the saved rating
+                                    $(`.rating-circle[data-row="${i}"][data-rating="${ratingValue}"]`).addClass("selected");
+                                }
+                            }
+                            
+                            // Update the total score display
+                            if (ratings.r_avg) {
+                                $("#ratingAvgDisplay").text(ratings.r_avg);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading saved ratings:", error);
+                    }
+                });
+            }
+
+            // Function to save assessment data without final submission
+            function saveAssessmentData(isSubmitting) {
+                console.log("==== SAVE ASSESSMENT FUNCTION STARTED ====");
+                // Gather form data
+                // Get all the rating values
+                let ratings = {};
+                for (let i = 1; i <= 10; i++) {
+                    // Find the selected rating for each row
+                    const selectedRating = $(`.rating-circle.selected[data-row="${i}"]`).data('rating') || 1;
+                    ratings[`r${i}`] = selectedRating;
+                    console.log(`Rating ${i}: ${selectedRating}`);
+                }
+                
+                // Calculate the integer average of all ratings
+                const ratingValues = Object.values(ratings);
+                const ratingSum = ratingValues.reduce((sum, rating) => sum + parseInt(rating), 0);
+                const ratingAvg = Math.floor(ratingSum / 5); // Divide by 5 since max is 50 (10 rows * max 5 rating)
+                console.log("Rating Sum:", ratingSum, "Rating Average (r_avg):", ratingAvg);
+                
+                // Get the manual ACR value directly from the input field
+                const manualAcrValue = parseInt($("#acrMarks").val() || 0);
+                console.log("Manual ACR Value (hodas5):", manualAcrValue);
+                
+                // Calculate the final ACR score: (manualAcrValue + ratingAvg) / 2
+                const finalAcrScore = Math.floor((manualAcrValue + ratingAvg) / 2);
+                console.log("Final ACR Score (finalacr):", finalAcrScore);
+                
+                // Update the UI to display the final ACR score
+                $("#finalAcrScore").text(finalAcrScore);
+                
+                console.log("ACR value in final score table updated to:", finalAcrScore);
+                
+                // Create the form data object with all necessary values
+                const formData = {
+                    user_id: "{{ user_id }}",
+                    acad_years: "{{ selected_year }}",
+                    hodas1: $("#teachingMarks").val(),
+                    hodas2: $("#feedbackMarks").val(),
+                    hodas3: $("#deptMarks").val(),
+                    hodas4: $("#instituteMarks").val(),
+                    hodas5: $("#acrMarks").val(), // This is the manual ACR value entered by the user
+                    hodas6: $("#contriMarks").val(),
+                    feedback: $("textarea[name='hodFeedback']").val(),
+                    hodfeed1: $("#teachingRemarks").val(),
+                    hodfeed2: $("#feedbackRemarks").val(),
+                    hodfeed3: $("#deptRemarks").val(),
+                    hodfeed4: $("#instituteRemarks").val(), 
+                    hodfeed5: $("#acrRemarks").val(),
+                    hodfeed6: $("#contriRemarks").val(),
+                    is_final_submit: isSubmitting, // Flag to indicate if this is a save or submit
+                    // Add the ratings to the form data
+                    r1: ratings.r1,
+                    r2: ratings.r2,
+                    r3: ratings.r3,
+                    r4: ratings.r4,
+                    r5: ratings.r5,
+                    r6: ratings.r6,
+                    r7: ratings.r7,
+                    r8: ratings.r8,
+                    r9: ratings.r9,
+                    r10: ratings.r10,
+                    r_avg: ratingAvg,
+                    // Most importantly, include the final ACR score to save to form3_tot.finalacr
+                    finalacr: finalAcrScore
+                };
+                
+                console.log("Form data being sent to server:", formData);
+
+                // AJAX request to save the assessment
+                $.ajax({
+                    url: "/save_assessment", // Flask route for saving
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        console.log("Save successful, server response:", response);
+                        
+                        // Ensure the ACR field in the table shows the correct final score
+                        $("#finalAcrScore").text(finalAcrScore);
+                        
+                        // Update the HOD assessment table with new values
+                        updateHodAssessmentTable();
+                        
+                        // Log the current state of important values
+                        console.log("After save - ACR input value:", $("#acrMarks").val());
+                        console.log("After save - Final ACR score in table:", $("#finalAcrScore").text());
+                        
+                        if (!isSubmitting) {
+                            alert("Assessment saved successfully!");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error saving assessment:", error, xhr.responseText);
+                        alert("Error saving assessment: " + error);
+                    }
+                });
+            }
+
+            // Function to update the HOD assessment table with current values
+            function updateHodAssessmentTable() {
+                // Get all the input values
+                const teaching = $("#teachingMarks").val() || 0;
+                const feedback = $("#feedbackMarks").val() || 0;
+                const dept = $("#deptMarks").val() || 0;
+                const institute = $("#instituteMarks").val() || 0;
+                const acr = $("#acrMarks").val() || 0;
+                const contri = $("#contriMarks").val() || 0;
+                
+                // Calculate total
+                const total = parseInt(teaching) + parseInt(feedback) + parseInt(dept) + 
+                              parseInt(institute) + parseInt(acr) + parseInt(contri);
+                
+                // Update the table cells
+                const hodScoreCells = $(".hodScore");
+                hodScoreCells.eq(0).text(teaching);
+                hodScoreCells.eq(1).text(feedback);
+                hodScoreCells.eq(2).text(dept);
+                hodScoreCells.eq(3).text(institute);
+                hodScoreCells.eq(4).text(acr);
+                hodScoreCells.eq(5).text(contri);
+                
+                // Update total score
+                $("#hodTotalScore").text(total);
+            }
+
+            // Modify the submitAssessment function to use saveAssessmentData
+            let isSubmitting = false;
+            
+            function submitAssessment() {
+                if (isSubmitting) return;
+                isSubmitting = true;
+                
+                // Get all the rating values
+                let ratings = {};
+                for (let i = 1; i <= 10; i++) {
+                    // Find the selected rating for each row
+                    const selectedRating = $(`.rating-circle.selected[data-row="${i}"]`).data('rating') || 1;
+                    ratings[`r${i}`] = selectedRating;
+                }
+                
+                // Calculate the integer average of all ratings
+                // Sum all ratings and divide by 10, then round to integer
+                const ratingValues = Object.values(ratings);
+                const ratingSum = ratingValues.reduce((sum, rating) => sum + rating, 0);
+                const ratingAvg = Math.round(ratingSum / ratingValues.length);
+                
+                // Gather form data
+                const formData = {
+                    user_id: "{{ user_id }}",
+                    acad_years: "{{ selected_year }}",
+                    hodas1: $("#teachingMarks").val(),
+                    hodas2: $("#feedbackMarks").val(),
+                    hodas3: $("#deptMarks").val(),
+                    hodas4: $("#instituteMarks").val(),
+                    hodas5: $("#acrMarks").val(),
+                    hodas6: $("#contriMarks").val(),
+                    feedback: $("textarea[name='hodFeedback']").val(),
+                    hodfeed1: $("#teachingRemarks").val(),
+                    hodfeed2: $("#feedbackRemarks").val(),
+                    hodfeed3: $("#deptRemarks").val(),
+                    hodfeed4: $("#instituteRemarks").val(), 
+                    hodfeed5: $("#acrRemarks").val(),
+                    hodfeed6: $("#contriRemarks").val(),
+                    is_final_submit: true,
+                    // Add the ratings to the form data
+                    r1: ratings.r1,
+                    r2: ratings.r2,
+                    r3: ratings.r3,
+                    r4: ratings.r4,
+                    r5: ratings.r5,
+                    r6: ratings.r6,
+                    r7: ratings.r7,
+                    r8: ratings.r8,
+                    r9: ratings.r9,
+                    r10: ratings.r10,
+                    r_avg: ratingAvg
+                };
+
+                // AJAX request to submit the assessment
+                $.ajax({
+                    url: "/submit_assessment", 
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        alert("Assessment submitted successfully!");
+                        location.reload(); // Reload the page
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Error submitting assessment: " + error);
+                        isSubmitting = false; // Reset flag on error
+                    }
+                });
+            }
+        });
+    </script>
+    <div class="text-center my-4">
+        <button class="btn btn-secondary" onclick="window.history.back()">Back</button>
+    </div>
+    <style>
+        /* Rating circles styling */
+        .rating-circle {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            text-align: center;
+            line-height: 28px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .rating-circle:hover {
+            background-color: #e0e0e0;
+            transform: scale(1.1);
+        }
+        .rating-circle.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+    </style>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize the rating selection system
+            let ratings = {};
+            
+            // Function to update total and average scores
+            function updateScores() {
+                let total = 0;
+                for (const row in ratings) {
+                    total += ratings[row];
+                }
+                
+                $("#totalRatingScore").text(total);
+                
+                // Calculate average (total / 5) as per requirements
+                const average = (total / 5).toFixed(2);
+                $("#averageRatingScore").text(average);
+                
+                // Calculate final ACR score (average of ratings average and ACR input)
+                const acrScore = parseInt($("#acrMarks").val() || 0);
+                const finalScore = ((parseFloat(average) + acrScore) / 2).toFixed(2);
+                
+                // Update the final ACR score in the final assessment table
+                $("#finalAcrScore").text(finalScore);
+            }
+            
+            // Handle rating selection
+            $(".rating-circle").click(function() {
+                const row = $(this).data("row");
+                const rating = $(this).data("rating");
+                
+                // Remove selected class from all ratings in this row
+                $(`.rating-circle[data-row="${row}"]`).removeClass("selected");
+                
+                // Add selected class to the clicked rating
+                $(this).addClass("selected");
+                
+                // Store the rating value
+                ratings[row] = rating;
+                
+                // Update scores
+                updateScores();
+            });
+            
+            // Also update scores when ACR marks change
+            $("#acrMarks").on("input", function() {
+                updateScores();
+            });
+        });
+    </script>
+    <!-- Additional script to fix rating display issues -->
+    <script>
+        $(document).ready(function() {
+            // Initialize the rating display when page loads
+            setTimeout(function() {
+                // Calculate sum of all selected ratings
+                let totalSum = 0;
+                for (let i = 1; i <= 10; i++) {
+                    const selectedRating = parseInt($(".rating-circle.selected[data-row='" + i + "']").data('rating') || 0);
+                    totalSum += selectedRating;
+                }
+                
+                // Calculate average (out of 10)
+                const avgRating = Math.round(totalSum / 5); // Divide by 5 since max is 50 (10 rows * 5 max rating)
+                
+                // Update UI
+                $("#totalRatingScore").text(totalSum);
+                $("#averageRatingScore").text(avgRating);
+                
+                // Update the ACR score in the final score table
+                $("#finalAcrScore").text(avgRating);
+                
+                console.log("Initialized ratings - Sum:", totalSum, "Average:", avgRating);
+                
+                // IMPORTANT: We've moved this logic to the saveAssessmentData function
+                // Do not attach additional click handlers here to avoid conflicts
+                console.log("Page load complete - ACR calculation will be handled by saveAssessmentData");
+            }, 1000); // Small delay to ensure DOM is fully loaded
+        });
+    </script>
+    <!-- ACR Rating Fix Script -->
+    <script>
+        // Function to override the form data before submission
+        function overrideFormData() {
+            // Override AJAX before form submission
+            const originalAjax = $.ajax;
+            
+            $.ajax = function(options) {
+                if (options.url === "/save_assessment" || options.url === "/submit_assessment") {
+                    // Calculate the rating average
+                    let totalSum = 0;
+                    for (let i = 1; i <= 10; i++) {
+                        const selectedRating = parseInt($(`.rating-circle.selected[data-row="${i}"]`).data('rating') || 1);
+                        totalSum += selectedRating;
+                    }
+                    
+                    // Calculate the average as total divided by 5
+                    const ratingAvg = Math.floor(totalSum / 5);
+                    
+                    // Get the data from the request
+                    let data = JSON.parse(options.data);
+                    
+                    // IMPORTANT: Get the manual hodas5 value directly from the acrMarks input field
+                    // This preserves the user's manually entered value
+                    const manualAcrValue = parseInt($("#acrMarks").val() || 0);
+                    
+                    // Calculate the final ACR score: (hodas5 + r_avg) / 2
+                    const finalAcrScore = Math.floor((manualAcrValue + ratingAvg) / 2);
+                    
+                    // Update the data object with all required values:
+                    // 1. Manual ACR value from input field (hodas5)
+                    // 2. Rating average (r_avg)
+                    // 3. We don't need to send finalacr separately - it's calculated on the server
+                    data.hodas5 = manualAcrValue;
+                    data.r_avg = ratingAvg;
+                    
+                    console.log("Manual ACR Value:", manualAcrValue, "Rating Avg:", ratingAvg, "Final Score:", finalAcrScore);
+                    
+                    // Update the data in the request
+                    options.data = JSON.stringify(data);
+                    
+                    // Update the display in the final score table to show the average of manual ACR and rating average
+                    $("#finalAcrScore").text(finalAcrScore);
+                    
+                    console.log("Form submission - Manual ACR:", manualAcrValue, "Rating Avg:", ratingAvg, "Final ACR Score:", finalAcrScore);
+                }
+                
+                return originalAjax.apply(this, arguments);
+            };
+        }
+
+        $(document).ready(function() {
+            // Override AJAX before form submission
+            overrideFormData();
+            
+            // Function to load saved ratings and update the UI
+            function loadSavedRatings() {
+                $.ajax({
+                    url: "/get_saved_ratings",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        user_id: "{{ user_id }}",
+                        acad_years: "{{ selected_year }}"
+                    }),
+                    success: function(response) {
+                        if (response.status === "success" && response.ratings) {
+                            const ratings = response.ratings;
+                            console.log("Loaded saved ratings:", ratings);
+                            
+                            // Set the selected ratings in the UI
+                            let totalSum = 0;
+                            for (let i = 1; i <= 10; i++) {
+                                if (ratings[`r${i}`]) {
+                                    const ratingValue = parseInt(ratings[`r${i}`]);
+                                    totalSum += ratingValue;
+                                    
+                                    // Remove any existing selections
+                                    $(`.rating-circle[data-row="${i}"]`).removeClass("selected");
+                                    
+                                    // Select the saved rating
+                                    $(`.rating-circle[data-row="${i}"][data-rating="${ratingValue}"]`).addClass("selected");
+                                }
+                            }
+                            
+                            // Update the total rating score
+                            $("#totalRatingScore").text(totalSum);
+                            
+                            // Get the saved r_avg value or calculate it
+                            const ratingAvg = ratings.r_avg ? parseInt(ratings.r_avg) : Math.floor(totalSum / 5);
+                            $("#averageRatingScore").text(ratingAvg);
+                            
+                            // Get the current hodas5 value 
+                            const hodas5Value = parseInt("{{ assessments.hodas5 }}" || 0);
+                            
+                            // Calculate the average of hodas5 and r_avg
+                            const finalAcrScore = Math.floor((hodas5Value + ratingAvg) / 2);
+                            
+                            // Update the ACR score in the final table
+                            $("#finalAcrScore").text(finalAcrScore);
+                            
+                            console.log("Loaded ratings - Sum:", totalSum, "Rating Avg:", ratingAvg, "HOD Assessment:", hodas5Value, "Final ACR Score:", finalAcrScore);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading saved ratings:", error);
+                    }
+                });
+            }
+            
+            // Call loadSavedRatings when page loads
+            loadSavedRatings();
+            
+            // Initialize the rating UI on page load
+            setTimeout(function() {
+                let totalSum = 0;
+                for (let i = 1; i <= 10; i++) {
+                    const selectedRating = parseInt($(`.rating-circle.selected[data-row="${i}"]`).data('rating') || 0);
+                    totalSum += selectedRating;
+                }
+                
+                // Calculate average of ratings: totalSum / 5 (without rounding)
+                const avgRating = Math.floor(totalSum / 5);
+                
+                // Update the total rating score
+                $("#totalRatingScore").text(totalSum);
+                
+                // Update the average rating score
+                $("#averageRatingScore").text(avgRating);
+                
+                // Get the manual ACR value from the acrMarks input field
+                const manualAcrValue = parseInt($("#acrMarks").val() || 0);
+                
+                // Calculate the average of manual ACR and r_avg: (manualAcrValue + avgRating) / 2
+                const finalAcrScore = Math.floor((manualAcrValue + avgRating) / 2);
+                
+                // Update the ACR score in the final table
+                $("#finalAcrScore").text(finalAcrScore);
+                
+                console.log("Page load - Updated ratings. Sum:", totalSum, "Rating Avg:", avgRating, "Manual ACR:", manualAcrValue, "Final ACR Score:", finalAcrScore);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

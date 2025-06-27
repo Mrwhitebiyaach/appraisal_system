@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Past Forms</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('/static/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+        }
+        /* Optional: Styling for the print button */
+        #printButton {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #printButton:hover {
+            background-color: #0056b3;
+        }
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .top-bar a {
+            margin-left: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .top-bar a:hover {
+            text-decoration: underline;
+            color: #ff9800;
+        }
+        .logo-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .logo-link img {
+            width: 90px;
+            height: auto;
+        }
+        .container {
+            margin-top: 150px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+        }
+        .table-container {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            width: 95%;
+            margin: 20px auto;
+        }
+        /* Fix for table cell truncation */
+        .table {
+            table-layout: auto;
+            width: 100%;
+        }
+        .table th, .table td {
+            word-break: normal;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            min-width: 100px;
+        }
+        /* Ensure Resource Person column has enough width */
+        .table th:first-child, .table td:first-child {
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Right Links -->
+    <div class="top-bar">
+        <a href="/landing">Home</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Logo -->
+    <a href="/landing" class="logo-link">
+        <img src="/static/logo.png" alt="Logo">
+    </a>
+
+    <!-- Main Content Container -->
+    <div class="container">
+        <h2>Select Academic Year</h2>
+        
+
+        <form id="academicForm" method="POST" action="{{ url_for('search_pastforms') }}">
+            <div class="form-group">
+                <label for="academicYear">Academic Year:</label>
+                <select class="form-control" id="academicYear" name="academicYear"></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+ <pre></pre>
+
+<!-- Faculty Details Container - Only show when faculty_data is available -->
+{% if user_data %}
+<div class="container">
+    <h2>Faculty Details</h2>
+    <table>
+        <tr>
+            <th>Faculty ID</th>
+            <td>{{ user_data[0] }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{ user_data[1] }}</td>
+        </tr>
+        <tr>
+            <th>Department</th>
+            <td>{{ user_data[2] }}</td>
+        </tr>
+        <tr>
+            <th>Name</th>
+            <td>{{ user_data[3] }}</td>
+        </tr>
+        <tr>
+            <th>Designation</th>
+            <td>{{ user_data[4] }}</td>
+        </tr>
+        <tr>
+            <th>Date of Joining</th>
+            <td>{{ user_data[5] }}</td>
+        </tr>
+        <tr>
+            <th>Date of Birth</th>
+            <td>{{ user_data[6] }}</td>
+        </tr>
+        <tr>
+            <th>Educational Qualification</th>
+            <td>{{ user_data[7] }}</td>
+        </tr>
+        <tr>
+            <th>Experience</th>
+            <td>{{ user_data[8] }}</td>
+        </tr>
+    </table>
+
+    {% if form_id %}
+    <h2>Form Information</h2>
+    <p>Form ID: {{ form_id }}</p>
+    <p>Academic Year: {{ selected_year }}</p>
+    {% endif %}
+   
+</div>
+{% endif %}
+
+<pre></pre>
+<!-- Table to display teaching data if available -->
+{% if teaching_data %}
+<div class="table-container">
+    <h3>Teaching Process for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Semester</th>
+                <th>Course Code/Name</th>
+                <th>Classes Scheduled (S)</th>
+                <th>Classes Held (H)</th>
+                <th>Points (H/S) * 5</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in teaching_data %}
+            <tr>
+                <td>{{ row[0] }}</td> <!-- Semester -->
+                <td>{{ row[1] }}</td> <!-- Course Code/Name -->
+                <td>{{ row[2] }}</td> <!-- Classes Scheduled (S) -->
+                <td>{{ row[3] }}</td> <!-- Classes Held (H) -->
+                <td>{{ "%.1f"|format(row[4]|float) if row[4] is not none else '0.0' }}</td> <!-- Points (H/S) * 5 -->
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No data available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        
+    </table>
+
+    {% if academic_review_data %}
+    <div class="table-container">
+        <div class="table-box">
+            <h3 class="table-title">Numeric Points Attained on basis of Academic Review (Max Marks: 20)</h3>
+            <div class="instructions">
+               
+            </div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Sr. No.</th>
+                        <th>Academic Review 1</th>
+                        <th>Academic Review 2</th>
+                        <th>Average Score</th>
+                    </tr>
+                </thead>
+                <tbody id="academicReviewTable">
+                    {% for row in academic_review_data %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No academic review data available for the selected academic year.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #ffffff; font-weight: bold;">
+                        
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Total Row in a More Appealing Way -->
+<tr style="background-color: #f5c6d1; font-weight: bold;">
+<td colspan="5" class="text-end" style="padding-right: 20px;">
+    Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.teaching }}</span>
+</td>
+</tr>
+
+</div>
+{% endif %}
+<pre></pre>
+
+{% if feedback_data %}
+<div class="table-container">
+    <h3>Student Feedback for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Semester</th>
+                <th>Course Code</th>
+                <th>Total Points</th>
+                <th>Points Obtained</th>
+                <th>Uploaded Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in feedback_data %}
+            <tr>
+                <td>{{ row[0] }}</td>  <!-- Semester -->
+                <td>{{ row[1] }}</td>  <!-- Course Code -->
+                <td>{{ row[2] }}</td>  <!-- Total Points -->
+                <td>{{ row[3] }}</td>  <!-- Points Obtained -->
+                <td>
+                    {% if row[4] %}
+                        {# Normalize path separators to handle both Windows and UNIX-style paths #}
+                        {% set file_name = row[4].replace('\\', '/').split('/')[-1] %}
+                        <a href="{{ url_for('uploaded_file', filename=file_name) }}" 
+                           target="_blank" class="btn btn-primary">
+                           View Document
+                        </a>
+                    {% else %}
+                        No Document
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <tr style="background-color: #f5c6d1; font-weight: bold;">
+        <td colspan="5" class="text-end" style="padding-right: 20px;">
+            Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.feedback }}</span>
+        </td>
+    </tr>
+</div>
+{% endif %}
+
+
+<pre></pre>
+{% if dept_act_data %}
+<div class="table-container">
+<h3>Department Activities for Academic Year: {{ selected_year }}</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Semester</th>
+            <th>Activity</th>
+            <th>Points</th>
+            <th>Order Copy</th>
+            <th>Uploaded Document</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in dept_act_data %}
+        <tr>
+            <td>{{ row[0] }}</td> <!-- Semester -->
+            <td>{{ row[1] }}</td> <!-- Activity -->
+            <td>{{ row[2] }}</td> <!-- Points -->
+            <td>{{ row[3] }}</td> <!-- Order Copy -->
+            
+            <td>
+                {% if row[4] %}
+                    <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}" 
+                       target="_blank" class="btn btn-primary">
+                       View Document
+                    </a>
+                {% else %}
+                    No Document
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">No department activities available for the selected academic year.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<tr style="background-color: #f5c6d1; font-weight: bold;">
+    <td colspan="5" class="text-end" style="padding-right: 20px;">
+        Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.dept }}</span>
+    </td>
+</tr>
+</div>
+{% endif %}
+<pre></pre>
+{% if inst_act_data %}
+<div class="table-container">
+<h3>Institute Activities for Academic Year: {{ selected_year }}</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Semester</th>
+            <th>Activity</th>
+            <th>Points</th>
+            <th>Order Copy</th>
+            <th>Uploaded Document</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in inst_act_data %}
+        <tr>
+            <td>{{ row[0] }}</td> <!-- Semester -->
+            <td>{{ row[1] }}</td> <!-- Activity -->
+            <td>{{ row[2] }}</td> <!-- Points -->
+            <td>{{ row[3] }}</td> <!-- Order Copy -->
+            <td>
+                {% if row[4] %}
+                    <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}" 
+                       target="_blank" class="btn btn-primary">
+                       View Document
+                    </a>
+                {% else %}
+                    No Document
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">No institute activities available for the selected academic year.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<tr style="background-color: #f5c6d1; font-weight: bold;">
+    <td colspan="5" class="text-end" style="padding-right: 20px;">
+        Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.institute}}</span>
+    </td>
+</tr>
+</div>
+{% endif %}
+        <pre></pre>
+
+
+
+         <!-- Papers Published in Conference -->
+    {% if self_improvement_data %}
+    <div class="table-container">
+        <h3>Papers Published in National/International Conference for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Title of Paper</th>
+                    <th>Month/Year</th>
+                    <th>Conference Name</th>
+                    <th>ISBN/ISSN</th>
+                    <th>Co-authors</th>
+                    <th>Impact Factor</th>
+                    <th>Citations</th>
+                    <th>Rating</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in self_improvement_data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>{{ row[6] if row[6] else 'N/A' }}</td>
+                    <td>{{ row[7] if row[7] else 'N/A' }}</td>
+                    <td>{{ row[8] if row[8] else 'N/A' }}</td>
+                    <td>
+                        {% if row[9] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[9].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="no-data">No conference papers available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+
+
+    <!-- Copyright Published -->
+    {% if copyright_data %}
+    <div class="table-container">
+        <h3>Copyright Published for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Title Name</th>
+                    <th>Month/Year</th>
+                    <th>Registration Number</th>
+                    <th>Status</th>
+                    <th>Category</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in copyright_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[4] == 'Granted' %}bg-success{% elif row[4] == 'Published' %}bg-info{% else %}bg-warning{% endif %}">
+                            {{ row[4] if row[4] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>
+                        {% if row[6] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[6].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="no-data">No copyright records available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Patent Published -->
+    {% if patent_data %}
+    <div class="table-container">
+        <h3>Patent Published for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Title Name</th>
+                    <th>Month/Year</th>
+                    <th>Registration Number</th>
+                    <th>Status</th>
+                    <th>Category</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in patent_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[4] == 'Granted' %}bg-success{% elif row[4] == 'Published' %}bg-info{% else %}bg-warning{% endif %}">
+                            {{ row[4] if row[4] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>
+                        {% if row[6] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[6].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="no-data">No patent records available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Short-term Training Programs/FDPs -->
+    {% if training_data %}
+    <div class="table-container">
+        <h3>Short-term Training Programs/FDPs for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Program Name</th>
+                    <th>Technology</th>
+                    <th>Duration</th>
+                    <th>Date Range</th>
+                    <th>Organizing Institute</th>
+                    <th>Mode</th>
+                    <th>Certificate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in training_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[6] == 'Online' %}bg-primary{% else %}bg-success{% endif %}">
+                            {{ row[6] if row[6] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if row[7] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Certificate
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Certificate</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="no-data">No training programs available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+   <!-- Fixed MOOCS Section with Better File Handling -->
+{% if moocs_data %}
+<div class="table-container">
+    <h3>MOOCS for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Sr. No.</th>
+                <th>Course Name</th>
+                <th>Month/Year</th>
+                <th>Duration</th>
+                <th>Certification Status</th>
+                <th>Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in moocs_data %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                <td>
+                    <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ row[4] if row[4] else 'N/A' }}
+                    </span>
+                </td>
+                <td>
+                    {% if row[5] %}
+                        {% set filename = row[5].split('/')[-1] %}
+                        <a href="{{ url_for('uploaded_file', filename=filename) }}"
+                           target="_blank" class="btn btn-primary btn-sm me-2">
+                           <i class="fas fa-eye"></i> View Document
+                        </a>
+                        <!-- Debug link - remove in production -->
+                        <a href="{{ url_for('debug_uploaded_file', filename=filename) }}"
+                           target="_blank" class="btn btn-secondary btn-sm">
+                           <i class="fas fa-bug"></i> Debug
+                        </a>
+                        <!-- Show filename for debugging -->
+                        <small class="text-muted d-block mt-1">File: {{ filename }}</small>
+                    {% else %}
+                        <span class="text-muted">No Document</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No MOOCS courses available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Fixed SWAYAM NPTEL Section -->
+{% if swayam_data %}
+<div class="table-container">
+    <h3>SWAYAM NPTEL for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Sr. No.</th>
+                <th>Course Name</th>
+                <th>Month/Year</th>
+                <th>Duration</th>
+                <th>Certification Status</th>
+                <th>Document</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in swayam_data %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                <td>
+                    <span class="badge {% if row[4] == 'Yes' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ row[4] if row[4] else 'N/A' }}
+                    </span>
+                </td>
+                <td>
+                    {% if row[5] %}
+                        {% set filename = row[5].split('/')[-1] %}
+                        <a href="{{ url_for('uploaded_file', filename=filename) }}"
+                           target="_blank" class="btn btn-primary btn-sm me-2">
+                           <i class="fas fa-eye"></i> View Document
+                        </a>
+                        <!-- Debug link - remove in production -->
+                        <a href="{{ url_for('debug_uploaded_file', filename=filename) }}"
+                           target="_blank" class="btn btn-secondary btn-sm">
+                           <i class="fas fa-bug"></i> Debug
+                        </a>
+                        <!-- Show filename for debugging -->
+                        <small class="text-muted d-block mt-1">File: {{ filename }}</small>
+                    {% else %}
+                        <span class="text-muted">No Document</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No SWAYAM NPTEL courses available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+    <!-- Seminars/Webinars -->
+    {% if webinar_data %}
+    <div class="table-container">
+        <h3>Seminars/Webinars for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Name</th>
+                    <th>Technology</th>
+                    <th>Duration</th>
+                    <th>Date Range</th>
+                    <th>Type</th>
+                    <th>Institute</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in webinar_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if row[5] == 'External' %}bg-primary{% else %}bg-info{% endif %}">
+                            {{ row[5] if row[5] else 'N/A' }}
+                        </span>
+                    </td>
+                    <td>{{ row[6] if row[6] else 'N/A' }}</td>
+                    <td>
+                        {% if row[7] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="no-data">No seminars/webinars available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Global Certification -->
+    {% if certification_data %}
+    <div class="table-container">
+        <h3>Global Certification for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Certification Name</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in certification_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>
+                        {% if row[2] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[2].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Certificate
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Certificate</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="no-data">No global certifications available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Resource Person Activities -->
+    {% if resource_data %}
+    <div class="table-container">
+        <h3>Resource Person in STTP/Training/Lecture Talks for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Topic Name</th>
+                    <th>Department</th>
+                    <th>Institute Name</th>
+                    <th>Participants</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in resource_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>
+                        {% if row[5] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="no-data">No resource person activities available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- University Committee -->
+    {% if committee_data %}
+    <div class="table-container">
+        <h3>Member of University Committee for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Committee Name</th>
+                    <th>Roles and Responsibilities</th>
+                    <th>Designation</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in committee_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>
+                        {% if row[4] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[4].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="no-data">No university committee memberships available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- External Projects -->
+    {% if project_data %}
+    <div class="table-container">
+        <h3>External Projects/Task Force/Exchange Programs for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Role</th>
+                    <th>Description</th>
+                    <th>Contribution</th>
+                    <th>University</th>
+                    <th>Duration</th>
+                    <th>Comments</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in project_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>{{ row[3] if row[3] else 'N/A' }}</td>
+                    <td>{{ row[4] if row[4] else 'N/A' }}</td>
+                    <td>{{ row[5] if row[5] else 'N/A' }}</td>
+                    <td>{{ row[6] if row[6] else 'N/A' }}</td>
+                    <td>
+                        {% if row[7] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[7].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="no-data">No external projects available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Special Mentions -->
+    {% if special_mentions_data %}
+    <div class="table-container">
+        <h3>Special Mentions for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Name</th>
+                    <th>Roles and Responsibilities</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in special_mentions_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>
+                        {% if row[3] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="no-data">No special mentions available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Conference/Journal Committee -->
+    {% if conference_committee_data %}
+    <div class="table-container">
+        <h3>Member of Conference/Journal Committee for Academic Year: {{ selected_year }}</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Conference/Journal Name</th>
+                    <th>Designation</th>
+                    <th>Document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in conference_committee_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ row[1] if row[1] else 'N/A' }}</td>
+                    <td>{{ row[2] if row[2] else 'N/A' }}</td>
+                    <td>
+                        {% if row[3] %}
+                            <a href="{{ url_for('uploaded_file', filename=row[3].split('/')[-1]) }}"
+                               target="_blank" class="btn btn-primary">
+                               View Document
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Document</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="no-data">No conference/journal committee memberships available for the selected academic year.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+        <!-- ACR Total Display -->
+        <div style="text-align: center; margin: 20px 0;">
+            <div style="display: inline-block; background-color: white; border: 1px solid #ddd; border-radius: 5px; padding: 10px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <span style="font-size: 1.1rem; font-weight: bold;">ACR Total = </span>
+                <span style="font-size: 1.3rem; color: #ed0000; font-weight: bold;">{{ points_data.acr }}</span>
+            </div>
+        </div>
+
+        <!-- Updated Display Table for Contributions to Society -->
+{% if contribution_data %}
+<div class="table-container">
+<h3>Contributions to Society for Academic Year: {{ selected_year }}</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Semester</th>
+            <th>Activity</th>
+            <th>Points</th>
+            <th>Order Copy</th>
+            <th>Details</th>
+            <th>Uploaded Document</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in contribution_data %}
+        <tr>
+            <td>{{ row[0] }}</td>  <!-- Semester -->
+            <td>{{ row[1] }}</td>  <!-- Activity -->
+            <td>{{ row[2] }}</td>  <!-- Points -->
+            <td>{{ row[3] }}</td>  <!-- Order Copy -->
+            <td>{{ row[4] }}</td>  <!-- Details -->
+            <td>
+                {% if row[5] %}
+                    <a href="{{ url_for('uploaded_file', filename=row[5].split('/')[-1]) }}" target="_blank" class="btn btn-primary">
+                       View Document
+                    </a>
+                {% else %}
+                    No Document
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<tr style="background-color: #f5c6d1; font-weight: bold;">
+    <td colspan="6" class="text-end" style="padding-right: 20px;">
+        Total = <span style="font-size: 1.2rem; color: #ed0000;">{{ points_data.society }}</span>
+    </td>
+</tr>
+</div>
+{% endif %}
+            
+
+            <pre> </pre>
+
+            {% if points_data %}
+<div class="table-container">
+    <h3>Final Score:</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Criteria</th>
+                <th>Maximum Points</th>
+                <th>Points (Self Assessment)</th>
+                {% if assessments %}
+                <th class="bg-info text-white">Points Given by HOD</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Teaching Process</td>
+                <td>25</td>
+                <td>{{ points_data['teaching']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas1 %}
+                <td class="bg-light">{{ assessments.hodas1 }}</td>
+                {% endif %}
+            </tr>
+            {% if assessments and assessments.hodfeed1 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed1 }}</td>
+            </tr>
+            {% endif %}
+            
+            <tr>
+                <td>Students' Feedback</td>
+                <td>25</td>
+                <td>{{ points_data['feedback']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas2 %}
+                <td class="bg-light">{{ assessments.hodas2 }}</td>
+                {% endif %}
+            </tr>
+            {% if assessments and assessments.hodfeed2 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed2 }}</td>
+            </tr>
+            {% endif %}
+            
+            <tr>
+                <td>Departmental Activities</td>
+                <td>20</td>
+                <td>{{ points_data['dept']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas3 %}
+                <td class="bg-light">{{ assessments.hodas3 }}</td>
+                {% endif %}
+            </tr>
+            {% if assessments and assessments.hodfeed3 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed3 }}</td>
+            </tr>
+            {% endif %}
+            
+            <tr>
+                <td>Institute Activity</td>
+                <td>10</td>
+                <td>{{ points_data['institute']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas4 %}
+                <td class="bg-light">{{ assessments.hodas4 }}</td>
+                {% endif %}
+            </tr>
+            {% if assessments and assessments.hodfeed4 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed4 }}</td>
+            </tr>
+            {% endif %}
+            
+            <tr>
+                <td>ACR</td>
+                <td>10</td>
+                <td>{{ points_data['acr']|float|round(2) }}</td>
+                <!-- ACR assessment by HOD is hidden for confidentiality -->
+            </tr>
+            {% if assessments and assessments.hodfeed5 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed5 }}</td>
+            </tr>
+            {% endif %}
+            
+            <tr>
+                <td>Contribution to Society</td>
+                <td>10</td>
+                <td>{{ points_data['society']|float|round(2) }}</td>
+                {% if assessments and assessments.hodas6 %}
+                <td class="bg-light">{{ assessments.hodas6 }}</td>
+                {% endif %}
+            </tr>
+            {% if assessments and assessments.hodfeed6 %}
+            <tr>
+                <td colspan="{% if assessments %}4{% else %}3{% endif %}" class="bg-light font-italic text-secondary"><strong>HOD Remarks:</strong> {{ assessments.hodfeed6 }}</td>
+            </tr>
+            {% endif %}
+            
+            <tr>
+                <th>Total</th>
+                <th>100</th>
+                <th>{{ (points_data['teaching']|float + points_data['feedback']|float + points_data['dept']|float 
+                    + points_data['institute']|float + points_data['acr']|float + points_data['society']|float)|round(2) }}</th>
+                {% if assessments %}
+                <th class="bg-info text-white">{{ (assessments.hodas1|default(0)|float + assessments.hodas2|default(0)|float + 
+                       assessments.hodas3|default(0)|float + assessments.hodas4|default(0)|float + 
+                       assessments.hodas6|default(0)|float)|round(2) }}</th>
+                {% endif %}
+            </tr>  
+        </tbody>
+    </table>
+    
+    {% if assessments and assessments|length > 0 %}
+    <div class="alert alert-info mt-3">
+        <h5 class="alert-heading"><i class="fas fa-check-circle"></i> Form Reviewed</h5>
+        <p><strong>Note:</strong> This form has been reviewed by your Head of Department. The assessment points and remarks from your HOD are displayed in the <span class="bg-info text-white px-2 py-1 rounded">highlighted columns</span> above.</p>
+        <hr>
+        <p class="mb-0 small">The HOD's assessment provides valuable feedback on your performance. Take note of any remarks provided.</p>
+    </div>
+    
+    <!-- HOD Assessment Details Section -->
+    <div class="table-container mt-4">
+        <h4 class="text-center mb-3"><i class="fas fa-clipboard-check text-primary"></i> HOD Assessment Details</h4>
+        <table class="table table-bordered">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th>Assessment Area</th>
+                    <th>Maximum Points</th>
+                    <th>HOD Assessment</th>
+                    <th>HOD Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Teaching Process</strong></td>
+                    <td class="text-center">25</td>
+                    <td class="text-center bg-light">{{ assessments.hodas1|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed1|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Students' Feedback</strong></td>
+                    <td class="text-center">25</td>
+                    <td class="text-center bg-light">{{ assessments.hodas2|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed2|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Departmental Activities</strong></td>
+                    <td class="text-center">20</td>
+                    <td class="text-center bg-light">{{ assessments.hodas3|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed3|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Institute Activity</strong></td>
+                    <td class="text-center">10</td>
+                    <td class="text-center bg-light">{{ assessments.hodas4|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed4|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>ACR</strong></td>
+                    <td class="text-center">10</td>
+                    <td class="text-center bg-light">***</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed5|default('No remarks provided') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Contribution to Society</strong></td>
+                    <td class="text-center">10</td>
+                    <td class="text-center bg-light">{{ assessments.hodas6|default(0)|float|round(2) }}</td>
+                    <td class="bg-light font-italic">{{ assessments.hodfeed6|default('No remarks provided') }}</td>
+                </tr>
+                <tr class="bg-primary text-white">
+                    <th>Total</th>
+                    <th class="text-center">90</th>
+                    <th class="text-center">{{ (assessments.hodas1|default(0)|float + assessments.hodas2|default(0)|float + assessments.hodas3|default(0)|float + assessments.hodas4|default(0)|float + assessments.hodas6|default(0)|float)|round(2) }}</th>
+                    <th></th>
+                </tr>
+            </tbody>
+            
+        </table>
+        
+        {% if assessments.feedback %}
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-comments"></i> Overall HOD Feedback</h5>
+            </div>
+            <div class="card-body">
+                <p class="font-italic">{{ assessments.feedback }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-secondary mt-3">
+        <h5 class="alert-heading"><i class="fas fa-hourglass-half"></i> Pending Review</h5>
+        <p>This form has not yet been reviewed by your Head of Department.</p>
+        <hr>
+        <p class="mb-0 small">Once your HOD reviews your form, their assessment and feedback will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+<pre> </pre>
+
+{% if user_data %}
+<div class="text-center">
+    <button id="printButton" onclick="window.print()" class="btn btn-success">Print</button>
+</div>
+{% endif %}
+
+<pre></pre>
+<div class="text-center">
+    <a href="/landing" class="btn btn-primary">Home</a>
+</div>
+<pre></pre>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Script for dynamically generating academic years -->
+    <script>
+       function generateAcademicYears() {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const month = today.getMonth(); // 0 = January, 11 = December
+    const day = today.getDate();    // 1-31
+    const dropdown = document.getElementById('academicYear');
+
+    // Determine the start year of the academic year.
+    // Switch to upcoming academic year if today's date is after 10 June.
+    const academicStartYear = (month > 5 || (month === 5 && day >= 10)) ? currentYear : currentYear - 1;
+
+    // Generate options for the current and last 4 academic years
+    for (let i = 0; i <= 4; i++) {
+        const startYear = academicStartYear - i;
+        const endYear = startYear + 1;
+        const option = document.createElement('option');
+        option.value = `${startYear}/${endYear.toString().slice(-2)}`;
+        option.text = `${startYear}/${endYear.toString().slice(-2)}`;
+        dropdown.appendChild(option);
+    }
+    
+    // Add onchange event to automatically submit form when selection changes
+    dropdown.addEventListener('change', function() {
+        document.getElementById('academicForm').submit();
+    });
+    
+    // Auto-submit disabled to prevent refresh loops
+    // dropdown.options[0].selected = true; // Just select the first option but don't auto-submit
+}
+
+// Call the function to populate the dropdown when the page loads
+window.onload = generateAcademicYears;
+
+function printPage() {
+    window.print();
+}
+    </script>
+    <div class="text-center my-4">
+        <button class="btn btn-secondary" onclick="window.history.back()">Back</button>
+    </div>
+</body>
+</html>

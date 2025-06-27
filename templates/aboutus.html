@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Responsive Portfolio</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Grechen+Fuemen&family=Montserrat+Alternates:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /*=============== VARIABLES CSS ===============*/
+    :root {
+      /*========== Colors ==========*/
+      --hue: 358;
+      --first-color: hsl(var(--hue), 80%, 49%);
+      --first-color-alt: hsl(var(--hue), 76%, 45%);
+      --white-color: hsl(0, 0%, 98%);
+      --black-color: hsl(0, 0%, 1%);
+      --text-color: hsl(var(--hue), 2%, 66%);
+      --body-color: hsl(var(--hue), 100%, 1%);
+      --container-color: hsl(var(--hue), 2%, 10%);
+      --conic-gradient: conic-gradient(from 150deg at 50% 45%,
+                      hsl(var(--hue), 80%, 20%) 0deg,
+                      hsl(var(--hue), 80%, 48%) 140deg,
+                      hsl(var(--hue), 80%, 20%) 360deg);
+      
+      /*========== Shadows ==========*/
+      --shadow-1: 0 2px 8px hsla(var(--hue), 80%, 49%, 0.25);
+      --shadow-2: 0 4px 16px hsla(var(--hue), 80%, 49%, 0.25);
+      --shadow-3: 0 8px 24px hsla(var(--hue), 80%, 49%, 0.25);
+      
+      /*========== Transitions ==========*/
+      --transition-1: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-2: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      /*========== Border Radius ==========*/
+      --radius-1: 0.5rem;
+      --radius-2: 1rem;
+      --radius-3: 1.5rem;
+      --radius-circle: 50%;
+
+      /*========== Font and typography ==========*/
+      --body-font: "Montserrat Alternates", sans-serif;
+      --second-font: "Grechen Fuemen", cursive;
+      --biggest-font-size: 2.5rem;
+      --h1-font-size: 1.5rem;
+      --h2-font-size: 1.25rem;
+      --h3-font-size: 1rem;
+      --normal-font-size: .938rem;
+      --small-font-size: .813rem;
+      --smaller-font-size: .75rem;
+
+      /*========== Font weight ==========*/
+      --font-regular: 400;
+      --font-medium: 500;
+      --font-semi-bold: 600;
+
+      /*========== z index ==========*/
+      --z-tooltip: 10;
+      --z-fixed: 100;
+    }
+
+    /*========== Responsive typography ==========*/
+    @media screen and (min-width: 1168px) {
+      :root {
+        --biggest-font-size: 3.5rem;
+        --h1-font-size: 2.25rem;
+        --h2-font-size: 1.5rem;
+        --h3-font-size: 1.25rem;
+        --normal-font-size: 1rem;
+        --small-font-size: .875rem;
+        --smaller-font-size: .813rem;
+      }
+    }
+
+    /*=============== BASE ===============*/
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      height: auto;
+      min-height: 80%;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body,
+    input,
+    textarea,
+    button {
+      font-family: var(--body-font);
+      font-size: var(--normal-font-size);
+    }
+
+    body {
+      background-color: var(--body-color);
+      color: var(--white-color);
+    }
+
+    input,
+    button,
+    textarea {
+      border: none;
+      outline: none;
+    }
+
+    h1, h2, h3, h4 {
+      color: var(--white-color);
+      font-weight: var(--font-semi-bold);
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /*=============== REUSABLE CSS CLASSES ===============*/
+    .container {
+      max-width: 1168px;
+      margin-inline: 1.5rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .section {
+      padding-block: 2rem 3rem;
+    }
+
+    .section__title {
+      font-size: var(--h2-font-size);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .main {
+      overflow: hidden;
+    }
+
+    /*=============== NAV ===============*/
+    .nav {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      background-color: hsla(var(--hue), 2%, 10%, 0.8);
+      box-shadow: var(--shadow-1);
+      z-index: var(--z-fixed);
+      transition: background .4s;
+    }
+
+    .nav__container {
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav__logo {
+      color: var(--white-color);
+      font-family: var(--second-font);
+      font-size: var(--h1-font-size);
+      text-shadow: var(--shadow-1);
+    }
+
+    .nav__menu {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      background-color: var(--container-color);
+      width: 80%;
+      height: 100%;
+      padding: 6rem 3rem;
+      transition: right .4s;
+    }
+
+    .nav__list {
+      display: flex;
+      flex-direction: column;
+      row-gap: 3rem;
+    }
+
+    .nav__link {
+      color: var(--white-color);
+      font-weight: var(--font-medium);
+      transition: color .4s;
+      position: relative;
+    }
+
+    .nav__link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--first-color);
+      transition: var(--transition-1);
+    }
+
+    .nav__link:hover::after {
+      width: 100%;
+    }
+
+    .nav__close {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      font-size: 1.5rem;
+      color: var(--white-color);
+      cursor: pointer;
+    }
+
+    .nav__toggle {
+      font-size: 1.25rem;
+      color: var(--white-color);
+      cursor: pointer;
+    }
+
+    /* Active link */
+    .active-link {
+      color: var(--first-color);
+    }
+
+    /* Show menu */
+    .show-menu {
+      right: 0;
+    }
+
+    /*=============== HOME ===============*/
+    .home {
+      position: relative;
+      padding-top: 7rem;
+    }
+
+    .home__container {
+      position: relative;
+      row-gap: 2rem;
+    }
+
+    /*===== PERFIL =====*/
+    .home__perfil {
+      position: relative;
+      justify-self: center;
+    }
+
+    .home__shape {
+      width: 220px;
+      height: 220px;
+      background: var(--conic-gradient);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      box-shadow: var(--shadow-2);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .home__img {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--body-color);
+      box-shadow: var(--shadow-3);
+      transition: var(--transition-2);
+    }
+
+    .home__img:hover {
+      transform: scale(1.05);
+    }
+
+    /*===== INFO =====*/
+    .home__info {
+      text-align: center;
+    }
+
+    .home__name {
+      font-size: var(--biggest-font-size);
+      font-family: var(--second-font);
+      margin-bottom: .5rem;
+      text-shadow: var(--shadow-1);
+      background: linear-gradient(to right, var(--first-color), var(--white-color));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .home__profession {
+      font-size: var(--h2-font-size);
+      color: var(--first-color);
+      margin-bottom: 1rem;
+    }
+
+    .home__description {
+      color: var(--text-color);
+      margin-bottom: 2rem;
+    }
+
+    /*===== SKILLS =====*/
+    .home__skills {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .home__skill-item {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .home__skill-icon {
+      font-size: 1.25rem;
+      color: var(--first-color);
+    }
+
+    .home__skill-name {
+      font-size: var(--small-font-size);
+      color: var(--text-color);
+    }
+
+    /*=============== BUTTON ===============*/
+    .button {
+      display: inline-flex;
+      align-items: center;
+      column-gap: .5rem;
+      background-color: var(--first-color);
+      padding: 1rem 1.5rem;
+      border-radius: .5rem;
+      color: var(--white-color);
+      font-weight: var(--font-medium);
+      transition: background .4s;
+    }
+
+    .button:hover {
+      background-color: var(--first-color-alt);
+    }
+
+    .button i {
+      font-size: 1.25rem;
+    }
+
+    /*=============== PROJECTS ===============*/
+    .projects {
+      padding-top: 2rem;
+    }
+
+    .projects__container {
+      row-gap: 2rem;
+    }
+
+    .projects__card {
+      background-color: var(--container-color);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      transition: transform .4s;
+    }
+
+    .projects__card:hover {
+      transform: translateY(-.5rem);
+    }
+
+    .projects__img {
+      width: 100%;
+      border-radius: .5rem;
+      margin-bottom: 1rem;
+    }
+
+    .projects__title {
+      font-size: var(--h3-font-size);
+      margin-bottom: .5rem;
+    }
+
+    .projects__description {
+      color: var(--text-color);
+      margin-bottom: 1rem;
+    }
+
+    .projects__button {
+      color: var(--first-color);
+      font-weight: var(--font-medium);
+      display: flex;
+      align-items: center;
+      column-gap: .25rem;
+    }
+
+    .projects__button i {
+      font-size: 1rem;
+      transition: transform .4s;
+    }
+
+    .projects__button:hover i {
+      transform: translateX(.25rem);
+    }
+
+    /*=============== CONTACT ===============*/
+    .contact {
+      padding-top: 2rem;
+    }
+
+    .contact__container {
+      row-gap: 2rem;
+    }
+
+    .contact__form {
+      background-color: var(--container-color);
+      padding: 2rem;
+      border-radius: 1rem;
+    }
+
+    .contact__input {
+      width: 100%;
+      background-color: var(--body-color);
+      padding: 1rem;
+      border-radius: .5rem;
+      color: var(--white-color);
+      margin-bottom: 1rem;
+    }
+
+    .contact__textarea {
+      width: 100%;
+      background-color: var(--body-color);
+      padding: 1rem;
+      border-radius: .5rem;
+      color: var(--white-color);
+      margin-bottom: 1rem;
+      resize: none;
+      height: 150px;
+    }
+
+    .contact__button {
+      width: 100%;
+    }
+
+    /*=============== FOOTER ===============*/
+    .footer {
+      background-color: var(--container-color);
+      padding: 2rem 0 1rem;
+      text-align: center;
+      width: 100%;
+      position: relative;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .footer__title {
+      font-size: var(--h3-font-size);
+      margin-bottom: 1rem;
+    }
+
+    .footer__social {
+      display: flex;
+      justify-content: center;
+      column-gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer__social-link {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      background-color: var(--first-color);
+      border-radius: 50%;
+      color: var(--white-color);
+      transition: background .4s;
+    }
+
+    .footer__social-link:hover {
+      background-color: var(--first-color-alt);
+    }
+
+    .footer__copy {
+      font-size: var(--small-font-size);
+      color: var(--text-color);
+    }
+
+    /*=============== SCROLL BAR ===============*/
+    ::-webkit-scrollbar {
+      width: .6rem;
+      background-color: var(--container-color);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: var(--first-color);
+      border-radius: .5rem;
+    }
+
+    /*=============== SCROLL UP ===============*/
+    .scrollup {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      background-color: var(--first-color);
+      border-radius: 0.5rem;
+      display: inline-flex;
+      padding: 0.5rem;
+      color: var(--white-color);
+      z-index: var(--z-tooltip);
+      transition: var(--transition-1);
+      opacity: 0.8;
+    }
+
+    .scrollup:hover {
+      transform: translateY(-.25rem);
+    }
+
+    /* Show Scroll Up */
+    .show-scroll {
+      bottom: 1rem;
+      opacity: 1;
+    }
+
+    /*=============== BREAKPOINTS ===============*/
+    /* For small devices */
+    @media screen and (max-width: 340px) {
+      .container {
+        margin-inline: 1rem;
+      }
+
+      .home__skills {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* For medium devices */
+    @media screen and (min-width: 768px) {
+      .nav__menu {
+        width: 50%;
+      }
+
+      .home__container {
+        grid-template-columns: repeat(2, 1fr);
+        align-items: center;
+      }
+
+      .home__perfil {
+        order: 1;
+      }
+
+      .home__info {
+        order: 0;
+        text-align: left;
+      }
+
+      .projects__container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* For large devices */
+    @media screen and (min-width: 1168px) {
+      .container {
+        margin-inline: auto;
+      }
+
+      .nav__menu {
+        width: 30%;
+      }
+
+      .home__container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4rem;
+      } /* Closing brace for .home__container */
+
+      .projects__container {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    } /* Closing brace for @media screen and (min-width: 1168px) */
+    /*=============== TEAM & PROFILE CARDS ===============*/
+    .team.section {
+      padding-top: 5rem; /* Adjusted padding */
+    }
+
+    .team__guide,
+    .team__students {
+      margin-bottom: 3rem;
+    }
+
+    .team__subsection-title {
+      font-size: var(--h1-font-size);
+      color: var(--first-color);
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+
+    .team__subsection-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background-color: var(--first-color-alt);
+      border-radius: 2px;
+    }
+
+    .profile-card__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+
+    .profile-card {
+      background-color: var(--container-color);
+      border-radius: var(--radius-2);
+      padding: 2rem;
+      box-shadow: var(--shadow-1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      text-align: left;
+    }
+
+    .profile-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-3);
+    }
+
+    .profile-card__name {
+      font-size: var(--h2-font-size);
+      font-family: var(--body-font); /* Ensuring consistent font */
+      color: var(--white-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .profile-card__role {
+      font-size: var(--normal-font-size);
+      color: var(--first-color);
+      margin-bottom: 1.5rem;
+      font-style: italic;
+    }
+
+    .profile-card__socials {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .profile-card__social-link {
+      color: var(--text-color);
+      font-size: var(--small-font-size);
+      display: inline-flex;
+      align-items: center;
+      transition: color 0.3s ease;
+      text-decoration: none;
+    }
+
+    .profile-card__social-link i {
+      margin-right: 0.75rem;
+      color: var(--first-color-alt);
+      width: 20px; /* Ensures icons align well */
+      text-align: center;
+      font-size: 1.1rem; /* Consistent icon size */
+    }
+
+    .profile-card__social-link:hover {
+      color: var(--first-color);
+    }
+
+    .profile-card__social-link:hover i {
+      color: var(--first-color);
+    }
+
+    /* About section adjustments */
+    .about__card {
+      background-color: var(--container-color);
+      padding: 2rem;
+      border-radius: var(--radius-2);
+      box-shadow: var(--shadow-1);
+      text-align: center; /* Center align text in about card */
+    }
+    .about__description {
+      color: var(--text-color);
+      line-height: 1.8;
+      font-size: var(--normal-font-size); /* Ensure consistent font size */
+    }
+
+    /* Header and Theme Toggle */
+    .page-header {
+      background: var(--container-color);
+      padding: 1rem 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-1);
+      width: 100%;
+    }
+    
+    .page-header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition-1);
+    }
+    
+    .home-link:hover {
+      color: var(--first-color);
+    }
+    
+
+    
+    .theme-toggle i {
+      font-size: 1.5rem;
+      color: var(--first-color);
+      cursor: pointer;
+      background: var(--container-color);
+      padding: 0.5rem;
+      border-radius: 50%;
+      box-shadow: var(--shadow-1);
+    }
+
+    /* Social Media Links in Footer */
+    .footer__social {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      padding: 0 1rem;
+    }
+    
+    .social-item {
+      text-align: center;
+      transition: var(--transition-1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 120px;
+    }
+    
+    .social-item:hover {
+      transform: translateY(-3px);
+    }
+    
+    .social-item a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-color);
+      text-decoration: none;
+      width: 100%;
+    }
+    
+    .social-item .social-button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--container-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+      box-shadow: var(--shadow-1);
+    }
+    
+    .social-item i {
+      font-size: 1.5rem;
+      color: var(--first-color);
+    }
+    
+    .social-item span {
+      font-size: 0.9rem;
+      display: block;
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+
+    /* Responsive adjustments for profile cards */
+    @media screen and (max-width: 768px) {
+      .profile-card__grid {
+        grid-template-columns: 1fr; /* Single column on smaller screens */
+      }
+      .team__subsection-title {
+        font-size: var(--h2-font-size); /* Slightly smaller on mobile */
+      }
+      .profile-card__name {
+        font-size: var(--h3-font-size);
+      }
+    }
+
+    /* Additional responsive adjustments for very small screens if needed */
+    @media screen and (max-width: 480px) {
+      .profile-card {
+        padding: 1.5rem; /* Reduce padding on very small screens */
+      }
+      .team__subsection-title {
+        font-size: 1.5rem; /* Further reduce title size */
+      }
+      .profile-card__name {
+        font-size: var(--h3-font-size); /* Adjust name size */
+      }
+      .profile-card__role {
+        font-size: var(--small-font-size); /* Adjust role size */
+      }
+      .profile-card__social-link {
+        font-size: var(--smaller-font-size); /* Adjust social link font size */
+      }
+      .profile-card__social-link i {
+        font-size: 1rem; /* Adjust icon size */
+      }
+    }
+</style>
+</head>
+<body>
+  <!-- Header with Home Link -->
+  <header class="page-header">
+    <div class="container">
+      <a href="{{ url_for('home') }}" class="home-link">
+        <i class="fas fa-home"></i> Back to Home
+      </a>
+    </div>
+  </header>
+
+  <!--========== MAIN CONTENT ==========-->
+  <main class="main" style="margin-top: 4.5rem; flex: 1;">
+
+    <!--========== MEET OUR TEAM ==========-->
+    <section class="team section" id="team-section">
+      <div class="container">
+        <h2 class="section__title">Meet Our Team</h2>
+
+        <!-- Student Developers Section (moved up) -->
+        <div class="team__students">
+          <h3 class="team__subsection-title">Student Developers</h3>
+          <div class="profile-card__grid">
+            <!-- Mayank Ashok Salvi -->
+            <div class="profile-card">
+              <div class="profile-card__content">
+                <img src="/static/profile_mayank.png" alt="Mayank Ashok Salvi" style="width:100px;height:100px;border-radius:50%;margin-bottom:1rem;object-fit:cover;" onerror="this.onerror=null;this.src='/static/profile_placeholder.png';">
+                <h4 class="profile-card__name">Mayank Ashok Salvi</h4>
+                <p class="profile-card__role">Student Developer</p>
+                <div class="profile-card__socials">
+                  <a href="mailto:mayanksalvi180@apsit.edu.in" class="profile-card__social-link">
+                    <i class="fas fa-envelope"></i> mayanksalvi180@apsit.edu.in
+                  </a>
+                  <a href="mailto:salvimayank40@gmail.com" class="profile-card__social-link">
+                    <i class="fas fa-envelope"></i> salvimayank40@gmail.com
+                  </a>
+                  <a href="https://www.linkedin.com/in/mayank-salvi-1357a433a" target="_blank" class="profile-card__social-link">
+                    <i class="fab fa-linkedin"></i> LinkedIn Profile
+                  </a>
+                  <a href="https://github.com/Mrwhitebiyaach" target="_blank" class="profile-card__social-link">
+                    <i class="fab fa-github"></i> GitHub Profile
+                  </a>
+                </div>
+              </div>
+            </div>
+            <!-- Aniruddha Nitin Sangle -->
+            <div class="profile-card">
+              <div class="profile-card__content">
+                <img src="/static/profile_aniruddha.png" alt="Aniruddha Nitin Sangle" style="width:100px;height:100px;border-radius:50%;margin-bottom:1rem;object-fit:cover;" onerror="this.onerror=null;this.src='/static/profile_placeholder.png';">
+                <h4 class="profile-card__name">Aniruddha Nitin Sangle</h4>
+                <p class="profile-card__role">Student Developer</p>
+                <div class="profile-card__socials">
+                  <a href="mailto:aniruddhasangle180@apsit.edu.in" class="profile-card__social-link">
+                    <i class="fas fa-envelope"></i> aniruddhasangle180@apsit.edu.in
+                  </a>
+                  <a href="mailto:aniruddhasangle180@gmail.com" class="profile-card__social-link">
+                    <i class="fas fa-envelope"></i> aniruddhasangle180@gmail.com
+                  </a>
+                  <a href="https://www.linkedin.com/in/aniruddha-sangle-04540535b/" target="_blank" class="profile-card__social-link">
+                    <i class="fab fa-linkedin"></i> LinkedIn Profile
+                  </a>
+                  <a href="https://github.com/NOTanirudh" target="_blank" class="profile-card__social-link">
+                    <i class="fab fa-github"></i> GitHub Profile
+                  </a>
+                </div>
+              </div>
+            </div>
+            <!-- Gandhar Rane -->
+            <div class="profile-card">
+              <div class="profile-card__content">
+                <img src="/static/profile_gandhar.png" alt="Gandhar Vijay Rane" style="width:100px;height:100px;border-radius:50%;margin-bottom:1rem;object-fit:cover;" onerror="this.onerror=null;this.src='/static/profile_placeholder.png';">
+                <h4 class="profile-card__name">Gandhar Vijay Rane</h4>
+                <p class="profile-card__role">Student Developer</p>
+                <div class="profile-card__socials">
+                  <a href="mailto:gandharrane180@apsit.edu.in" class="profile-card__social-link">
+                    <i class="fas fa-envelope"></i> gandharrane180@apsit.edu.in
+                  </a>
+                  <a href="mailto:gandharrane180@gmail.com" class="profile-card__social-link">
+                    <i class="fas fa-envelope"></i> gandharrane180@gmail.com
+                  </a>
+                  <a href="https://www.linkedin.com/in/gandhar-rane-339707288" target="_blank" class="profile-card__social-link">
+                    <i class="fab fa-linkedin"></i> LinkedIn Profile
+                  </a>
+                  <a href="https://github.com/Gandhar-Rane" target="_blank" class="profile-card__social-link">
+                    <i class="fab fa-github"></i> GitHub Profile
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Guide Section (moved below) -->
+        <div class="team__guide">
+          <h3 class="team__subsection-title">Project Guide</h3>
+          <div class="profile-card">
+            <div class="profile-card__content">
+              <h4 class="profile-card__name">Vishal Badgujar</h4>
+              <p class="profile-card__role">Guiding us through this project</p>
+              <div class="profile-card__socials">
+                <a href="mailto:vishalbadgujar4@gmail.com" class="profile-card__social-link" aria-label="Email Vishal Badgujar">
+                  <i class="fas fa-envelope"></i> vishalbadgujar4@gmail.com
+                </a>
+                <a href="https://www.linkedin.com/in/vishalbadgujar/" target="_blank" class="profile-card__social-link" aria-label="Vishal Badgujar's LinkedIn">
+                  <i class="fab fa-linkedin"></i> LinkedIn Profile
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--========== ABOUT OUR TEAM ==========-->
+    <section class="about section" id="about">
+      <div class="container">
+        <h2 class="section__title">About Our Team</h2>
+        <div class="about__card">
+          <p class="about__description">
+            We are a dedicated team passionate about leveraging technology to create innovative solutions. This project showcases our collaborative spirit and our commitment to learning and applying development practices. We are excited to share our work and journey.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!--========== FOOTER ==========-->
+  <footer class="footer">
+    <div class="container">
+      <h3 class="footer__title">Connect With Us</h3>
+      <div class="footer__social">
+        <div class="social-item">
+          <a href="https://www.linkedin.com/in/mayank-salvi-8b1b3b1b2/" target="_blank" class="footer__social-link">
+            <div class="social-button">
+              <i class="fab fa-linkedin"></i>
+            </div>
+            <span>Mayank Salvi</span>
+          </a>
+        </div>
+        <div class="social-item">
+          <a href="https://www.linkedin.com/in/aniruddha-sangle-04540535b/" target="_blank" class="footer__social-link">
+            <div class="social-button">
+              <i class="fab fa-linkedin"></i>
+            </div>
+            <span>Aniruddha Sangle</span>
+          </a>
+        </div>
+        <div class="social-item">
+          <a href="https://www.linkedin.com/in/gandhar-rane-339707288" target="_blank" class="footer__social-link">
+            <div class="social-button">
+              <i class="fab fa-linkedin"></i>
+            </div>
+            <span>Gandhar Rane</span>
+          </a>
+        </div>
+      </div>
+      <span class="footer__copy">&copy; </span>
+    </div>
+  </footer>
+
+  <!--========== SCROLL UP ==========-->
+  <a href="#" class="scrollup" id="scroll-up">
+    <i class="fas fa-arrow-up scrollup__icon"></i>
+  </a>
+
+  <!--=============== MAIN JS ===============-->
+  <script>
+    /*=============== SHOW MENU ===============*/
+    const navMenu = document.getElementById('nav-menu'),
+          navToggle = document.getElementById('nav-toggle'),
+          navClose = document.getElementById('nav-close');
+
+    /*===== MENU SHOW =====*/
+    /* Validate if constant exists */
+    if(navToggle){
+        navToggle.addEventListener('click', () =>{
+            navMenu.classList.add('show-menu');
+        });
+    }
+
+    /*===== MENU HIDDEN =====*/
+    /* Validate if constant exists */
+    if(navClose){
+        navClose.addEventListener('click', () =>{
+            navMenu.classList.remove('show-menu');
+        });
+    }
+
+    /*=============== REMOVE MENU MOBILE ===============*/
+    const navLink = document.querySelectorAll('.nav__link');
+
+    function linkAction(){
+        const navMenu = document.getElementById('nav-menu');
+        // When we click on each nav__link, we remove the show-menu class
+        navMenu.classList.remove('show-menu');
+    }
+    navLink.forEach(n => n.addEventListener('click', linkAction));
+
+    /*=============== CHANGE BACKGROUND HEADER ===============*/
+    function scrollHeader(){
+        const header = document.getElementById('header');
+        // When the scroll is greater than 50 viewport height, add the scroll-header class to the header tag
+        if(this.scrollY >= 50) header.classList.add('scroll-header'); else header.classList.remove('scroll-header');
+    }
+    window.addEventListener('scroll', scrollHeader);
+
+    // Dark theme is always active
+    document.body.classList.add('dark-theme');
+
+    /*=============== SHOW SCROLL UP ===============*/ 
+    function scrollUp(){
+        const scrollUp = document.getElementById('scroll-up');
+        // When the scroll is higher than 200 viewport height, add the show-scroll class to the a tag with the scroll-top class
+        if(this.scrollY >= 200) scrollUp.classList.add('show-scroll'); else scrollUp.classList.remove('show-scroll');
+    }
+    window.addEventListener('scroll', scrollUp);
+  </script>
+</body>
+</html>

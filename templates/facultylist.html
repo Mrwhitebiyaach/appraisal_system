@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Assessment</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('/static/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+        }
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .top-bar a {
+            margin-left: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .top-bar a:hover {
+            text-decoration: underline;
+            color: #ff9800; /* Highlight color */
+        }
+        .logo-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .logo-link img {
+            width: 90px;
+            height: auto;
+        }
+        .content {
+            margin: 100px auto;
+            width: 80%;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+        }
+        .profile-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
+        }
+        .profile-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .status-completed {
+            color: green;
+            font-weight: bold;
+        }
+        .status-pending {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Right Links -->
+    <div class="top-bar">
+        <a href="/highlanding">Home</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Logo -->
+    <a href="/highlanding" class="logo-link">
+        <img src="/static/logo.png" alt="Logo">
+    </a>
+
+    <!-- Content Section -->
+    <div class="content">
+        <h3>Faculty Assessment</h3>
+        <h1>Department: {{ department }}</h1>
+
+        <!-- Academic Year Filter Dropdown -->
+        <form id="yearFilterForm" method="get" action="/facultylist" class="form-inline mb-4" style="justify-content: center;">
+            <input type="hidden" name="department" value="{{ department }}">
+            <label for="yearFilter" class="mr-2 font-weight-bold">Academic Year:</label>
+            <select name="year" id="yearFilter" class="form-control mr-2" style="width: 180px;" onchange="document.getElementById('yearFilterForm').submit();">
+                {% for year in acad_year_options %}
+                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <!-- Table Section -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Profile</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Faculty ID</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="facultyTable">
+                {% if user_statuses %}
+                    {% for user, status in user_statuses %}
+                    <tr>
+                        <td>
+                            {% if user[3] and user[3] != '' %}
+                                <img src="/static/profile_images/{{ user[3] }}" alt="Profile" class="profile-image" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="profile-placeholder" style="display: none;">
+                                    {{ user[0][0] if user[0] else 'U' }}
+                                </div>
+                            {% else %}
+                                <div class="profile-placeholder">
+                                    {{ user[0][0] if user[0] else 'U' }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ user[0] }}</td> <!-- Name -->
+                        <td>{{ user[1] }}</td> <!-- Email -->
+                        <td>
+                            <a href="/hodpastform?userid={{ user[2] }}&name={{ user[0] }}" 
+                               style="text-decoration: none; color: blue;">
+                               {{ user[2] }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if status == "Completed" %}
+                                <span class="status-completed">Completed</span>
+                            {% else %}
+                                <span class="status-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">No users found.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function getInitials(name) {
+            return name ? name.charAt(0).toUpperCase() : 'U';
+        }
+
+        // Add any additional JavaScript functionality here if needed
+        window.onload = function() {
+            // Handle any initialization if needed
+            console.log('Faculty list page loaded successfully');
+        };
+    </script>
+</body>
+</html>
