@@ -266,7 +266,7 @@
 <body>
     <!-- Top Right Links -->
     <div class="top-bar">
-       
+        <a href="/form2/{{ form_id }}" class="btn btn-secondary">Back to Form 2</a>
         <a href="/logout">Logout</a>
     </div>
 
@@ -1951,38 +1951,33 @@ function updateRowNumbers(tableId) {
         }
 
         // Calculate the total points for Contribution to Society
-        function calculateTeachingTotal() {
-            let total = 0;
-            const points = document.querySelectorAll('.points');
-            
-            points.forEach(input => {
-                const value = parseFloat(input.value) || 0;
-                total += value;
-            });
-            
-            // Cap at 10 points if needed
-            total = Math.min(total, 10);
-            
-            // If total exceeds 10, adjust the last changed input
-            if (total > 10) {
-                // Find the currently focused or last changed input
-                const activeInput = document.activeElement;
-                if (activeInput && activeInput.classList.contains('points')) {
-                    // Calculate how much we need to reduce this input
-                    const currentValue = parseFloat(activeInput.value) || 0;
-                    const excess = total - 10;
-                    const newValue = Math.max(0, currentValue - excess);
-                    
-                    // Update the input value
-                    activeInput.value = newValue;
-                    
-                    // Recalculate the total
-                    total = 10;
-                }
-            }
-            
-            document.getElementById('totalsocietyPoints').textContent = total.toFixed(2);
+function calculateTeachingTotal() {
+    let totalPoints = 0;
+    const points = document.querySelectorAll('.points');
+    
+    points.forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        totalPoints += value;
+    });
+    
+    // Store actual total but display capped total (10)
+    let displayTotal = totalPoints;
+    if (totalPoints > 10) {
+        displayTotal = 10;
+    }
+    
+    let totalElement = document.getElementById('totalsocietyPoints');
+    if (totalElement) {
+        totalElement.textContent = displayTotal;
+        
+        // Change color to red if exceeding maximum
+        if (totalPoints > 10) {
+            totalElement.style.color = 'red';
+        } else {
+            totalElement.style.color = '';
         }
+    }
+}
 
         // Toggle display of upload/download buttons
         function toggleUploadDownload(section) {
@@ -2820,10 +2815,20 @@ function uploadDocument(input) {
 function goToNext() {
     // Fetch input value correctly
     let totalPoints = parseInt(document.getElementById('selfAssessmentMarks').value);
-    let totalPointsObtained = parseInt(document.getElementById('totalsocietyPoints').innerText);
+    
+    // Get the contribution to society points from all inputs
+    let actualPointsObtained = 0;
+    const pointInputs = document.querySelectorAll('.points');
+    pointInputs.forEach(input => {
+        actualPointsObtained += parseFloat(input.value) || 0;
+    });
+    
+    // Cap society points at 10 if needed
+    let totalPointsObtained = Math.min(actualPointsObtained, 10);
 
     console.log("Total acr Points: ", totalPoints);
-    console.log("Total contribution to society Points: ", totalPointsObtained);
+    console.log("Total contribution to society Points (actual): ", actualPointsObtained);
+    console.log("Total contribution to society Points (capped): ", totalPointsObtained);
 
     // Ensure form ID is valid
     let formId = document.getElementById('formId').value;
@@ -2844,7 +2849,7 @@ function goToNext() {
         society: totalPointsObtained
     }));
 
-    // Send AJAX request
+    // Send AJAX request with capped society points
     $.ajax({
         url: '/save-3total-points',
         method: 'POST',
@@ -2853,7 +2858,7 @@ function goToNext() {
             form_id: formId,
             total: overallTotal,
             acr: totalPoints,
-            society: totalPointsObtained
+            society: totalPointsObtained // Using capped value
         }),
         success: function(response) {
             // Use the redirect URL from the server response

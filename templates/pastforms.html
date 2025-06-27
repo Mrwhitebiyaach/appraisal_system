@@ -629,13 +629,8 @@
                            target="_blank" class="btn btn-primary btn-sm me-2">
                            <i class="fas fa-eye"></i> View Document
                         </a>
-                        <!-- Debug link - remove in production -->
-                        <a href="{{ url_for('debug_uploaded_file', filename=filename) }}"
-                           target="_blank" class="btn btn-secondary btn-sm">
-                           <i class="fas fa-bug"></i> Debug
-                        </a>
-                        <!-- Show filename for debugging -->
-                        <small class="text-muted d-block mt-1">File: {{ filename }}</small>
+                        
+                        
                     {% else %}
                         <span class="text-muted">No Document</span>
                     {% endif %}
@@ -685,13 +680,8 @@
                            target="_blank" class="btn btn-primary btn-sm me-2">
                            <i class="fas fa-eye"></i> View Document
                         </a>
-                        <!-- Debug link - remove in production -->
-                        <a href="{{ url_for('debug_uploaded_file', filename=filename) }}"
-                           target="_blank" class="btn btn-secondary btn-sm">
-                           <i class="fas fa-bug"></i> Debug
-                        </a>
-                        <!-- Show filename for debugging -->
-                        <small class="text-muted d-block mt-1">File: {{ filename }}</small>
+                        
+                        
                     {% else %}
                         <span class="text-muted">No Document</span>
                     {% endif %}

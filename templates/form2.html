@@ -273,7 +273,7 @@
                         </select>
                     </td>
                     <td><textarea class="form-control" required title="Enter Activity" rows="2">{{ row[1] }}</textarea></td>
-                    <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateTeachingTotal()" required title="Enter Points"></td>
+                    <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateTeachingTotal(this)" required title="Enter Points"></td>
                     <td><textarea class="form-control" required title="Enter Order Copy" rows="2">{{ row[3] }}</textarea></td>
                     <td>
                         {% if row[4] %}
@@ -332,7 +332,7 @@
                         </select>
                     </td>
                     <td><textarea class="form-control" required title="Enter Activity" rows="2">{{ row[1] }}</textarea></td>
-                    <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateFeedbackTotal()" required title="Enter Points"></td>
+                    <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateFeedbackTotal(this)" required title="Enter Points"></td>
                     <td><textarea class="form-control" required title="Enter Order Copy" rows="2">{{ row[3] }}</textarea></td>
                     <td>
                         {% if row[4] %}
@@ -474,7 +474,7 @@ function addTeachingRow() {
             </select>
         </td>
         <td><textarea class="form-control" required title="Enter Activity" rows="2"></textarea></td>
-        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateTeachingTotal()"></td>
+        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateTeachingTotal(this)"></td>
         <td><textarea class="form-control" required title="Enter Order Copy" rows="2"></textarea></td>
         <td>
             <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
@@ -503,7 +503,7 @@ function addFeedbackRow() {
             </select>
         </td>
         <td><textarea class="form-control" required title="Enter Activity" rows="2"></textarea></td>
-        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateFeedbackTotal()"></td>
+        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateFeedbackTotal(this)"></td>
         <td><textarea class="form-control" required title="Enter Order Copy" rows="2"></textarea></td>
         <td>
             <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
@@ -607,8 +607,8 @@ function deleteInstituteRowFromDatabase(row, formId, srno) {
 
         
 
-// Calculate total points for Department activities
-function calculateTeachingTotal() {
+// Calculate total points for Department activities with cap enforcement
+function calculateTeachingTotal(changedInput) {
     // Select all input elements for points in the department activities table
     let rows = document.querySelectorAll("#deptTable .points");
     let totalPoints = 0;
@@ -618,18 +618,24 @@ function calculateTeachingTotal() {
         totalPoints += parseInt(input.value) || 0; // Add points, defaulting to 0 if input is not a number
     });
 
-    // Attempt to update the total points display
+    // Store actual total but display capped total (20)
+    let displayTotal = totalPoints;
+    if (totalPoints > 20) {
+        displayTotal = 20;
+    }
+
+    // Update the total points display with capped value if needed
     let totalElement = document.getElementById("totaldeptPoints");
     if (totalElement) {
-        totalElement.textContent = totalPoints; // Update total points without decimal places
+        totalElement.textContent = displayTotal; // Show capped total (20) if exceeded
     } else {
         console.error("Element with ID 'totaldeptPoints' not found.");
     }
 }
 
 
-        // Calculate total points for Institute activities
-        function calculateFeedbackTotal() {
+        // Calculate total points for Institute activities with cap enforcement
+function calculateFeedbackTotal(changedInput) {
     let totalPoints = 0;
 
     // Assuming you are calculating total points from the input fields
@@ -638,10 +644,16 @@ function calculateTeachingTotal() {
         totalPoints += parseInt(input.value) || 0; // Add up the points
     });
 
-    // Attempt to update the total points display
+    // Store actual total but display capped total (10)
+    let displayTotal = totalPoints;
+    if (totalPoints > 10) {
+        displayTotal = 10;
+    }
+
+    // Update the total points display with capped value if needed
     let totalElement = document.getElementById('totalinstitutePoints');
     if (totalElement) {
-        totalElement.textContent = totalPoints; // Update total points
+        totalElement.textContent = displayTotal; // Show capped total (10) if exceeded
     } else {
         console.error("Element with ID 'totalinstitutePoints' not found.");
     }
@@ -720,7 +732,7 @@ function uploadDocument(input) {
 
 
 
-// Update the saveFormData function with better debugging
+// Update the saveFormData function with better debugging and validation
 function saveFormData() {
     console.log("Save button clicked");
     const flashMessage = document.getElementById('flashMessage');
@@ -730,6 +742,12 @@ function saveFormData() {
     let totalDeptPoints = 0;
     let totalInstitutePoints = 0;
     let totalFileSize = 0;
+    
+    // Get the displayed (already capped) totals
+    const displayedDeptTotal = parseInt(document.getElementById('totaldeptPoints').textContent) || 0;
+    const displayedInstituteTotal = parseInt(document.getElementById('totalinstitutePoints').textContent) || 0;
+    
+    // We don't need to check if they exceed maximums since they're already capped
     
     // Validate Department activities
     document.querySelectorAll('#deptTable tr').forEach(row => {
@@ -938,6 +956,16 @@ function resetAll() {
     
     console.log("Total Department Points: ", totalPoints);
     console.log("Total Institute Points: ", totalPointsObtained);
+    
+    // Totals are already capped at their max values in the UI
+    // Cap the values for submission
+    if (totalPoints > 20) {
+        totalPoints = 20;
+    }
+    
+    if (totalPointsObtained > 10) {
+        totalPointsObtained = 10;
+    }
 
     let overallTotal = totalPoints + totalPointsObtained;
     let formId = document.getElementById('formId').value;
