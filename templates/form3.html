@@ -1247,7 +1247,7 @@
             <div class="col-md-4">
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-heading"></i></span>
-                    <input type="text" id="customTableTitle" class="form-control" placeholder="Enter Table Title" value="Team Members">
+                    <input type="text" id="customTableTitle" class="form-control" placeholder="Enter Table Title" value="{{ custom_table_title }}">
                 </div>
             </div>
             <div class="col-md-8">
@@ -1280,60 +1280,91 @@
             <thead>
                 <tr>
                     <th>Sr. No.</th>
-                    <th>
-                        <div class="column-header">
-                            <span>Name</span>
-                            <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
-                        </div>
-                    </th>
-                    <th>
-                        <div class="column-header">
-                            <span>Role</span>
-                            <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
-                        </div>
-                    </th>
-                    <th>
-                        <div class="column-header">
-                            <span>Document</span>
-                            <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
-                        </div>
-                    </th>
+                    {% if custom_table_data and custom_table_data|length > 0 and custom_table_data[0].headers %}
+                        {% for header in custom_table_data[0].headers %}
+                        <th>
+                            <div class="column-header">
+                                <span>{{ header }}</span>
+                                <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    {% else %}
+                        <th>
+                            <div class="column-header">
+                                <span>Name</span>
+                                <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="column-header">
+                                <span>Role</span>
+                                <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="column-header">
+                                <span>Document</span>
+                                <i class="fas fa-edit column-edit" onclick="editColumnName(this)"></i>
+                            </div>
+                        </th>
+                    {% endif %}
                     <th class="action-cell">Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td><input type="text" class="form-control" value="John Smith"></td>
-                    <td><input type="text" class="form-control" value="Project Manager"></td>
-                    <td>
-                        <div class="file-upload-container">
-                            <input type="file" class="form-control">
-                            <span class="file-name"></span>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
-                            <i class="fas fa-trash-alt"></i> Remove
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td><input type="text" class="form-control" value="Sarah Johnson"></td>
-                    <td><input type="text" class="form-control" value="Design Lead"></td>
-                    <td>
-                        <div class="file-upload-container">
-                            <input type="file" class="form-control">
-                            <span class="file-name"></span>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
-                            <i class="fas fa-trash-alt"></i> Remove
-                        </button>
-                    </td>
-                </tr>
+                {% if custom_table_data and custom_table_data|length > 0 %}
+                    {% for item in custom_table_data %}
+                    <tr>
+                        <td>{{ item.srno }}</td>
+                        {% set columns = item.columns_data | from_json if item.columns_data else {} %}
+                        {% set headers = item.headers if item.headers else [] %}
+                        {% for col_name in headers %}
+                            {% set col_data = columns.get(col_name, {}) %}
+                            {% if col_name.lower() == 'document' or 'document' in col_name.lower() or 'upload' in col_name.lower() %}
+                            <td>
+                                <div class="file-upload-container">
+                                    <input type="file" class="form-control" onchange="updateFileName(this)">
+                                    {% if col_data.upload %}
+                                        <button class="btn btn-info btn-sm ml-2" onclick="window.open('/{{ col_data.upload }}', '_blank')">View</button>
+                                        <span class="file-name">{{ col_data.upload.split('/')[-1] if col_data.upload else '' }}</span>
+                                    {% elif col_data is string and col_data %}
+                                        <span class="file-name">{{ col_data.split('/')[-1] if col_data else '' }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            {% else %}
+                            <td>
+                                {% set text_value = col_data.text if col_data is mapping else (col_data if col_data else '') %}
+                                <input type="text" class="form-control" placeholder="{{ col_name }}" value="{{ text_value }}">
+                            </td>
+                            {% endif %}
+                        {% endfor %}
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                                <i class="fas fa-trash-alt"></i> Remove
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>1</td>
+                        <td><input type="text" class="form-control" placeholder="Name"></td>
+                        <td><input type="text" class="form-control" placeholder="Role"></td>
+                        <td>
+                            <div class="file-upload-container">
+                                <input type="file" class="form-control" onchange="updateFileName(this)">
+                                <span class="file-name"></span>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                                <i class="fas fa-trash-alt"></i> Remove
+                            </button>
+                        </td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
@@ -2585,6 +2616,67 @@ function saveFormData() {
             });
         }
 
+        // -------------------- Custom Table (with dynamic columns and file uploads) --------------------
+        const customTable = document.getElementById('customTable');
+        if (customTable) {
+            const rows = customTable.querySelectorAll('tbody tr');
+            console.log(`\nProcessing customTable: ${rows.length} rows found`);
+            
+            // Get the table title
+            const customTableTitle = document.getElementById('customTableTitle');
+            const tableTitle = customTableTitle ? customTableTitle.value.trim() : 'Custom Table';
+            formData.append('customTableTitle', tableTitle);
+            console.log(`Custom table title: ${tableTitle}`);
+            
+            // Get column headers (excluding Sr. No. and Action)
+            const headerCells = customTable.querySelectorAll('thead th');
+            const columnNames = [];
+            for (let i = 1; i < headerCells.length - 1; i++) {
+                const spanElement = headerCells[i].querySelector('.column-header span');
+                if (spanElement) {
+                    columnNames.push(spanElement.textContent.trim());
+                }
+            }
+            console.log('Custom table column names:', columnNames);
+            
+            rows.forEach((row, index) => {
+                const rowData = {
+                    srno: index + 1,
+                    columns_data: {},
+                    headers: columnNames
+                };
+                let hasContent = false;
+                let hasFile = false;
+                
+                // Process each data cell (skip first and last columns)
+                const dataCells = row.querySelectorAll('td');
+                for (let i = 1; i < dataCells.length - 1; i++) {
+                    const columnName = columnNames[i - 1] || `Column${i}`;
+                    const cell = dataCells[i];
+                    
+                    const fileInput = cell.querySelector('input[type="file"]');
+                    const textInput = cell.querySelector('input[type="text"], textarea');
+                    
+                    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                        const file = fileInput.files[0];
+                        formData.append(`customTable_${index + 1}_${columnName}_file`, file);
+                        hasFile = true;
+                        console.log(`File found for CustomTable row ${index + 1}, column ${columnName}:`, file.name);
+                    }
+                    
+                    if (textInput && textInput.value && textInput.value.trim()) {
+                        rowData.columns_data[columnName] = textInput.value.trim();
+                        hasContent = true;
+                    }
+                }
+                
+                if (hasContent || hasFile) {
+                    formData.append(`customTable[${index}]`, JSON.stringify(rowData));
+                    console.log(`Added CustomTable entry ${index}:`, rowData);
+                }
+            });
+        }
+
         // -------------------- Other tables (without file uploads) --------------------
         const otherTables = {
             
@@ -2983,7 +3075,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <a href="/form2/{{ form_id }}" class="btn btn-secondary">Back to Form 2</a>
     </div>
 
-    <!-- Custom Table Section -->
+    
     
     <script>
         // Custom Table Functions

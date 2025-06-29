@@ -1001,6 +1001,91 @@
     </div>
     {% endif %}
 
+    <!-- Custom Table Display -->
+{% if custom_table_data and custom_table_data|length > 0 %}
+<div class="table-container">
+    <h3>{{ custom_table_title if custom_table_title else 'Custom Table' }} for Academic Year: {{ selected_year }}</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Sr. No.</th>
+                {% if custom_table_data[0] and custom_table_data[0].get('columns_data') %}
+                    {% set first_row_data = custom_table_data[0]['columns_data'] | from_json %}
+                    {% for key, value in first_row_data.items() %}
+                        <th>{{ key | title }}</th>
+                    {% endfor %}
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in custom_table_data %}
+            <tr>
+                <td>{{ row.srno if row.srno else loop.index }}</td>
+                {% if row.get('columns_data') %}
+                    {% set row_data = row['columns_data'] | from_json %}
+                    {% for key, value in row_data.items() %}
+                        <td>
+                            {% if value %}
+                                {% if value is mapping and value.upload %}
+                                    <!-- Handle complex data structure with text and upload -->
+                                    <div class="d-flex align-items-center">
+                                        {% if value.upload.endswith('.pdf') %}
+                                            <i class="fas fa-file-pdf text-danger mr-2"></i>
+                                        {% elif value.upload.endswith(('.doc', '.docx')) %}
+                                            <i class="fas fa-file-word text-primary mr-2"></i>
+                                        {% elif value.upload.endswith(('.jpg', '.png', '.jpeg')) %}
+                                            <i class="fas fa-file-image text-info mr-2"></i>
+                                        {% endif %}
+                                        <a href="{{ url_for('uploaded_file', filename=value.upload.split('/')[-1]) }}"
+                                           target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye mr-1"></i>View File
+                                        </a>
+                                        {% if value.text %}
+                                            <span class="ml-2 text-muted">{{ value.text }}</span>
+                                        {% endif %}
+                                    </div>
+                                {% elif value is string and value.endswith(('.pdf', '.doc', '.docx', '.jpg', '.png', '.jpeg')) and ('custom_' in value) %}
+                                    <!-- Handle simple string file paths -->
+                                    <div class="d-flex align-items-center">
+                                        {% if value.endswith('.pdf') %}
+                                            <i class="fas fa-file-pdf text-danger mr-2"></i>
+                                        {% elif value.endswith(('.doc', '.docx')) %}
+                                            <i class="fas fa-file-word text-primary mr-2"></i>
+                                        {% elif value.endswith(('.jpg', '.png', '.jpeg')) %}
+                                            <i class="fas fa-file-image text-info mr-2"></i>
+                                        {% endif %}
+                                        <a href="{{ url_for('uploaded_file', filename=value.split('/')[-1]) }}"
+                                           target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye mr-1"></i>View File
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <!-- Handle regular text content -->
+                                    {% set text_value = value.text if value is mapping else value %}
+                                    {{ text_value }}
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                {% endif %}
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10" class="text-center text-muted">No custom table data available for the selected academic year.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if custom_table_data and custom_table_data|length > 0 %}
+        <div class="text-right mt-2">
+            <small class="text-muted">Total entries: {{ custom_table_data|length }}</small>
+        </div>
+    {% endif %}
+</div>
+{% endif %}
+
         <!-- ACR Total Display -->
         <div style="text-align: center; margin: 20px 0;">
             <div style="display: inline-block; background-color: white; border: 1px solid #ddd; border-radius: 5px; padding: 10px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -1055,6 +1140,8 @@
             
 
             <pre> </pre>
+
+            
 
             {% if points_data %}
 <div class="table-container">
@@ -1255,6 +1342,9 @@
     {% endif %}
 </div>
 {% endif %}
+
+
+
 <pre> </pre>
 
 {% if user_data %}

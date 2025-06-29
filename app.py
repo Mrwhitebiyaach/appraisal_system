@@ -46,6 +46,15 @@ s = URLSafeTimedSerializer(app.secret_key)  # Required for token generation and 
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 
+# Add custom Jinja2 filter for JSON parsing
+@app.template_filter('from_json')
+def from_json_filter(value):
+    """Parse JSON string in Jinja2 templates"""
+    try:
+        return json.loads(value) if value else {}
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
 # Configure Flask-Mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -1539,12 +1548,77 @@ def review(form_id):
                         "uploads": row[3]
                     } for row in special_mentions_raw
                 ]
-                # ===== END OF FORM3 DATA FETCHING =====
-
+                
+                # ===== CUSTOM TABLE DATA FETCHING =====
+                custom_table_data = []
+                custom_table_title = 'Custom Table'
+                try:
+                    # Create custom_table table if it doesn't exist
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS custom_table (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            form_id VARCHAR(45) NOT NULL,
+                            srno INT NOT NULL,
+                            columns_data TEXT,
+                            headers TEXT,
+                            uploads TEXT,
+                            table_title VARCHAR(255) DEFAULT 'Custom Table',
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                            INDEX idx_form_id (form_id),
+                            INDEX idx_form_srno (form_id, srno)
+                        )
+                    """)
+                    
+                    # Query custom table data
+                    cursor.execute("SELECT srno, columns_data, headers, uploads, table_title FROM custom_table WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                    custom_table_rows = cursor.fetchall()
+                    
+                    # Get the table title (use the first row's title or default)
+                    if custom_table_rows and len(custom_table_rows[0]) >= 5 and custom_table_rows[0][4]:
+                        custom_table_title = custom_table_rows[0][4]
+                    
+                    # Process custom table data
+                    for row in custom_table_rows:
+                        try:
+                            srno = row[0]
+                            columns_data_str = row[1] if len(row) > 1 else '{}'
+                            headers_str = row[2] if len(row) > 2 else '[]'
+                            uploads_str = row[3] if len(row) > 3 else '{}'
+                            
+                            columns_data = json.loads(columns_data_str) if columns_data_str else {}
+                            headers = json.loads(headers_str) if headers_str else []
+                            uploads = json.loads(uploads_str) if uploads_str else {}
+                            
+                            # Merge columns_data with uploads for easy template rendering
+                            merged_columns = columns_data.copy()
+                            for col_name, upload_path in uploads.items():
+                                if col_name in merged_columns:
+                                    merged_columns[col_name] = {'text': merged_columns[col_name], 'upload': upload_path}
+                                else:
+                                    merged_columns[col_name] = {'text': '', 'upload': upload_path}
+                            
+                            custom_table_data.append({
+                                'srno': srno,
+                                'columns_data': json.dumps(merged_columns),
+                                'headers': headers
+                            })
+                        except (json.JSONDecodeError, TypeError, ValueError) as e:
+                            print(f"Error processing custom table row {row}: {e}")
+                            custom_table_data.append({
+                                'srno': row[0] if row else 0,
+                                'columns_data': '{}',
+                                'headers': []
+                            })
+                except Exception as e:
+                    print(f"Error querying custom table: {e}")
+                    custom_table_data = []
+                    custom_table_title = 'Custom Table'
+                # ===== END OF CUSTOM TABLE DATA FETCHING =====
+                
                 # Fetch points for Final Score table
                 cursor.execute("SELECT teaching, feedback, hodas1, hodas2, hodfeed1, hodfeed2 FROM form1_tot WHERE form_id = %s", (form_id,))
                 form1_tot = cursor.fetchone()
-                print("Fetched Form1 Totals:", form1_tot)
 
                 cursor.execute("SELECT dept, institute, hodas3, hodas4, hodfeed3, hodfeed4 FROM form2_tot WHERE form_id = %s", (form_id,))
                 form2_tot = cursor.fetchone()
@@ -1618,6 +1692,9 @@ def review(form_id):
         contribution_data=contribution_data,
         special_mentions_data=special_mentions_data,
         self_assessment_marks=self_assessment_marks,
+        # Custom table data
+        custom_table_data=custom_table_data,
+        custom_table_title=custom_table_title,
         user_data=user_data,
         selected_year=selected_year,
         form_id=form_id
@@ -1997,6 +2074,72 @@ def render_pastforms():
                         'feedback': hod_assessment[14]
                     }
                 
+                # Fetch custom table data for principlepast.html
+                custom_table_data = []
+                custom_table_title = "Custom Table"
+                try:
+                    # Create custom_table table if it doesn't exist
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS custom_table (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            form_id VARCHAR(100),
+                            srno VARCHAR(10),
+                            columns_data TEXT,
+                            headers TEXT,
+                            uploads TEXT,
+                            table_title VARCHAR(255) DEFAULT 'Custom Table',
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                        )
+                    """)
+                    
+                    # Fetch custom table data for the current form_id
+                    form_id_str = str(form_id)
+                    cursor.execute("SELECT srno, columns_data, headers, uploads, table_title FROM custom_table WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                    custom_table_rows = cursor.fetchall()
+                    
+                    if custom_table_rows:
+                        # Use the first row's table_title as the display title
+                        custom_table_title = custom_table_rows[0][4] if len(custom_table_rows[0]) > 4 and custom_table_rows[0][4] else "Custom Table"
+                        
+                        for row in custom_table_rows:
+                            srno = row[0]
+                            columns_data_str = row[1] if len(row) > 1 else '{}'
+                            headers_str = row[2] if len(row) > 2 else '[]'
+                            uploads_str = row[3] if len(row) > 3 else '{}'
+                            
+                            try:
+                                columns_data = json.loads(columns_data_str) if columns_data_str else {}
+                                headers = json.loads(headers_str) if headers_str else []
+                                uploads = json.loads(uploads_str) if uploads_str else {}
+                                
+                                # Merge upload info with text data
+                                merged_columns = columns_data.copy()
+                                for col_name, upload_path in uploads.items():
+                                    if col_name in merged_columns:
+                                        # Create structure consistent with form3_page
+                                        merged_columns[col_name] = {
+                                            'text': merged_columns[col_name], 
+                                            'upload': upload_path
+                                        }
+                                    else:
+                                        merged_columns[col_name] = {
+                                            'text': '', 
+                                            'upload': upload_path
+                                        }
+                                
+                                custom_table_data.append({
+                                    'srno': srno,
+                                    'columns_data': json.dumps(merged_columns),
+                                    'headers': headers
+                                })
+                                
+                            except json.JSONDecodeError as e:
+                                print(f"Error parsing JSON for row {srno}: {e}")
+                                continue
+                except Exception as e:
+                    print(f"Error fetching custom table data in render_pastforms: {e}")
+                
                 return render_template('principlepast.html',
                                       user_id=user_id,
                                       user_name=user_data[3],
@@ -2023,7 +2166,9 @@ def render_pastforms():
                                       assessments=assessments,
                                       finalacr_value=0,
                                       hod_ratings=[],
-                                      extra_feedback='')
+                                      extra_feedback='',
+                                      custom_table_data=custom_table_data,
+                                      custom_table_title=custom_table_title)
     except Exception as e:
         flash(f'An error occurred: {str(e)}', 'danger')
     finally:
@@ -2044,6 +2189,10 @@ def render_pastforms():
         'hodfeed1': '', 'hodfeed2': '', 'hodfeed3': '', 'hodfeed4': '', 'hodfeed5': '', 'hodfeed6': '',
         'feedback': ''
     }
+    # Initialize custom table data for empty state
+    custom_table_data = []
+    custom_table_title = "Custom Table"
+    
     return render_template(
         'pastforms.html',
         teaching_data=[],
@@ -2054,7 +2203,9 @@ def render_pastforms():
         assessments=assessments,
         finalacr_value=0,
         hod_ratings=[],
-        extra_feedback=''
+        extra_feedback='',
+        custom_table_data=custom_table_data,
+        custom_table_title=custom_table_title
     )
 
 @app.route('/pastforms/search', methods=['POST'])
@@ -2343,6 +2494,77 @@ def search_pastforms():
     user_name = user_data[3] if user_data and len(user_data) > 3 else "N/A"
     user_dept = user_data[2] if user_data and len(user_data) > 2 else "N/A"
 
+    # Fetch custom table data
+    custom_table_data = []
+    custom_table_title = "Custom Table"
+    connection = connect_to_database()
+    if connection and form_id:
+        try:
+            with connection.cursor() as cursor:
+                # Create custom_table table if it doesn't exist
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS custom_table (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        form_id VARCHAR(100),
+                        srno VARCHAR(10),
+                        columns_data TEXT,
+                        headers TEXT,
+                        uploads TEXT,
+                        table_title VARCHAR(255) DEFAULT 'Custom Table',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Fetch custom table data for the current form_id
+                form_id_str = str(form_id)
+                cursor.execute("SELECT srno, columns_data, headers, uploads, table_title FROM custom_table WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                custom_table_rows = cursor.fetchall()
+                
+                if custom_table_rows:
+                    # Use the first row's table_title as the display title
+                    custom_table_title = custom_table_rows[0][4] if len(custom_table_rows[0]) > 4 and custom_table_rows[0][4] else "Custom Table"
+                    
+                    for row in custom_table_rows:
+                        srno = row[0]
+                        columns_data_str = row[1] if len(row) > 1 else '{}'
+                        headers_str = row[2] if len(row) > 2 else '[]'
+                        uploads_str = row[3] if len(row) > 3 else '{}'
+                        
+                        try:
+                            columns_data = json.loads(columns_data_str) if columns_data_str else {}
+                            headers = json.loads(headers_str) if headers_str else []
+                            uploads = json.loads(uploads_str) if uploads_str else {}
+                            
+                            # Merge upload info with text data
+                            merged_columns = columns_data.copy()
+                            for col_name, upload_path in uploads.items():
+                                if col_name in merged_columns:
+                                    # Create structure consistent with form3_page
+                                    merged_columns[col_name] = {
+                                        'text': merged_columns[col_name], 
+                                        'upload': upload_path
+                                    }
+                                else:
+                                    merged_columns[col_name] = {
+                                        'text': '', 
+                                        'upload': upload_path
+                                    }
+                            
+                            custom_table_data.append({
+                                'srno': srno,
+                                'columns_data': json.dumps(merged_columns),
+                                'headers': headers
+                            })
+                            
+                        except json.JSONDecodeError as e:
+                            print(f"Error parsing JSON for row {srno}: {e}")
+                            continue
+        except Exception as e:
+            print(f"Error fetching custom table data in search_pastforms: {e}")
+        finally:
+            connection.close()
+
     return render_template(
         'pastforms.html',
         teaching_data=teaching_data,
@@ -2373,7 +2595,9 @@ def search_pastforms():
         assessments=assessments,
         finalacr_value=finalacr_value,
         self_assessment_marks=self_assessment_marks,
-        str=str
+        str=str,
+        custom_table_data=custom_table_data,
+        custom_table_title=custom_table_title
     )
 
 
@@ -2915,6 +3139,67 @@ def hodpastform():
                     user_data = cursor.fetchone()
                     print(f"Debug - User Data in hodpastform default year: {user_data}")
                     
+                    # Fetch custom table data
+                    custom_table_data = []
+                    custom_table_title = "Custom Table"
+                    try:
+                        # Create custom_table table if it doesn't exist
+                        cursor.execute("""
+                            CREATE TABLE IF NOT EXISTS custom_table (
+                                id INT AUTO_INCREMENT PRIMARY KEY,
+                                form_id VARCHAR(100),
+                                srno VARCHAR(10),
+                                columns_data TEXT,
+                                headers TEXT,
+                                uploads TEXT,
+                                table_title VARCHAR(255) DEFAULT 'Custom Table',
+                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                            )
+                        """)
+                        
+                        # Fetch custom table data for the current form_id
+                        form_id_str = str(form_id)
+                        cursor.execute("SELECT srno, columns_data, headers, uploads, table_title FROM custom_table WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                        custom_table_rows = cursor.fetchall()
+                        
+                        if custom_table_rows:
+                            # Use the first row's table_title as the display title
+                            custom_table_title = custom_table_rows[0][4] if len(custom_table_rows[0]) > 4 and custom_table_rows[0][4] else "Custom Table"
+                            
+                            for row in custom_table_rows:
+                                srno = row[0]
+                                columns_data_str = row[1] if len(row) > 1 else '{}'
+                                headers_str = row[2] if len(row) > 2 else '[]'
+                                uploads_str = row[3] if len(row) > 3 else '{}'
+                                
+                                try:
+                                    columns_data = json.loads(columns_data_str) if columns_data_str else {}
+                                    headers = json.loads(headers_str) if headers_str else []
+                                    uploads = json.loads(uploads_str) if uploads_str else {}
+                                    
+                                    # Merge upload info with text data
+                                    merged_columns = columns_data.copy()
+                                    for col_name, upload_path in uploads.items():
+                                        if col_name in merged_columns:
+                                            merged_columns[col_name] = {
+                                                'type': 'file',
+                                                'filename': file_info.get('filename', ''),
+                                                'filepath': file_info.get('filepath', '')
+                                            }
+                                    
+                                    custom_table_data.append({
+                                        'srno': srno,
+                                        'columns_data': json.dumps(merged_columns),
+                                        'headers': headers
+                                    })
+                                    
+                                except json.JSONDecodeError as e:
+                                    print(f"Error parsing JSON for row {srno}: {e}")
+                                    continue
+                    except Exception as e:
+                        print(f"Error fetching custom table data in hodpastform: {e}")
+                    
                     return render_template(
                         'hodpastform.html',
                         user_id=user_id,
@@ -2929,7 +3214,9 @@ def hodpastform():
                         dept_act_data=dept_act_data,
                         inst_act_data=inst_act_data,
                         user_data=user_data,
-                        finalacr_value=finalacr_value
+                        finalacr_value=finalacr_value,
+                        custom_table_data=custom_table_data,
+                        custom_table_title=custom_table_title
                     )
         except Exception as e:
             print(f"Error loading default data: {e}")
@@ -2965,6 +3252,11 @@ def hodpastform():
 
     # Always pass finalacr_value to template to avoid UndefinedError
     finalacr_value = 0
+    
+    # Initialize custom table data for empty state
+    custom_table_data = []
+    custom_table_title = "Custom Table"
+    
     return render_template('hodpastform.html', 
                            user_id=user_id, 
                            user_name=user_name, 
@@ -2972,7 +3264,9 @@ def hodpastform():
                            assessments=assessments, 
                            department=department if department else (user_data[2] if user_data else None),
                            user_data=user_data,
-                           finalacr_value=finalacr_value)
+                           finalacr_value=finalacr_value,
+                           custom_table_data=custom_table_data,
+                           custom_table_title=custom_table_title)
 
 
 
@@ -3183,6 +3477,9 @@ def search_pastforms2():
                 special_mentions_data = process_rows(cursor.fetchall())
                 print("Special Mentions Data:", special_mentions_data)
 
+
+                
+
                 # Self-assessment marks
                 cursor.execute("""
                     SELECT self_assessment_marks
@@ -3282,6 +3579,77 @@ def search_pastforms2():
     user_name = user_data[3] if user_data and len(user_data) > 3 else "N/A"
     user_dept = user_data[2] if user_data and len(user_data) > 2 else "N/A"
 
+    # Fetch custom table data
+    custom_table_data = []
+    custom_table_title = "Custom Table"
+    connection = connect_to_database()
+    if connection:
+        try:
+            with connection.cursor() as cursor:
+                # Create custom_table table if it doesn't exist
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS custom_table (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        form_id VARCHAR(100),
+                        srno VARCHAR(10),
+                        columns_data TEXT,
+                        headers TEXT,
+                        uploads TEXT,
+                        table_title VARCHAR(255) DEFAULT 'Custom Table',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Fetch custom table data for the current form_id
+                form_id_str = str(form_id)
+                cursor.execute("SELECT srno, columns_data, headers, uploads, table_title FROM custom_table WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                custom_table_rows = cursor.fetchall()
+                
+                if custom_table_rows:
+                    # Use the first row's table_title as the display title
+                    custom_table_title = custom_table_rows[0][4] if len(custom_table_rows[0]) > 4 and custom_table_rows[0][4] else "Custom Table"
+                    
+                    for row in custom_table_rows:
+                        srno = row[0]
+                        columns_data_str = row[1] if len(row) > 1 else '{}'
+                        headers_str = row[2] if len(row) > 2 else '[]'
+                        uploads_str = row[3] if len(row) > 3 else '{}'
+                        
+                        try:
+                            columns_data = json.loads(columns_data_str) if columns_data_str else {}
+                            headers = json.loads(headers_str) if headers_str else []
+                            uploads = json.loads(uploads_str) if uploads_str else {}
+                            
+                            # Merge upload info with text data
+                            merged_columns = columns_data.copy()
+                            for col_name, upload_path in uploads.items():
+                                if col_name in merged_columns:
+                                    # Create structure consistent with form3_page
+                                    merged_columns[col_name] = {
+                                        'text': merged_columns[col_name], 
+                                        'upload': upload_path
+                                    }
+                                else:
+                                    merged_columns[col_name] = {
+                                        'text': '', 
+                                        'upload': upload_path
+                                    }
+                            
+                            custom_table_data.append({
+                                'srno': srno,
+                                'columns_data': json.dumps(merged_columns),
+                                'headers': headers
+                            })
+                            
+                        except json.JSONDecodeError as e:
+                            print(f"Error parsing JSON for row {srno}: {e}")
+                            continue
+        except Exception as e:
+            print(f"Error fetching custom table data in search_pastforms2: {e}")
+        finally:
+            connection.close()
+
     return render_template(
         'hodpastform.html',
         teaching_data=teaching_data,
@@ -3312,7 +3680,9 @@ def search_pastforms2():
         user_data=user_data,
         department=user_dept,
         finalacr_value=finalacr_value,
-        self_assessment_marks=self_assessment_marks
+        self_assessment_marks=self_assessment_marks,
+        custom_table_data=custom_table_data,
+        custom_table_title=custom_table_title
     )
 
 
@@ -4113,6 +4483,177 @@ def principlepastform():
         if connection:
             connection.close()
     
+    # Initialize all data containers for custom tables like the POST route
+    teaching_data, feedback_data, dept_act_data, inst_act_data = [], [], [], []
+    academic_review_data = []
+    self_improvement_data, certification_data = [], []
+    resource_data, committee_data, project_data, contribution_data = [], [], [], []
+    moocs_data, swayam_data, webinar_data = [], [], []
+    training_data, patent_data, conference_committee_data = [], [], []
+    special_mentions_data, copyright_data = [], []
+    hodas_data = {}  # Container for HOD-specific data
+    extra_feedback = ""  # For HOD's overall textual feedback, used by template
+    
+    # Fetch all custom table data if form_id exists (same logic as POST route)
+    if 'form_id' in locals() and form_id:
+        # Process rows function (same as POST route)
+        def process_rows(rows):
+            processed = []
+            for row in rows:
+                processed_row = list(row)  # Convert to list for mutability
+                # Handle uploads column (assuming it's the last column)
+                if processed_row and processed_row[-1]:  # Check if upload exists
+                    upload_path = processed_row[-1]
+                    processed_row[-1] = upload_path  # Keep the upload path for viewing
+                processed.append(processed_row)
+            return processed
+            
+        try:
+            connection = connect_to_database()
+            if connection:
+                with connection.cursor() as cursor:
+                    # Fetch all custom table data (same queries as POST route)
+                    # Teaching data
+                    cursor.execute("""
+                        SELECT semester, coursecode, coursename, totmarks, markobt, uploads
+                        FROM teaching WHERE form_id = %s
+                    """, (form_id,))
+                    teaching_data = process_rows(cursor.fetchall())
+
+                    # Student feedback data
+                    cursor.execute("""
+                        SELECT semester, coursecode, totmarks, markobt, uploads
+                        FROM feedback_form WHERE form_id = %s
+                    """, (form_id,))
+                    feedback_data = process_rows(cursor.fetchall())
+
+                    # Department activity data
+                    cursor.execute("""
+                        SELECT semester, activity, points, order_cpy, uploads
+                        FROM department_act WHERE form_id = %s
+                    """, (form_id,))
+                    dept_act_data = process_rows(cursor.fetchall())
+
+                    # Institute activity data
+                    cursor.execute("""
+                        SELECT semester, activity, points, order_cpy, uploads
+                        FROM institute_act WHERE form_id = %s
+                    """, (form_id,))
+                    inst_act_data = process_rows(cursor.fetchall())
+
+                    # Academic review data
+                    cursor.execute("""
+                        SELECT semester, program, course, activity, uploads
+                        FROM academic_review WHERE form_id = %s
+                    """, (form_id,))
+                    academic_review_data = process_rows(cursor.fetchall())
+
+                    # Self improvement data
+                    cursor.execute("""
+                        SELECT semester, activity, details, uploads
+                        FROM self_improvement WHERE form_id = %s
+                    """, (form_id,))
+                    self_improvement_data = process_rows(cursor.fetchall())
+
+                    # Certification data
+                    cursor.execute("""
+                        SELECT semester, certification, uploads
+                        FROM certification WHERE form_id = %s
+                    """, (form_id,))
+                    certification_data = process_rows(cursor.fetchall())
+
+                    # Resource person data
+                    cursor.execute("""
+                        SELECT semester, topic, department, institute, participants, uploads
+                        FROM resource_person WHERE form_id = %s
+                    """, (form_id,))
+                    resource_data = process_rows(cursor.fetchall())
+
+                    # Committee data
+                    cursor.execute("""
+                        SELECT semester, committee, dept_institute, role, uploads
+                        FROM committee WHERE form_id = %s
+                    """, (form_id,))
+                    committee_data = process_rows(cursor.fetchall())
+
+                    # External project data
+                    cursor.execute("""
+                        SELECT semester, role, description, contribution, university, duration, comments, uploads
+                        FROM external_project WHERE form_id = %s
+                    """, (form_id,))
+                    project_data = process_rows(cursor.fetchall())
+
+                    # Contribution data
+                    cursor.execute("""
+                        SELECT semester, activity, points, order_cpy, details, uploads
+                        FROM contribution WHERE form_id = %s
+                    """, (form_id,))
+                    contribution_data = process_rows(cursor.fetchall())
+
+                    # MOOCS data
+                    cursor.execute("""
+                        SELECT semester, course_name, month_year, duration, certification, uploads
+                        FROM moocs WHERE form_id = %s
+                    """, (form_id,))
+                    moocs_data = process_rows(cursor.fetchall())
+
+                    # SWAYAM data
+                    cursor.execute("""
+                        SELECT semester, course_name, month_year, duration, certification, uploads
+                        FROM swayam WHERE form_id = %s
+                    """, (form_id,))
+                    swayam_data = process_rows(cursor.fetchall())
+
+                    # Webinar data
+                    cursor.execute("""
+                        SELECT semester, topic, organisation, duration, date, uploads
+                        FROM webinar WHERE form_id = %s
+                    """, (form_id,))
+                    webinar_data = process_rows(cursor.fetchall())
+
+                    # Training data
+                    cursor.execute("""
+                        SELECT semester, training_type, organiser, duration, date, uploads
+                        FROM training WHERE form_id = %s
+                    """, (form_id,))
+                    training_data = process_rows(cursor.fetchall())
+
+                    # Patent data
+                    cursor.execute("""
+                        SELECT semester, title, patent_number, status, date, uploads
+                        FROM patent WHERE form_id = %s
+                    """, (form_id,))
+                    patent_data = process_rows(cursor.fetchall())
+
+                    # Conference committee data
+                    cursor.execute("""
+                        SELECT semester, conference, role, organisation, date, uploads
+                        FROM conference_committee WHERE form_id = %s
+                    """, (form_id,))
+                    conference_committee_data = process_rows(cursor.fetchall())
+
+                    # Special mentions data
+                    cursor.execute("""
+                        SELECT semester, achievement, description, uploads
+                        FROM special_mentions WHERE form_id = %s
+                    """, (form_id,))
+                    special_mentions_data = process_rows(cursor.fetchall())
+
+                    # Copyright data
+                    cursor.execute("""
+                        SELECT semester, title, copyright_number, status, date, uploads
+                        FROM copyright WHERE form_id = %s
+                    """, (form_id,))
+                    copyright_data = process_rows(cursor.fetchall())
+                    
+                    print(f"[LOG] /principlepastform: Fetched all custom table data for form_id={form_id}")
+
+        except Exception as e:
+            print(f"Error fetching custom table data in /principlepastform: {e}")
+        finally:
+            if connection:
+                connection.close()
+    
     # Calculate total_hod_points using the correct values (ensure all are float)
     total_hod_points = (
         float(assessments.get('hodas1', 0)) +
@@ -4123,8 +4664,41 @@ def principlepastform():
         float(assessments.get('hodas6', 0))
     )
     print(f"[LOG] Rendering principlepast.html with hod_ratings: {hod_ratings}, finalacr_value: {finalacr_value}, total_hod_points: {total_hod_points}")
-    return render_template('principlepast.html', user_name=user_name, user_id=user_id, department=department, 
-                          points_data=points_data, assessments=assessments, user_data=user_data, hod_ratings=hod_ratings, finalacr_value=finalacr_value, total_hod_points=total_hod_points)
+    
+    # Return template with all data (same as POST route)
+    return render_template('principlepast.html', 
+                          user_name=user_name, 
+                          user_id=user_id, 
+                          department=department,
+                          selected_year=acad_year,
+                          points_data=points_data, 
+                          assessments=assessments, 
+                          user_data=user_data, 
+                          hod_ratings=hod_ratings, 
+                          finalacr_value=finalacr_value, 
+                          total_hod_points=total_hod_points,
+                          # Add all custom table data
+                          teaching_data=teaching_data,
+                          feedback_data=feedback_data,
+                          dept_act_data=dept_act_data,
+                          inst_act_data=inst_act_data,
+                          academic_review_data=academic_review_data,
+                          self_improvement_data=self_improvement_data,
+                          certification_data=certification_data,
+                          resource_data=resource_data,
+                          committee_data=committee_data,
+                          project_data=project_data,
+                          contribution_data=contribution_data,
+                          moocs_data=moocs_data,
+                          swayam_data=swayam_data,
+                          webinar_data=webinar_data,
+                          training_data=training_data,
+                          patent_data=patent_data,
+                          conference_committee_data=conference_committee_data,
+                          special_mentions_data=special_mentions_data,
+                          copyright_data=copyright_data,
+                          hodas_data=hodas_data,
+                          extra_feedback=extra_feedback)
 
 
 
@@ -4474,6 +5048,76 @@ def principle_pastforms():
     user_name = user_data[3] if user_data and len(user_data) > 3 else "N/A"
     user_dept = user_data[2] if user_data and len(user_data) > 2 else "N/A"
 
+    # ===== CUSTOM TABLE DATA FETCHING =====
+    custom_table_data = []
+    custom_table_title = 'Custom Table'
+    
+    if form_id:
+        connection = connect_to_database()
+        if connection:
+            try:
+                with connection.cursor() as cursor:
+                    # Create custom_table if it doesn't exist
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS custom_table (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            form_id VARCHAR(255),
+                            srno VARCHAR(255),
+                            columns_data TEXT,
+                            headers TEXT,
+                            uploads TEXT,
+                            table_title TEXT,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                        )
+                    """)
+                    
+                    # Fetch custom table data for this form_id
+                    form_id_str = str(form_id)
+                    cursor.execute("SELECT srno, columns_data, headers, uploads, table_title FROM custom_table WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                    custom_table_rows = cursor.fetchall()
+                    
+                    for row in custom_table_rows:
+                        srno = row[0]
+                        columns_data_str = row[1] if len(row) > 1 else '{}'
+                        headers_str = row[2] if len(row) > 2 else '[]'
+                        uploads_str = row[3] if len(row) > 3 else '{}'
+                        table_title_from_row = row[4] if len(row) > 4 else 'Custom Table'
+                        
+                        # Set the table title from the first row
+                        if not custom_table_data:  # First row
+                            custom_table_title = table_title_from_row if table_title_from_row else 'Custom Table'
+                        
+                        try:
+                            columns_data = json.loads(columns_data_str) if columns_data_str else {}
+                            headers = json.loads(headers_str) if headers_str else []
+                            uploads = json.loads(uploads_str) if uploads_str else {}
+                            
+                            # Merge columns_data with upload info
+                            merged_columns = columns_data.copy()
+                            for col_name, upload_info in uploads.items():
+                                if col_name in merged_columns:
+                                    merged_columns[col_name] = {
+                                        'text': merged_columns[col_name],
+                                        'upload': upload_info
+                                    }
+                                else:
+                                    merged_columns[col_name] = {'upload': upload_info}
+                            
+                            custom_table_data.append({
+                                'srno': srno,
+                                'columns_data': json.dumps(merged_columns),
+                                'headers': headers
+                            })
+                        except json.JSONDecodeError:
+                            print(f"Error parsing JSON for custom table row {srno}")
+                            continue
+                            
+            except Exception as e:
+                print(f"Error fetching custom table data: {str(e)}")
+            finally:
+                connection.close()
+
     # Render the template with all the fetched data
     return render_template(
         'principlepast.html',
@@ -4498,6 +5142,9 @@ def principle_pastforms():
         project_data=project_data,
         contribution_data=contribution_data,
         special_mentions_data=special_mentions_data,
+        # Custom table data
+        custom_table_data=custom_table_data,
+        custom_table_title=custom_table_title,
         selected_year=selected_year,
         user_name=user_name, 
         user_id=user_id,
@@ -5160,6 +5807,25 @@ def generate_appraisal_html(user_id, form_id=None, acad_years=None):
         html=html_content
     )
     
+    # Attach the logo image to the email
+    try:
+        import os
+        logo_path = os.path.join(os.path.dirname(__file__), 'static', 'logo.png')
+        if os.path.exists(logo_path):
+            with open(logo_path, 'rb') as fp:
+                msg.attach(
+                    filename='logo.png',
+                    content_type='image/png',
+                    data=fp.read(),
+                    disposition='inline',
+                    headers={'Content-ID': '<logo>'}  # This allows referencing as cid:logo
+                )
+                print('[DEBUG] Logo attached to email successfully')
+        else:
+            print(f'[WARNING] Logo file not found at: {logo_path}')
+    except Exception as e:
+        print(f'[ERROR] Failed to attach logo: {str(e)}')
+    
     mail.send(msg)
     return html_content 
 
@@ -5511,6 +6177,83 @@ def form3_page(form_id):
                 "upload": row[3]
             } for row in conference_committee_data
         ]
+        
+        # Query for custom table data
+        custom_table_rows = []
+        custom_table_data = []
+        try:
+            # Create custom_table table if it doesn't exist
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS custom_table (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    form_id VARCHAR(45) NOT NULL,
+                    srno INT NOT NULL,
+                    columns_data TEXT,
+                    headers TEXT,
+                    uploads TEXT,
+                    table_title VARCHAR(255) DEFAULT 'Custom Table',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_form_id (form_id),
+                    INDEX idx_form_srno (form_id, srno)
+                )
+            """)
+            
+            # Now query the table
+            cursor.execute("SELECT srno, columns_data, headers, uploads, table_title FROM custom_table WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+            custom_table_rows = cursor.fetchall()
+            print(f"Custom table data: {len(custom_table_rows)} records found")
+            
+            # Get the table title (use the first row's title or default)
+            custom_table_title = 'Custom Table'
+            if custom_table_rows and len(custom_table_rows[0]) >= 5 and custom_table_rows[0][4]:
+                custom_table_title = custom_table_rows[0][4]
+                print(f"Found custom table title: {custom_table_title}")
+        except Exception as e:
+            print(f"Error querying custom table: {e}")
+            # If there's an error, we'll just use empty data
+            custom_table_rows = []
+            custom_table_title = 'Custom Table'
+        
+        # Process custom table data
+        for row in custom_table_rows:
+            try:
+                # Use positional access instead of unpacking to be more robust
+                srno = row[0]
+                columns_data_str = row[1] if len(row) > 1 else '{}'
+                headers_str = row[2] if len(row) > 2 else '[]'
+                uploads_str = row[3] if len(row) > 3 else '{}'
+                # Row might have a table_title as the 5th element
+                
+                columns_data = json.loads(columns_data_str) if columns_data_str else {}
+                headers = json.loads(headers_str) if headers_str else []
+                uploads = json.loads(uploads_str) if uploads_str else {}
+                
+                # Merge columns_data with uploads for easy template rendering
+                merged_columns = columns_data.copy()
+                for col_name, upload_path in uploads.items():
+                    if col_name in merged_columns:
+                        # Keep text data but add upload path
+                        merged_columns[col_name] = {'text': merged_columns[col_name], 'upload': upload_path}
+                    else:
+                        # Only upload path
+                        merged_columns[col_name] = {'text': '', 'upload': upload_path}
+                
+                custom_table_data.append({
+                    'srno': srno,
+                    'columns_data': json.dumps(merged_columns),  # Convert back to JSON for template
+                    'headers': headers
+                })
+            except (json.JSONDecodeError, TypeError, ValueError) as e:
+                print(f"Error processing custom table row {row}: {e}")
+                # Add empty entry to maintain structure
+                custom_table_data.append({
+                    'srno': row[0] if row else 0,
+                    'columns_data': '{}',
+                    'headers': []
+                })
+        
+        print(f"Processed custom table data: {len(custom_table_data)} records")
 
         cursor.close()
         conn.close()
@@ -5543,6 +6286,8 @@ def form3_page(form_id):
                                contribution_data=contribution_data,
                                special_mentions_data=special_mentions_data,
                                conference_committee_data=conference_committee_data,
+                               custom_table_data=custom_table_data,
+                               custom_table_title=custom_table_title,
                                self_assessment_marks=self_assessment_marks)
                                
     except Exception as e:
@@ -5583,6 +6328,23 @@ def save_form3_data():
             CREATE TABLE IF NOT EXISTS form3_assessment (
                 form_id VARCHAR(45) PRIMARY KEY,
                 self_assessment_marks VARCHAR(45) DEFAULT '0'
+            )
+        """)
+        
+        # Create custom_table table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS custom_table (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                form_id VARCHAR(45) NOT NULL,
+                srno INT NOT NULL,
+                columns_data TEXT,
+                headers TEXT,
+                uploads TEXT,
+                table_title VARCHAR(255) DEFAULT 'Custom Table',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_form_id (form_id),
+                INDEX idx_form_srno (form_id, srno)
             )
         """)
         
@@ -6555,6 +7317,73 @@ def save_form3_data():
                 ))
             print(f"Inserted {len(contribution_entries)} contribution records")
 
+        # ===== PROCESS CUSTOM TABLE DATA =====
+        custom_table_entries = []
+        for key in request.form.keys():
+            if key.startswith('customTable[') and key.endswith(']'):
+                try:
+                    entry = json.loads(request.form.get(key))
+                    custom_table_entries.append(entry)
+                    print(f"Processed custom table entry from key: {key}")
+                except json.JSONDecodeError as e:
+                    print(f"Error parsing custom table entry: {e}")
+        
+        if custom_table_entries:
+            # Get the table title
+            table_title = request.form.get('customTableTitle', 'Custom Table')
+            print(f"Custom table title: {table_title}")
+            
+            # Fetch previous uploads for this form_id by srno
+            cursor.execute("SELECT srno, uploads FROM custom_table WHERE form_id = %s", (form_id,))
+            old_custom_uploads = {str(row[0]): row[1] for row in cursor.fetchall() if row[0] is not None}
+            cursor.execute("DELETE FROM custom_table WHERE form_id = %s", (form_id,))
+            
+            for item in custom_table_entries:
+                uploads_data = {}
+                srno = str(item.get('srno', ''))
+                columns_data = item.get('columns_data', {})
+                headers = item.get('headers', [])
+                
+                # Process file uploads for each column
+                for column_name in headers:
+                    file_key = f"customTable_{srno}_{column_name}_file"
+                    if file_key in request.files:
+                        file = request.files[file_key]
+                        if file and file.filename and allowed_file(file.filename):
+                            try:
+                                filename = secure_filename(file.filename)
+                                timestamp = str(int(time.time()))
+                                name, ext = os.path.splitext(filename)
+                                unique_filename = f"custom_{form_id}_{timestamp}_{srno}_{column_name}_{name}{ext}"
+                                os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                                file.save(file_path)
+                                uploads_data[column_name] = f"uploads/{unique_filename}"
+                                print(f"Saved custom table file: {unique_filename} for column: {column_name}")
+                            except Exception as e:
+                                print(f"Error saving custom table file for column {column_name}: {e}")
+                
+                # If no new uploads, use previous uploads
+                if not uploads_data and srno in old_custom_uploads:
+                    try:
+                        uploads_data = json.loads(old_custom_uploads[srno]) if old_custom_uploads[srno] else {}
+                        print(f"No new files for custom table srno '{srno}', using previous uploads: {uploads_data}")
+                    except (json.JSONDecodeError, TypeError):
+                        uploads_data = {}
+                
+                cursor.execute("""
+                    INSERT INTO custom_table (form_id, srno, columns_data, headers, uploads, table_title)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (
+                    form_id,
+                    item.get('srno', ''),
+                    json.dumps(columns_data),
+                    json.dumps(headers),
+                    json.dumps(uploads_data),
+                    table_title
+                ))
+            print(f"Inserted {len(custom_table_entries)} custom table records")
+
         # ===== SAVE SELF-ASSESSMENT MARKS =====
         self_assessment_marks = request.form.get('selfAssessmentMarks', '0')
         print(f"Self-assessment marks: {self_assessment_marks}")
@@ -6585,6 +7414,7 @@ def save_form3_data():
                 'swayam_records': len(swayam_entries),
                 'webinar_records': len(webinar_entries),
                 'contribution_records': len(contribution_entries),
+                'custom_table_records': len(custom_table_entries),
                 'special_mention_records': len(special_mention_entries)
             }
         })
@@ -6687,9 +7517,66 @@ def pastform(form_id):
         cursor.execute("SELECT semester, activity, points, order_cpy FROM institute_act WHERE form_id = %s", (form_id,))
         form2_inst_data = cursor.fetchall()
         
-        # Fetch Form 3 data - you can add specific queries here
-        # cursor.execute(...
-        # form3_data = cursor.fetchall()
+        # Fetch custom table data
+        custom_table_data = []
+        custom_table_title = "Custom Table"
+        try:
+            # Create custom_table table if it doesn't exist
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS custom_table (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    form_id VARCHAR(100),
+                    srno VARCHAR(10),
+                    columns_data TEXT,
+                    headers TEXT,
+                    uploads TEXT,
+                    table_title VARCHAR(255) DEFAULT 'Custom Table',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Fetch custom table data for the current form_id
+            form_id_str = str(form_id)
+            cursor.execute("SELECT srno, columns_data, headers, uploads, table_title FROM custom_table WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+            custom_table_rows = cursor.fetchall()
+            
+            if custom_table_rows:
+                # Use the first row's table_title as the display title
+                custom_table_title = custom_table_rows[0][4] if len(custom_table_rows[0]) > 4 and custom_table_rows[0][4] else "Custom Table"
+                
+                for row in custom_table_rows:
+                    srno = row[0]
+                    columns_data_str = row[1] if len(row) > 1 else '{}'
+                    headers_str = row[2] if len(row) > 2 else '[]'
+                    uploads_str = row[3] if len(row) > 3 else '{}'
+                    
+                    try:
+                        columns_data = json.loads(columns_data_str) if columns_data_str else {}
+                        headers = json.loads(headers_str) if headers_str else []
+                        uploads = json.loads(uploads_str) if uploads_str else {}
+                        
+                        # Merge upload info with text data
+                        merged_columns = columns_data.copy()
+                        for col_name, file_info in uploads.items():
+                            if col_name in merged_columns:
+                                merged_columns[col_name] = {
+                                    'type': 'file',
+                                    'filename': file_info.get('filename', ''),
+                                    'filepath': file_info.get('filepath', '')
+                                }
+                        
+                        custom_table_data.append({
+                            'srno': srno,
+                            'columns_data': json.dumps(merged_columns),
+                            'headers': headers
+                        })
+                        
+                    except json.JSONDecodeError as e:
+                        print(f"Error parsing JSON for row {srno}: {e}")
+                        continue
+        except Exception as e:
+            print(f"Error fetching custom table data in pastform: {e}")
         
         cursor.close()
         conn.close()
@@ -6700,14 +7587,22 @@ def pastform(form_id):
                                selected_year=selected_year,
                                form1_data=form1_data,
                                form2_dept_data=form2_dept_data,
-                               form2_inst_data=form2_inst_data)
+                               form2_inst_data=form2_inst_data,
+                               custom_table_data=custom_table_data,
+                               custom_table_title=custom_table_title)
     except Exception as e:
         print(f"Error fetching past form data: {e}")
+        # Initialize custom table data for error state
+        custom_table_data = []
+        custom_table_title = "Custom Table"
+        
         return render_template('pastform.html', 
                                user_data=None, 
                                form_id=form_id,
                                selected_year=None,
-                               error=str(e))
+                               error=str(e),
+                               custom_table_data=custom_table_data,
+                               custom_table_title=custom_table_title)
 
 @app.route('/upload', methods=['POST'])
 def upload_file():

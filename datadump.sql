@@ -61,7 +61,7 @@ CREATE TABLE `appraisals` (
   `acad_year` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_user` (`userid`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,7 +70,7 @@ CREATE TABLE `appraisals` (
 
 LOCK TABLES `appraisals` WRITE;
 /*!40000 ALTER TABLE `appraisals` DISABLE KEYS */;
-INSERT INTO `appraisals` VALUES (1,'99999','approved','2025-06-10 12:50:27','2025-06-08 13:29:38','2025-06-10 07:20:27',NULL,NULL);
+INSERT INTO `appraisals` VALUES (34,'99999','approved','2025-06-30 02:57:58','2025-06-29 21:11:25','2025-06-29 21:27:58','905592','2024/25');
 /*!40000 ALTER TABLE `appraisals` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -95,7 +95,7 @@ CREATE TABLE `certifications` (
 
 LOCK TABLES `certifications` WRITE;
 /*!40000 ALTER TABLE `certifications` DISABLE KEYS */;
-INSERT INTO `certifications` VALUES ('515988','awd',NULL,NULL),('527559','awda',NULL,NULL),('449389','',NULL,'1'),('905592','edit','uploads/cert_905592_1750060897_0_bill.pdf',NULL),('905592','edit','uploads/cert_905592_1750060897_1_poster_appraisalsystem.pdf',NULL);
+INSERT INTO `certifications` VALUES ('515988','awd',NULL,NULL),('527559','awda',NULL,NULL),('449389','awd','uploads/cert_449389_1751026742_0_Academic_Calendar_first_half_2025.pdf',NULL),('905592','edit','uploads/cert_905592_1751230967_0_Academic_Calendar_first_half_2025.pdf',NULL),('905592','edit','uploads/cert_905592_1751230967_1_bill.pdf',NULL);
 /*!40000 ALTER TABLE `certifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -124,7 +124,7 @@ CREATE TABLE `contribution_to_society` (
 
 LOCK TABLES `contribution_to_society` WRITE;
 /*!40000 ALTER TABLE `contribution_to_society` DISABLE KEYS */;
-INSERT INTO `contribution_to_society` VALUES ('515988','V','awd','3','awd',NULL,NULL,NULL),('527559','V','awdad','5','awd',NULL,NULL,NULL),('905592','I','awdawd','3','awd','uploads/contrib_905592_1750072850_1_bill.pdf','awsssss','1'),('905592','II','2222','3','22','uploads/contrib_905592_1750073675_2_poster_appraisalsystem.pdf','dawd','2');
+INSERT INTO `contribution_to_society` VALUES ('515988','V','awd','3','awd',NULL,NULL,NULL),('527559','V','awdad','5','awd',NULL,NULL,NULL),('449389','II','awd','3','awd','uploads/contrib_449389_1751026742_1_Academic_Calendar_first_half_2025.pdf','awd','1'),('905592','I','awdawd','3','awd','uploads/contrib_905592_1751230967_1_bill.pdf','awsssss','1'),('905592','II','2222','3','22','uploads/contrib_905592_1751230967_2_poster_appraisalsystem.pdf','dawd','2');
 /*!40000 ALTER TABLE `contribution_to_society` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -153,8 +153,41 @@ CREATE TABLE `copyright` (
 
 LOCK TABLES `copyright` WRITE;
 /*!40000 ALTER TABLE `copyright` DISABLE KEYS */;
-INSERT INTO `copyright` VALUES (NULL,'515988','awd','awd','awd',NULL,NULL,NULL),(NULL,'527559','wad','wada','wdaa',NULL,NULL,NULL),('1','449389','','','',NULL,NULL,NULL),('1','905592','1','161','1','Published','International','uploads/copyright_905592_1749983042_0_bill.pdf'),('2','905592','212','21221','3','Granted','National','uploads/copyright_905592_1749983139_1_poster_appraisalsystem.pdf');
+INSERT INTO `copyright` VALUES (NULL,'515988','awd','awd','awd',NULL,NULL,NULL),(NULL,'527559','wad','wada','wdaa',NULL,NULL,NULL),('1','449389','awd','awda','wdaw','Filed','National','uploads/copyright_449389_1751026742_0_Academic_Calendar_first_half_2025.pdf'),('1','905592','1','161','1','Published','International','uploads/copyright_905592_1751230967_0_Academic_Calendar_first_half_2025.pdf'),('2','905592','212','21221','3','Granted','National','uploads/copyright_905592_1751230967_1_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `copyright` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `custom_table`
+--
+
+DROP TABLE IF EXISTS `custom_table`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `custom_table` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `form_id` varchar(45) NOT NULL,
+  `srno` int NOT NULL,
+  `columns_data` text,
+  `headers` text,
+  `uploads` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `table_title` varchar(425) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_form_id` (`form_id`),
+  KEY `idx_form_srno` (`form_id`,`srno`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `custom_table`
+--
+
+LOCK TABLES `custom_table` WRITE;
+/*!40000 ALTER TABLE `custom_table` DISABLE KEYS */;
+INSERT INTO `custom_table` VALUES (5,'449389',1,'{\"New Column 1\": \"adw\", \"New Column2\": \"wda11\"}','[\"New Column 1\", \"New Column2\", \"Document\"]','{\"Document\": \"uploads/custom_449389_1751100389_1_Document_Academic_Calendar_first_half_2025.pdf\"}','2025-06-28 09:23:08','2025-06-28 09:23:08','Custom Table 11'),(6,'449389',2,'{\"New Column 1\": \"awd\", \"New Column2\": \"dwa\"}','[\"New Column 1\", \"New Column2\", \"Document\"]','{\"Document\": \"uploads/custom_449389_1751100389_2_Document_bill.pdf\"}','2025-06-28 09:23:08','2025-06-28 09:23:08','Custom Table 11'),(9,'905592',1,'{\"Name\": \"dwa\", \"Role\": \"awd\"}','[\"Name\", \"Role\", \"Document\"]','{\"Document\": \"uploads/custom_905592_1751231100_1_Document_Academic_Calendar_first_half_2025.pdf\"}','2025-06-29 21:05:00','2025-06-29 21:05:00','trail'),(10,'905592',2,'{\"Name\": \"awd\", \"Role\": \"daw\"}','[\"Name\", \"Role\", \"Document\"]','{\"Document\": \"uploads/custom_905592_1751231100_2_Document_bill.pdf\"}','2025-06-29 21:05:00','2025-06-29 21:05:00','trail');
+/*!40000 ALTER TABLE `custom_table` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -183,7 +216,7 @@ CREATE TABLE `department_act` (
 
 LOCK TABLES `department_act` WRITE;
 /*!40000 ALTER TABLE `department_act` DISABLE KEYS */;
-INSERT INTO `department_act` VALUES ('515988','ODD','awd','3','dwa',NULL,NULL,NULL,'1'),('515988','ODD','dwa','1','dwa',NULL,NULL,NULL,'2'),('527559','ODD','awdada','3','dwasda',NULL,NULL,NULL,'1'),('905592','ODD','xyz','3','awd','uploads/2023_december_ethical-hacking-and-forensicrev-2019-c-scheme.pdf',NULL,NULL,'1');
+INSERT INTO `department_act` VALUES ('515988','ODD','awd','3','dwa',NULL,NULL,NULL,'1'),('515988','ODD','dwa','1','dwa',NULL,NULL,NULL,'2'),('527559','ODD','awdada','3','dwasda',NULL,NULL,NULL,'1'),('905592','ODD','xyz','3','awd','uploads/2023_december_ethical-hacking-and-forensicrev-2019-c-scheme.pdf',NULL,NULL,'1'),('449389','ODD','awd','3','aw','uploads/dept_449389_1_1751026643_bill.pdf',NULL,NULL,'1'),('449389','EVEN','dwa','3','asdw','uploads/dept_449389_2_1751026643_poster_appraisalsystem.pdf',NULL,NULL,'2');
 /*!40000 ALTER TABLE `department_act` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -233,8 +266,8 @@ CREATE TABLE `external_projects` (
   `university` varchar(495) DEFAULT NULL,
   `duration` varchar(495) DEFAULT NULL,
   `comments` varchar(495) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL,
-  `upload` varchar(415) DEFAULT NULL
+  `upload` varchar(415) DEFAULT NULL,
+  `srno` varchar(45) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -244,7 +277,7 @@ CREATE TABLE `external_projects` (
 
 LOCK TABLES `external_projects` WRITE;
 /*!40000 ALTER TABLE `external_projects` DISABLE KEYS */;
-INSERT INTO `external_projects` VALUES ('515988','awd','awd','adwd','wdad','waw','d',NULL,NULL),('527559','awd','awda','dawd','dada','awda','wd',NULL,NULL),('449389','','','','','','','1',NULL),('905592','wad','awda','wda','dawd','dwdwd','awd','1','uploads/external_905592_1750072285_1_bill.pdf'),('905592','dwa','dwad','wda','dwad','222','dwa','2','uploads/external_905592_1750072285_2_poster_appraisalsystem.pdf');
+INSERT INTO `external_projects` VALUES ('515988','awd','awd','adwd','wdad','waw','d',NULL,NULL),('527559','awd','awda','dawd','dada','awda','wd',NULL,NULL),('449389','dawda','wawd','wd','awda','da','wd','uploads/external_449389_1751026742_1_Academic_Calendar_first_half_2025.pdf','1'),('905592','wad','awda','wda','dawd','dwdwd','awd','uploads/external_905592_1751230967_1_poster_appraisalsystem.pdf','1'),('905592','dwa','dwad','wda','dwad','222','dwa','uploads/external_905592_1751230967_2_bill.pdf','2');
 /*!40000 ALTER TABLE `external_projects` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -280,7 +313,7 @@ CREATE TABLE `feedback` (
 
 LOCK TABLES `feedback` WRITE;
 /*!40000 ALTER TABLE `feedback` DISABLE KEYS */;
-INSERT INTO `feedback` VALUES ('515988','abcd',NULL,'4','4','4','4','4','4','4','4','4','4','8'),('905592','awd','awd2','1','1','1','1','1','1','1','1','1','1','2');
+INSERT INTO `feedback` VALUES ('449389','',NULL,'1','2','1','1','1','1','1','1','1','1','2'),('515988','abcd',NULL,'4','4','4','4','4','4','4','4','4','4','8'),('905592','awd','awd2','1','1','1','1','1','1','1','1','1','1','2');
 /*!40000 ALTER TABLE `feedback` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -314,7 +347,7 @@ CREATE TABLE `form1_tot` (
 
 LOCK TABLES `form1_tot` WRITE;
 /*!40000 ALTER TABLE `form1_tot` DISABLE KEYS */;
-INSERT INTO `form1_tot` VALUES (130525,'0','0','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(449389,'0','0','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(515988,'28','18','10','18','10','wwwwwwww','wwwwwwwwwwwwwwwwww',NULL,NULL,NULL,NULL),(527559,'33','13','20',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'54','19','20','15','15','www','ww','6','6','111','222');
+INSERT INTO `form1_tot` VALUES (130525,'0','0','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(449389,'64','24','20','0','0','','',NULL,NULL,NULL,NULL),(515988,'28','18','10','18','10','wwwwwwww','wwwwwwwwwwwwwwwwww',NULL,NULL,NULL,NULL),(527559,'33','13','20',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'54','19','20','15','15','www','ww','6','6','111','222');
 /*!40000 ALTER TABLE `form1_tot` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -348,7 +381,7 @@ CREATE TABLE `form2_tot` (
 
 LOCK TABLES `form2_tot` WRITE;
 /*!40000 ALTER TABLE `form2_tot` DISABLE KEYS */;
-INSERT INTO `form2_tot` VALUES (449389,'0','0','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(515988,'6','4','2','3','2','wwwwwww','wwwwwwwwwwwwww',NULL,NULL,NULL,NULL),(527559,'6','3','3',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'6','3','3','15','10','ww','ww','5','7','333','444');
+INSERT INTO `form2_tot` VALUES (449389,'12','6','6','0','0','','',NULL,NULL,NULL,NULL),(515988,'6','4','2','3','2','wwwwwww','wwwwwwwwwwwwww',NULL,NULL,NULL,NULL),(527559,'6','3','3',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'6','3','3','15','10','ww','ww','5','7','333','444');
 /*!40000 ALTER TABLE `form2_tot` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -407,7 +440,7 @@ CREATE TABLE `form3_tot` (
 
 LOCK TABLES `form3_tot` WRITE;
 /*!40000 ALTER TABLE `form3_tot` DISABLE KEYS */;
-INSERT INTO `form3_tot` VALUES (449389,'2','2','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(515988,'6','3','3','10','2','wwwww','addw',NULL,NULL,NULL,NULL,'9'),(527559,'15','10','5',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'14','8','6','6','9','1ww','ww','6','6','555','666','4');
+INSERT INTO `form3_tot` VALUES (449389,'5','2','3','10','10','','awd',NULL,NULL,NULL,NULL,'6'),(515988,'6','3','3','10','2','wwwww','addw',NULL,NULL,NULL,NULL,'9'),(527559,'15','10','5',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(905592,'15','9','6','6','9','1ww','ww','6','6','555','666','4');
 /*!40000 ALTER TABLE `form3_tot` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -466,7 +499,7 @@ CREATE TABLE `institute_act` (
 
 LOCK TABLES `institute_act` WRITE;
 /*!40000 ALTER TABLE `institute_act` DISABLE KEYS */;
-INSERT INTO `institute_act` VALUES ('515988','ODD','awd','2','adw',NULL,NULL,NULL,'1'),('527559','ODD','dawda','3','dsadwad',NULL,NULL,NULL,'1'),('905592','ODD','awd','3','wad','uploads/Academic_Calendar_first_half_2025.pdf',NULL,NULL,'1');
+INSERT INTO `institute_act` VALUES ('515988','ODD','awd','2','adw',NULL,NULL,NULL,'1'),('527559','ODD','dawda','3','dsadwad',NULL,NULL,NULL,'1'),('905592','ODD','awd','3','wad','uploads/Academic_Calendar_first_half_2025.pdf',NULL,NULL,'1'),('449389','EVEN','dwa','3','dw','uploads/inst_449389_1_1751026643_Academic_Calendar_first_half_2025.pdf',NULL,NULL,'1'),('449389','ODD','dwa','3','ss','uploads/inst_449389_2_1751026643_bill.pdf',NULL,NULL,'2');
 /*!40000 ALTER TABLE `institute_act` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -482,8 +515,8 @@ CREATE TABLE `mem_uni` (
   `name` varchar(495) DEFAULT NULL,
   `roles` varchar(495) DEFAULT NULL,
   `designation` varchar(495) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL,
-  `upload` varchar(295) DEFAULT NULL
+  `upload` varchar(295) DEFAULT NULL,
+  `srno` varchar(45) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -493,7 +526,7 @@ CREATE TABLE `mem_uni` (
 
 LOCK TABLES `mem_uni` WRITE;
 /*!40000 ALTER TABLE `mem_uni` DISABLE KEYS */;
-INSERT INTO `mem_uni` VALUES ('515988','awd','awd','awd',NULL,NULL),('527559','awd','awda','wd',NULL,NULL),('449389','','','','1',NULL),('905592','dwa','dwa','aw','1','uploads/committee_905592_1750071380_1_poster_appraisalsystem.pdf');
+INSERT INTO `mem_uni` VALUES ('515988','awd','awd','awd',NULL,NULL),('527559','awd','awda','wd',NULL,NULL),('449389','dwad','wda','daw','uploads/committee_449389_1751026742_1_bill.pdf','1'),('905592','dwa','dwa','aw','uploads/committee_905592_1751230967_1_Academic_Calendar_first_half_2025.pdf','1');
 /*!40000 ALTER TABLE `mem_uni` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -519,7 +552,7 @@ CREATE TABLE `members_conference` (
 
 LOCK TABLES `members_conference` WRITE;
 /*!40000 ALTER TABLE `members_conference` DISABLE KEYS */;
-INSERT INTO `members_conference` VALUES ('1','905592','ddaw','da','uploads/conf_905592_1750099675_1_bill.pdf'),('2','905592','a','a','uploads/conf_905592_1750099675_2_poster_appraisalsystem.pdf');
+INSERT INTO `members_conference` VALUES ('1','449389','awd','awd','uploads/conf_449389_1751026742_1_bill.pdf'),('1','905592','ddaw','da','uploads/conf_905592_1751230967_1_Academic_Calendar_first_half_2025.pdf'),('2','905592','a','a','uploads/conf_905592_1751230967_2_bill.pdf');
 /*!40000 ALTER TABLE `members_conference` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -531,12 +564,12 @@ DROP TABLE IF EXISTS `moocs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `moocs` (
+  `srno` varchar(45) DEFAULT NULL,
+  `form_id` varchar(45) DEFAULT NULL,
   `name` varchar(445) DEFAULT NULL,
   `month` varchar(435) DEFAULT NULL,
   `duration` varchar(45) DEFAULT NULL,
   `completion` varchar(455) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL,
-  `form_id` varchar(45) DEFAULT NULL,
   `upload` varchar(415) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -547,7 +580,7 @@ CREATE TABLE `moocs` (
 
 LOCK TABLES `moocs` WRITE;
 /*!40000 ALTER TABLE `moocs` DISABLE KEYS */;
-INSERT INTO `moocs` VALUES ('awd','awd','wdda','No','1','515988',NULL),('awda','awd','awd','Yes','1','527559',NULL),('','','','','1','449389',NULL),('awd','awd','222','Yes','1','905592','uploads/moocs_905592_1750103888_1_bill.pdf'),('dwa','dwa','ss','No','2','905592','uploads/moocs_905592_1750103888_2_poster_appraisalsystem.pdf');
+INSERT INTO `moocs` VALUES ('1','515988','awd','awd','wdda','No',NULL),('1','527559','awda','awd','awd','Yes',NULL),('1','449389','awd','awd','awd','No','uploads/moocs_449389_1751028460_1_poster_appraisalsystem.pdf'),('2','449389','awd','dwa','wda','No','uploads/moocs_449389_1751028460_2_Academic_Calendar_first_half_2025.pdf'),('1','905592','awd','awd','222','Yes','uploads/moocs_905592_1751230967_1_poster_appraisalsystem.pdf'),('2','905592','dwa','dwa','ss','No','uploads/moocs_905592_1751230967_2_Academic_Calendar_first_half_2025.pdf');
 /*!40000 ALTER TABLE `moocs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -573,7 +606,7 @@ CREATE TABLE `numeric_points_attained` (
 
 LOCK TABLES `numeric_points_attained` WRITE;
 /*!40000 ALTER TABLE `numeric_points_attained` DISABLE KEYS */;
-INSERT INTO `numeric_points_attained` VALUES (1,905592,18,12,15);
+INSERT INTO `numeric_points_attained` VALUES (1,905592,18,12,15),(1,449389,20,20,20);
 /*!40000 ALTER TABLE `numeric_points_attained` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -602,7 +635,7 @@ CREATE TABLE `patents` (
 
 LOCK TABLES `patents` WRITE;
 /*!40000 ALTER TABLE `patents` DISABLE KEYS */;
-INSERT INTO `patents` VALUES ('1','905592','111','111','11','Published','International','uploads/patent_905592_1749983042_0_bill.pdf'),('2','905592','222212','21111','3','Published','International','uploads/patent_905592_1749983139_1_bill.pdf');
+INSERT INTO `patents` VALUES ('1','449389','dwad','awda','wdawd','Filed','International','uploads/patent_449389_1751026742_0_poster_appraisalsystem.pdf'),('1','905592','111','111','11','Published','International','uploads/patent_905592_1751230967_0_bill.pdf'),('2','905592','222212','21111','3','Published','International','uploads/patent_905592_1751230967_1_Academic_Calendar_first_half_2025.pdf');
 /*!40000 ALTER TABLE `patents` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -619,8 +652,8 @@ CREATE TABLE `resource_person` (
   `dept` varchar(425) DEFAULT NULL,
   `name_oi` varchar(425) DEFAULT NULL,
   `num_op` varchar(425) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL,
-  `upload` varchar(415) DEFAULT NULL
+  `upload` varchar(415) DEFAULT NULL,
+  `srno` varchar(45) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -630,7 +663,7 @@ CREATE TABLE `resource_person` (
 
 LOCK TABLES `resource_person` WRITE;
 /*!40000 ALTER TABLE `resource_person` DISABLE KEYS */;
-INSERT INTO `resource_person` VALUES ('515988','awd','awd','awd','12',NULL,NULL),('527559','wdawd','wdawd','awda','0',NULL,NULL),('449389','','','','','1',NULL),('905592','awd','awda','ed','5','1','uploads/resource_905592_1750070348_1_bill.pdf'),('905592','awdw','awd','awd','3','2','uploads/resource_905592_1750070348_2_poster_appraisalsystem.pdf');
+INSERT INTO `resource_person` VALUES ('515988','awd','awd','awd','12',NULL,NULL),('527559','wdawd','wdawd','awda','0',NULL,NULL),('449389','awd','awd','awda','','uploads/resource_449389_1751026742_1_bill.pdf','1'),('905592','awd','awda','ed','5','uploads/resource_905592_1751230967_1_bill.pdf','1'),('905592','awdw','awd','awd','3','uploads/resource_905592_1751230967_2_bill.pdf','2');
 /*!40000 ALTER TABLE `resource_person` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -662,7 +695,7 @@ CREATE TABLE `self_imp` (
 
 LOCK TABLES `self_imp` WRITE;
 /*!40000 ALTER TABLE `self_imp` DISABLE KEYS */;
-INSERT INTO `self_imp` VALUES ('515988','awd','awd','awd','awd','awd','',NULL,NULL,NULL,NULL),('527559','awd','wdaw','dawd','awd','awdaw','',NULL,NULL,NULL,NULL),('449389','','','','','','','','','1',NULL),('905592','111','2','3','4','5','6','7','8','1','uploads/selfimp_905592_1750008908_1_bill.pdf');
+INSERT INTO `self_imp` VALUES ('515988','awd','awd','awd','awd','awd','',NULL,NULL,NULL,NULL),('527559','awd','wdaw','dawd','awd','awdaw','',NULL,NULL,NULL,NULL),('449389','awd','awd','awd','awd','awda','awd','da','awd','1','uploads/selfimp_449389_1751026742_1_bill.pdf'),('905592','111','2','3','4','5','6','7','8','1','uploads/selfimp_905592_1751230967_1_bill.pdf');
 /*!40000 ALTER TABLE `self_imp` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -692,7 +725,7 @@ CREATE TABLE `short_term_training` (
 
 LOCK TABLES `short_term_training` WRITE;
 /*!40000 ALTER TABLE `short_term_training` DISABLE KEYS */;
-INSERT INTO `short_term_training` VALUES (1,905592,'222','222','22','222','222','Online','uploads/training_905592_1749983139_0_bill.pdf'),(2,905592,'33','3','3','3','33','Online','uploads/training_905592_1749983139_1_poster_appraisalsystem.pdf');
+INSERT INTO `short_term_training` VALUES (1,449389,'dwad','awd','awd','awda','wdawd','Offline','uploads/training_449389_1751026742_0_Academic_Calendar_first_half_2025.pdf'),(1,905592,'222','222','22','222','222','Online','uploads/training_905592_1751230967_0_Academic_Calendar_first_half_2025.pdf'),(2,905592,'33','3','3','3','33','Online','uploads/training_905592_1751230967_1_bill.pdf');
 /*!40000 ALTER TABLE `short_term_training` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -718,7 +751,7 @@ CREATE TABLE `special_mentions` (
 
 LOCK TABLES `special_mentions` WRITE;
 /*!40000 ALTER TABLE `special_mentions` DISABLE KEYS */;
-INSERT INTO `special_mentions` VALUES ('1','905592','awd','awd','uploads/special_905592_1750090354_1_bill.pdf');
+INSERT INTO `special_mentions` VALUES ('1','449389','awd','awd','uploads/special_449389_1751026742_1_poster_appraisalsystem.pdf'),('1','905592','awd','awd','uploads/special_905592_1751230967_1_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `special_mentions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -748,7 +781,7 @@ CREATE TABLE `students_feedback` (
 
 LOCK TABLES `students_feedback` WRITE;
 /*!40000 ALTER TABLE `students_feedback` DISABLE KEYS */;
-INSERT INTO `students_feedback` VALUES (515988,'I','Physics',5,'2',NULL,NULL,1),(527559,'I','Chemistry',5,'4',NULL,NULL,1),(905592,'II','Mathematics-II',5,'4',NULL,NULL,1);
+INSERT INTO `students_feedback` VALUES (515988,'I','Physics',5,'2',NULL,NULL,1),(527559,'I','Chemistry',5,'4',NULL,NULL,1),(905592,'II','Mathematics-II',5,'4','uploads/feedback_905592_1_1751230725_bill.pdf',NULL,1),(449389,'II','Mathematics-II',5,'5','uploads/feedback_449389_1_1751055668_Academic_Calendar_first_half_2025.pdf',NULL,1),(449389,'IV','Network Lab',5,'3','uploads/feedback_449389_2_1751056116_poster_appraisalsystem.pdf',NULL,2);
 /*!40000 ALTER TABLE `students_feedback` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -760,12 +793,12 @@ DROP TABLE IF EXISTS `swayam`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `swayam` (
+  `srno` varchar(45) DEFAULT NULL,
+  `form_id` varchar(45) DEFAULT NULL,
   `name` varchar(495) DEFAULT NULL,
   `month` varchar(45) DEFAULT NULL,
   `duration` varchar(45) DEFAULT NULL,
   `completion` varchar(495) DEFAULT NULL,
-  `srno` varchar(45) DEFAULT NULL,
-  `form_id` varchar(45) DEFAULT NULL,
   `upload` varchar(415) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -776,7 +809,7 @@ CREATE TABLE `swayam` (
 
 LOCK TABLES `swayam` WRITE;
 /*!40000 ALTER TABLE `swayam` DISABLE KEYS */;
-INSERT INTO `swayam` VALUES ('awd','dawd','awd','Yes','1','515988',NULL),('awda','da','wda','Yes','1','527559',NULL),('','','','','1','449389',NULL),('dwww','wwww','333333','Yes','1','905592','uploads/swayam_905592_1750103888_1_poster_appraisalsystem.pdf'),('sas','as','ss','No','2','905592','uploads/swayam_905592_1750103888_2_bill.pdf');
+INSERT INTO `swayam` VALUES ('1','515988','awd','dawd','awd','Yes',NULL),('1','527559','awda','da','wda','Yes',NULL),('1','449389','awd','awd','awd','Yes','uploads/swayam_449389_1751029254_1_Academic_Calendar_first_half_2025.pdf'),('2','449389','awd','awd','awd','No','uploads/swayam_449389_1751029254_2_bill.pdf'),('1','905592','dwww','wwww','333333','Yes','uploads/swayam_905592_1751230967_1_bill.pdf'),('2','905592','sas','as','ss','No','uploads/swayam_905592_1751230967_2_poster_appraisalsystem.pdf');
 /*!40000 ALTER TABLE `swayam` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -805,7 +838,7 @@ CREATE TABLE `teaching_process` (
 
 LOCK TABLES `teaching_process` WRITE;
 /*!40000 ALTER TABLE `teaching_process` DISABLE KEYS */;
-INSERT INTO `teaching_process` VALUES (515988,'I','Mathematics-I',5,4,0,NULL,1),(515988,'I','Physics',5,3,0,NULL,2),(527559,'I','Chemistry',6,3,0,NULL,1),(905592,'I','Mathematics-I',12,9,4,NULL,1);
+INSERT INTO `teaching_process` VALUES (515988,'I','Mathematics-I',5,4,0,NULL,1),(515988,'I','Physics',5,3,0,NULL,2),(527559,'I','Chemistry',6,3,0,NULL,1),(905592,'I','Mathematics-I',12,9,4,NULL,1),(449389,'I','Physics Lab',9,3,4,NULL,1);
 /*!40000 ALTER TABLE `teaching_process` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -835,7 +868,7 @@ CREATE TABLE `total` (
 
 LOCK TABLES `total` WRITE;
 /*!40000 ALTER TABLE `total` DISABLE KEYS */;
-INSERT INTO `total` VALUES (123456,'2024/25','60','68','128','IT','Roshna Sangle',NULL),(449389,'2025/26','2',NULL,'99999','IT','Mayank Ashok Salvi',NULL),(515988,'2024/25','70','45','125','IT','Vishal Badgujar',NULL),(527559,'2024/25','54',NULL,'619','IT','dhanashree salvi',NULL),(654321,'2023/24','72','70','213','IT','omkar',NULL),(905592,'2024/25','59','70','99999','IT','Mayank Ashok Salvi','36');
+INSERT INTO `total` VALUES (123456,'2024/25','60','68','128','IT','Roshna Sangle',NULL),(449389,'2025/26','81','20','99999','IT','Mayank Ashok Salvi',NULL),(515988,'2024/25','70','45','125','IT','Vishal Badgujar',NULL),(527559,'2024/25','54',NULL,'619','IT','dhanashree salvi',NULL),(654321,'2023/24','72','70','213','IT','omkar',NULL),(905592,'2024/25','75','70','99999','IT','Mayank Ashok Salvi','36');
 /*!40000 ALTER TABLE `total` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -889,9 +922,9 @@ CREATE TABLE `webinar` (
   `date` varchar(495) DEFAULT NULL,
   `int_ext` varchar(495) DEFAULT NULL,
   `name_of_institute` varchar(495) DEFAULT NULL,
+  `upload` varchar(415) DEFAULT NULL,
   `srno` varchar(45) DEFAULT NULL,
-  `form_id` varchar(45) DEFAULT NULL,
-  `upload` varchar(415) DEFAULT NULL
+  `form_id` varchar(45) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -901,7 +934,7 @@ CREATE TABLE `webinar` (
 
 LOCK TABLES `webinar` WRITE;
 /*!40000 ALTER TABLE `webinar` DISABLE KEYS */;
-INSERT INTO `webinar` VALUES ('awd','awd','awdaw','','','awd','1','515988',NULL),('awd','awd','awda','wd','Internal','awd','1','527559',NULL),('','','','','','','1','449389',NULL),('awd','444444444444','44444444','awd','External','adw','1','905592','uploads/webinar_905592_1750104054_1_bill.pdf'),('dwa','dwa','dwa','sw','Internal','dwa','2','905592','uploads/webinar_905592_1750104054_2_poster_appraisalsystem.pdf');
+INSERT INTO `webinar` VALUES ('awd','awd','awdaw','','','awd',NULL,'1','515988'),('awd','awd','awda','wd','Internal','awd',NULL,'1','527559'),('awd','awda','wdaw','daw','Internal','awd','uploads/webinar_449389_1751026742_1_Academic_Calendar_first_half_2025.pdf','1','449389'),('awd','444444444444','44444444','awd','External','adw','uploads/webinar_905592_1751230967_1_Academic_Calendar_first_half_2025.pdf','1','905592'),('dwa','dwa','dwa','sw','Internal','dwa','uploads/webinar_905592_1751230967_2_bill.pdf','2','905592');
 /*!40000 ALTER TABLE `webinar` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -914,4 +947,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-17 10:20:10
+-- Dump completed on 2025-06-30  3:20:36
