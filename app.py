@@ -5855,6 +5855,12 @@ def profile():
         dob = request.form.get('dob')
         edu_q = request.form.get('edu_q')
         exp = request.form.get('exp')
+        new_userid = request.form.get('userid')
+        if not new_userid:
+            flash('User ID cannot be empty', 'danger')
+            cursor.close()
+            connection.close()
+            return redirect(url_for('profile'))
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         
@@ -5890,15 +5896,29 @@ def profile():
                 # Update the user's profile image in the database
                 cursor.execute("UPDATE users SET profile_image = %s WHERE userid = %s", (filepath, user_id))
         
-        # Update user information
-        update_query = f"UPDATE users SET name = %s, gmail = %s, dept = %s, designation = %s, d_o_j = %s, dob = %s, edu_q = %s, exp = %s{password_update} WHERE userid = %s"
+        # Validate uniqueness if user ID is changed
+        if str(new_userid) != str(user_id):
+            cursor.execute("SELECT userid FROM users WHERE userid = %s", (new_userid,))
+            existing_userid = cursor.fetchone()
+            if existing_userid:
+                flash('The new User ID is already taken. Please choose another one.', 'danger')
+                cursor.close()
+                connection.close()
+                return redirect(url_for('profile'))
+
+        # Update user information, including optional User ID change
+        update_query = f"UPDATE users SET userid = %s, name = %s, gmail = %s, dept = %s, designation = %s, d_o_j = %s, dob = %s, edu_q = %s, exp = %s{password_update} WHERE userid = %s"
         
-        update_values = [name, gmail, dept, designation, d_o_j, dob, edu_q, exp]
+        update_values = [new_userid, name, gmail, dept, designation, d_o_j, dob, edu_q, exp]
         if password_update:
             update_values.append(password)
         update_values.append(user_id)
         
         cursor.execute(update_query, update_values)
+        
+        # If User ID changed, update session
+        if str(new_userid) != str(user_id):
+            session['user_id'] = new_userid
         connection.commit()
         
         flash('Profile updated successfully', 'success')
