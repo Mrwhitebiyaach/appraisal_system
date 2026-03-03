@@ -269,11 +269,12 @@
             <thead>
                 <tr>
                     <th style="width: 5%;">Sr No.</th>
-                    <th style="width: 15%;">Semester</th>
-                    <th style="width: 25%;">Activity</th>
-                    <th style="width: 10%;">Points</th>
-                    <th style="width: 20%;">Order Copy</th>
-                    <th style="width: 20%;">Upload Document</th>
+                    <th style="width: 12%;">Semester</th>
+                    <th style="width: 22%;">Activity</th>
+                    <th style="width: 8%;">Points</th>
+                    <th style="width: 18%;">Order Copy</th>
+                    <th style="width: 12%; white-space: nowrap;">Order Number</th>
+                    <th style="width: 18%;">Upload Document</th>
                     <th style="width: 5%;">Action</th>
                 </tr>
             </thead>
@@ -292,6 +293,7 @@
                     <td><textarea class="form-control" required title="Enter Activity" rows="2">{{ row[1] }}</textarea></td>
                     <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateTeachingTotal(this)" required title="Enter Points"></td>
                     <td><textarea class="form-control" required title="Enter Order Copy" rows="2">{{ row[3] }}</textarea></td>
+                    <td><input type="text" class="form-control" value="{{ row[5] if row[5] else '' }}" title="Enter Order Number"></td>
                     <td>
                         {% if row[4] %}
                         <a href="{{ url_for('static', filename=row[4]) }}" target="_blank">View Upload</a>
@@ -325,15 +327,16 @@
                 4. The max file size one can upload is 1mb. Document uploads are optional.
             </p>
         </div>
-        <table class="table table-bordered">
+        <table class="table table-bordered" style="table-layout: fixed; width: 100%;">
             <thead>
                 <tr>
                     <th style="width: 5%;">Sr No.</th>
-                    <th style="width: 15%;">Semester</th>
-                    <th style="width: 25%;">Activity</th>
-                    <th style="width: 10%;">Points</th>
-                    <th style="width: 20%;">Order Copy</th>
-                    <th style="width: 20%;">Upload Document</th>
+                    <th style="width: 12%;">Semester</th>
+                    <th style="width: 22%;">Activity</th>
+                    <th style="width: 8%;">Points</th>
+                    <th style="width: 18%;">Order Copy</th>
+                    <th style="width: 12%; white-space: nowrap;">Order Number</th>
+                    <th style="width: 18%;">Upload Document</th>
                     <th style="width: 5%;">Action</th>
                 </tr>
             </thead>
@@ -352,6 +355,7 @@
                     <td><textarea class="form-control" required title="Enter Activity" rows="2">{{ row[1] }}</textarea></td>
                     <td><input type="number" class="form-control points" value="{{ row[2] }}" min="0" max="3" oninput="calculateFeedbackTotal(this)" required title="Enter Points"></td>
                     <td><textarea class="form-control" required title="Enter Order Copy" rows="2">{{ row[3] }}</textarea></td>
+                    <td><input type="text" class="form-control" value="{{ row[5] if row[5] else '' }}" title="Enter Order Number"></td>
                     <td>
                         {% if row[4] %}
                         <a href="{{ url_for('static', filename=row[4]) }}" target="_blank">View Upload</a>
@@ -452,6 +456,7 @@ function showError(message, isSuccess = false) {
         flashMessage.style.color = '#721c24';
         flashMessage.style.borderColor = '#f5c6cb';
         flashMessage.style.display = 'block';
+        flashMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
         setTimeout(() => {
             flashMessage.style.display = 'none';
@@ -495,6 +500,7 @@ function addTeachingRow() {
         <td><textarea class="form-control" required title="Enter Activity" rows="2"></textarea></td>
         <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateTeachingTotal(this)"></td>
         <td><textarea class="form-control" required title="Enter Order Copy" rows="2"></textarea></td>
+        <td><input type="text" class="form-control" title="Enter Order Number"></td>
         <td>
             <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
             <div class="upload-status"></div>
@@ -524,6 +530,7 @@ function addFeedbackRow() {
         <td><textarea class="form-control" required title="Enter Activity" rows="2"></textarea></td>
         <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" oninput="calculateFeedbackTotal(this)"></td>
         <td><textarea class="form-control" required title="Enter Order Copy" rows="2"></textarea></td>
+        <td><input type="text" class="form-control" title="Enter Order Number"></td>
         <td>
             <input type="file" class="form-control-file" onchange="validateFileSize(this, 1)" title="Upload Document (Optional)">
             <div class="upload-status"></div>
@@ -814,16 +821,8 @@ function saveFormData() {
         }
     });
     
-    // Check total points constraints
-    if (totalDeptPoints > 20) {
-        showError('Department activities total points cannot exceed 20');
-        isValid = false;
-    }
-    
-    if (totalInstitutePoints > 10) {
-        showError('Institute activities total points cannot exceed 10');
-        isValid = false;
-    }
+    // Check total points constraints - just cap them, don't block saving
+    // Totals are already capped in the display (20 for dept, 10 for institute)
     
     // Check total file size only if files are uploaded
     if (totalFileSize > 100 * 1024 * 1024) { // 100MB
@@ -846,6 +845,7 @@ function saveFormData() {
         const semester = row.querySelector('select').value;
         const activity = row.querySelector('textarea[title="Enter Activity"]').value;
         const points = row.querySelector('.points').value;
+        const orderNumber = row.querySelector('input[title="Enter Order Number"]') ? row.querySelector('input[title="Enter Order Number"]').value : '';
         const orderCopy = row.querySelector('textarea[title="Enter Order Copy"]').value;
         const fileInput = row.querySelector('input[type="file"]');
         const uploadedFile = row.querySelector('input[name="uploaded_file"]');
@@ -854,6 +854,7 @@ function saveFormData() {
         formData.append(`departmentActivities[${index}][semester]`, semester);
         formData.append(`departmentActivities[${index}][activity]`, activity);
         formData.append(`departmentActivities[${index}][points]`, points);
+        formData.append(`departmentActivities[${index}][orderNumber]`, orderNumber);
         formData.append(`departmentActivities[${index}][orderCopy]`, orderCopy);
         
         // Only append file data if a file is selected or there's an existing uploaded file
@@ -871,6 +872,7 @@ function saveFormData() {
         const semester = row.querySelector('select').value;
         const activity = row.querySelector('textarea[title="Enter Activity"]').value;
         const points = row.querySelector('.points').value;
+        const orderNumber = row.querySelector('input[title="Enter Order Number"]') ? row.querySelector('input[title="Enter Order Number"]').value : '';
         const orderCopy = row.querySelector('textarea[title="Enter Order Copy"]').value;
         const fileInput = row.querySelector('input[type="file"]');
         const uploadedFile = row.querySelector('input[name="uploaded_file"]');
@@ -879,6 +881,7 @@ function saveFormData() {
         formData.append(`instituteActivities[${index}][semester]`, semester);
         formData.append(`instituteActivities[${index}][activity]`, activity);
         formData.append(`instituteActivities[${index}][points]`, points);
+        formData.append(`instituteActivities[${index}][orderNumber]`, orderNumber);
         formData.append(`instituteActivities[${index}][orderCopy]`, orderCopy);
         
         // Only append file data if a file is selected or there's an existing uploaded file

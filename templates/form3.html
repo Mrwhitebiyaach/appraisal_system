@@ -1458,6 +1458,7 @@
                     <th>Activity</th>
                     <th>Points</th>
                     <th>Order Copy</th>
+                    <th style="white-space: nowrap;">Order Number</th>
                     <th>Details</th>
                     <th>Upload Document</th>
                     <th>Action</th>
@@ -1482,15 +1483,16 @@
                             </select>
                         </td>
                         <td><textarea class="form-control" title="Enter Activity" rows="2">{{ item.1 }}</textarea></td>
-                        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points" value="{{ item.2 }}"></td>
+                        <td><input type="number" class="form-control points" min="0" max="5" required title="Enter Points" value="{{ item.2 }}"></td>
                         <td><textarea class="form-control" title="Enter Order Copy" rows="2">{{ item.3 }}</textarea></td>
-                        <td><textarea class="form-control" title="Enter Details" rows="2">{{ item.4 }}</textarea></td>
+                        <td><input type="text" class="form-control" title="Enter Order Number" value="{{ item.4 }}"></td>
+                        <td><textarea class="form-control" title="Enter Details" rows="2">{{ item.5 }}</textarea></td>
                         <td>
     <div class="d-flex">
         <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
-        {% if item is defined and item.5 %}
-            <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.6 }}{% else %}{% endif %}">
+        {% if item is defined and item.6 %}
+            <a href="/uploads/{{ item.6.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
 </td>
@@ -1514,15 +1516,16 @@
                             </select>
                         </td>
                         <td><textarea class="form-control" title="Enter Activity" rows="2"></textarea></td>
-                        <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points"></td>
+                        <td><input type="number" class="form-control points" min="0" max="5" required title="Enter Points"></td>
                         <td><textarea class="form-control" title="Enter Order Copy" rows="2"></textarea></td>
+                        <td><input type="text" class="form-control" title="Enter Order Number"></td>
                         <td><textarea class="form-control" title="Enter Details" rows="2"></textarea></td>
                         <td>
     <div class="d-flex">
         <input type="file" name="moocs_{% if loop is defined %}{{ loop.index }}{% else %}1{% endif %}_file" class="form-control" accept=".pdf,.doc,.docx">
-        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.5 }}{% else %}{% endif %}">
-        {% if item is defined and item.5 %}
-            <a href="/uploads/{{ item.5.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
+        <input type="hidden" name="uploads" value="{% if item is defined %}{{ item.6 }}{% else %}{% endif %}">
+        {% if item is defined and item.6 %}
+            <a href="/uploads/{{ item.6.split('/')[-1] }}" target="_blank" class="btn btn-info ml-2">View</a>
         {% endif %}
     </div>
 </td>
@@ -2015,8 +2018,9 @@ function updateRowNumbers(tableId) {
                     </select>
                 </td>
                 <td><textarea class="form-control" title="Enter Activity" rows="2"></textarea></td>
-                <td><input type="number" class="form-control points" min="0" max="3" required title="Enter Points"></td>
+                <td><input type="number" class="form-control points" min="0" max="5" required title="Enter Points"></td>
                 <td><textarea class="form-control" title="Enter Order Copy" rows="2"></textarea></td>
+                <td><input type="text" class="form-control" title="Enter Order Number"></td>
                 <td><textarea class="form-control" title="Enter Details" rows="2"></textarea></td>
                 <td>
                     <div class="d-flex">
@@ -2223,7 +2227,7 @@ console.log('Self assessment marks:', selfAssessmentMarks);
                 });
 
                 // Only add row data if there's actual content
-                const hasContent = Object.values(rowData).some(value => value && value.trim());
+                const hasContent = Object.values(rowData).some(value => value && value.toString().trim());
                 if (hasContent || hasFile) {
                     // Add srno to rowData
                     rowData.srno = index + 1;
@@ -2262,7 +2266,7 @@ console.log('Self assessment marks:', selfAssessmentMarks);
                     }
                 });
                 
-                const hasContent = Object.values(rowData).some(value => value && value.trim());
+                const hasContent = Object.values(rowData).some(value => value && value.toString().trim());
                 if (hasContent || hasFile) {
                     rowData.srno = index + 1;
                     formData.append(`selfImprovement[${index}]`, JSON.stringify(rowData));
@@ -2595,6 +2599,9 @@ console.log('Self assessment marks:', selfAssessmentMarks);
                                 rowData['order_cpy'] = input.value;
                                 break;
                             case 4:
+                                rowData['order_no'] = input.value;
+                                break;
+                            case 5:
                                 rowData['details'] = input.value;
                                 break;
                             default:
@@ -2639,7 +2646,7 @@ console.log('Self assessment marks:', selfAssessmentMarks);
                         }
                     }
                 });
-                const hasContent = Object.values(rowData).some(v => v && v.trim());
+                const hasContent = Object.values(rowData).some(v => v && v.toString().trim());
                 if (hasContent || hasFile) {
                     formData.append(`certification[${index}]`, JSON.stringify(rowData));
                     console.log(`Added Certification entry ${index}:`, rowData);
@@ -2814,7 +2821,7 @@ console.log('Self assessment marks:', selfAssessmentMarks);
                 }
 
                 // Only add if there's any content
-                const hasContent = Object.values(rowData).some(value => value && value.trim());
+                const hasContent = Object.values(rowData).some(value => value && value.toString().trim());
                 if (hasContent || (fileInput && fileInput.files.length > 0)) {
                     formData.append(`patent[${index}]`, JSON.stringify(rowData));
                     console.log(`Added patent entry ${index}:`, rowData);
@@ -2848,7 +2855,7 @@ console.log('Self assessment marks:', selfAssessmentMarks);
                         }
                     });
 
-                    const hasContent = Object.values(rowData).some(value => value && value.trim());
+                    const hasContent = Object.values(rowData).some(value => value && value.toString().trim());
                     if (hasContent) {
                         rowData.srno = index + 1;
                         formData.append(`${formKey}[${index}]`, JSON.stringify(rowData));

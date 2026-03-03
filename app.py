@@ -1086,7 +1086,7 @@ def form2_page(form_id):
     try:
         # Query department_act table for department activities
         dept_sql = """
-            SELECT semester, activity, points, order_cpy, uploads 
+            SELECT semester, activity, points, order_cpy, uploads, order_no 
             FROM department_act 
             WHERE form_id = %s
         """
@@ -1095,7 +1095,7 @@ def form2_page(form_id):
 
         # Query institute_act table for institute activities
         inst_sql = """
-            SELECT semester, activity, points, order_cpy, uploads 
+            SELECT semester, activity, points, order_cpy, uploads, order_no 
             FROM institute_act 
             WHERE form_id = %s
         """
@@ -1169,10 +1169,12 @@ def save_form2_data():
         dept_points_total = 0
         
         # Process form data
-        for key, value in request.form.items():
+        for key in list(request.form.keys()):
+            values = request.form.getlist(key)
+            value = values[0] if values else ''
             if key.startswith('departmentActivities'):
                 parts = key.split('[')
-                if len(parts) >= 2:
+                if len(parts) >= 3:
                     index_str = parts[1].split(']')[0]
                     try:
                         index = int(index_str)
@@ -1187,9 +1189,8 @@ def save_form2_data():
                     except Exception as e:
                         print(f"Error parsing key {key}: {e}")
         
-        # Validate department points
-        if dept_points_total > 20:
-            raise ValueError("Department activities total points cannot exceed 20")
+        # Department points are capped at 20 in the frontend display
+        # No need to reject - just allow saving all rows
             
         # Insert department activities
         for i, activity in enumerate(department_activities):
@@ -1200,6 +1201,7 @@ def save_form2_data():
             semester = activity.get('semester', '')
             act_name = activity.get('activity', '')
             points = activity.get('points', 0)
+            order_number = activity.get('orderNumber', '')
             order_copy = activity.get('orderCopy', '')
             upload_path = None
             
@@ -1233,18 +1235,20 @@ def save_form2_data():
             # Always insert with direct insertion since we've already deleted all rows
             # And we've already handled preserving the uploads if needed
             cursor.execute("""
-                INSERT INTO department_act (form_id, srno, semester, activity, points, order_cpy, uploads)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (form_id, i+1, semester, act_name, points, order_copy, upload_path))
+                INSERT INTO department_act (form_id, srno, semester, activity, points, order_cpy, uploads, order_no)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (form_id, i+1, semester, act_name, points, order_copy, upload_path, order_number))
         
         # Process institute activities (similar logic)
         institute_activities = []
         institute_points_total = 0
         
-        for key, value in request.form.items():
+        for key in list(request.form.keys()):
+            values = request.form.getlist(key)
+            value = values[0] if values else ''
             if key.startswith('instituteActivities'):
                 parts = key.split('[')
-                if len(parts) >= 2:
+                if len(parts) >= 3:
                     index_str = parts[1].split(']')[0]
                     try:
                         index = int(index_str)
@@ -1259,9 +1263,8 @@ def save_form2_data():
                     except Exception as e:
                         print(f"Error parsing key {key}: {e}")
         
-        # Validate institute points
-        if institute_points_total > 10:
-            raise ValueError("Institute activities total points cannot exceed 10")
+        # Institute points are capped at 10 in the frontend display
+        # No need to reject - just allow saving all rows
             
         # Insert institute activities
         for i, activity in enumerate(institute_activities):
@@ -1272,6 +1275,7 @@ def save_form2_data():
             semester = activity.get('semester', '')
             act_name = activity.get('activity', '')
             points = activity.get('points', 0)
+            order_number = activity.get('orderNumber', '')
             order_copy = activity.get('orderCopy', '')
             upload_path = None
             
@@ -1304,9 +1308,9 @@ def save_form2_data():
             # Always insert with direct insertion since we've already deleted all rows
             # And we've already handled preserving the uploads if needed
             cursor.execute("""
-                INSERT INTO institute_act (form_id, srno, semester, activity, points, order_cpy, uploads)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (form_id, i+1, semester, act_name, points, order_copy, upload_path))
+                INSERT INTO institute_act (form_id, srno, semester, activity, points, order_cpy, uploads, order_no)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (form_id, i+1, semester, act_name, points, order_copy, upload_path, order_number))
         
         # Commit changes
         conn.commit()
@@ -1592,7 +1596,7 @@ def review(form_id):
                 project_data = process_rows(cursor.fetchall())
                 
                 # Query for contribution to society data
-                cursor.execute("SELECT semester, activity, points, order_cpy, details, COALESCE(uploads, '') as uploads FROM contribution_to_society WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+                cursor.execute("SELECT semester, activity, points, order_cpy, order_no, details, COALESCE(uploads, '') as uploads FROM contribution_to_society WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
                 contribution_data = process_rows(cursor.fetchall())
                 
                 # Fetch self-assessment marks if available
@@ -6359,7 +6363,7 @@ def form3_page(form_id):
         print(f"External projects data: {len(project_data)} records found")
         
         # Query for contribution to society data
-        cursor.execute("SELECT semester, activity, points, order_cpy, details, COALESCE(uploads, '') as uploads FROM contribution_to_society WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
+        cursor.execute("SELECT semester, activity, points, order_cpy, order_no, details, COALESCE(uploads, '') as uploads FROM contribution_to_society WHERE form_id = %s ORDER BY srno ASC", (form_id_str,))
         contribution_data = process_rows(cursor.fetchall())
         print(f"Contribution to society data: {len(contribution_data)} records found")
         
@@ -7395,8 +7399,8 @@ def save_form3_data():
                 if not upload_path:
                     upload_path = old_contrib_uploads.get(srno, None)
                 cursor.execute("""
-                    INSERT INTO contribution_to_society (srno, form_id, semester, activity, points, order_cpy, details, uploads)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO contribution_to_society (srno, form_id, semester, activity, points, order_cpy, order_no, details, uploads)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
                     idx,
                     form_id,
@@ -7404,6 +7408,7 @@ def save_form3_data():
                     item.get('activity', ''),
                     item.get('points', ''),
                     item.get('order_cpy', ''),
+                    item.get('order_no', ''),
                     item.get('details', ''),
                     upload_path
                 ))
