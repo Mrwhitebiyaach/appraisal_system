@@ -7,6 +7,9 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
         body {
             background: url('/static/bg.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -65,6 +68,16 @@
             margin-top: 10px;
             font-style: italic;
         }
+        .section-hint {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+        }
+        .section-hint small {
+            color: #6d4c41;
+        }
         .footer {
             width: 100%;
             background: rgba(0, 0, 0, 0.7);
@@ -100,7 +113,7 @@
     <!-- Graph and Controls -->
     <div class="graph-container">
         <!-- Dropdown and Refresh Button -->
-        <div class="d-flex align-items-center mb-3">
+        <div class="d-flex align-items-center mb-3 mt-4">
             <select id="academicYear" class="form-control mr-2" style="width: 200px;"></select>
             <button id="refreshButton" class="btn btn-primary">Refresh</button>
         </div>
@@ -111,11 +124,15 @@
             <div id="noDataMessage" style="display:none; color: red;">No data available for the selected year.</div>
             <canvas id="myBarChart"></canvas>
             <div class="chart-help">Click on any bar to view detailed assessment form for that faculty member</div>
+            <div class="section-hint">
+                <a href="#section-filter" class="btn btn-sm btn-outline-primary">View Section-wise Scores Below</a>
+                <div><small>Tip: Scroll down for section-wise ranking and score breakdown.</small></div>
+            </div>
         </div>
     </div>
 
     <!-- Section-wise Scores Filter for HOD -->
-    <div class="graph-container" style="margin-top: 30px;">
+    <div class="graph-container" id="section-filter" style="margin-top: 30px;">
         <div class="graph-box">
             <h4 class="graph-title">Filter Scores by Section</h4>
             <div class="d-flex align-items-center mb-3">

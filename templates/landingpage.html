@@ -10,6 +10,9 @@
             background: url('/static/bg.jpg') no-repeat center center fixed;
             background-size: cover;
             margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         .top-bar {
             position: absolute;
@@ -68,14 +71,15 @@
             width: 90px;
             height: auto;
         }
-        .welcome-container {
-    min-height: calc(100vh - 120px); /* adjust 120px based on your top-bar and footer height */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-top: 80px; /* optional: to push content below top bar */
-    padding-bottom: 40px; /* optional: to give space above footer */
-}
+                .welcome-container {
+                    flex: 1;
+                    min-height: calc(100vh - 120px); /* adjust 120px based on your top-bar and footer height */
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding-top: 80px; /* optional: to push content below top bar */
+                    padding-bottom: 40px; /* optional: to give space above footer */
+                }
 
         .content-box {
             background-color: rgba(255, 255, 255, 0.9);
@@ -122,6 +126,7 @@
             color: white;
             text-align: center;
             padding: 20px 0;
+                margin-top: auto;
         }
 
         .footer a {

@@ -187,7 +187,7 @@
         <form id="academicForm" method="POST" action="/search_pastforms" onsubmit="return validateForm()">
             <div class="form-group">
                 <label for="academicYear">Academic Year:</label>
-                <select class="form-control" id="academicYear" name="academicYear"></select>
+                <select class="form-control" id="academicYear" name="academicYear" data-selected-year="{{ selected_year or '' }}"></select>
             </div>
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
@@ -1669,6 +1669,10 @@ function printDiv(divId) {
     const month = today.getMonth(); // 0 = January, 11 = December
     const day = today.getDate();   // 1-31
     const dropdown = document.getElementById('academicYear');
+    const selectedYear = dropdown.getAttribute('data-selected-year') || '';
+
+    // Clear existing options before repopulating
+    dropdown.innerHTML = '';
 
     // Determine the start year of the academic year
     // Switch to upcoming academic year if date is after 10 June
@@ -1681,16 +1685,29 @@ function printDiv(divId) {
         const option = document.createElement('option');
         option.value = `${startYear}/${endYear.toString().slice(-2)}`;
         option.text = `${startYear}/${endYear.toString().slice(-2)}`;
+        if (selectedYear && option.value === selectedYear) {
+            option.selected = true;
+        }
         dropdown.appendChild(option);
     }
-    
-    
-    
-    
+
+    // Keep selected year even if it is outside generated range
+    if (selectedYear && !dropdown.querySelector(`option[value="${selectedYear}"]`)) {
+        const fallback = document.createElement('option');
+        fallback.value = selectedYear;
+        fallback.text = selectedYear;
+        fallback.selected = true;
+        dropdown.appendChild(fallback);
+    }
+
+    // First load default to latest only when no selected year exists
+    if (!dropdown.value && dropdown.options.length > 0) {
+        dropdown.options[0].selected = true;
+    }
 }
 
 // Call the function to populate the dropdown when the page loads
-window.onload = generateAcademicYears;
+document.addEventListener('DOMContentLoaded', generateAcademicYears);
 
 
         function validateForm() {
