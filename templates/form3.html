@@ -3107,6 +3107,42 @@ function goToNext() {
 // Document load event listener to initialize the form
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM loaded, initializing form");
+
+    function sectionHasExistingData(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return false;
+
+        // If any existing uploaded document link is present, data exists.
+        if (container.querySelector('a.btn.btn-info')) return true;
+
+        // Check textual/select/numeric values.
+        const fields = container.querySelectorAll('input, textarea, select');
+        for (const field of fields) {
+            const tag = field.tagName.toLowerCase();
+            const type = (field.type || '').toLowerCase();
+
+            if (type === 'hidden' && field.name === 'uploads' && field.value && field.value.trim()) {
+                return true;
+            }
+
+            if (type === 'file') {
+                continue;
+            }
+
+            if (tag === 'select') {
+                if (field.value && field.value.trim()) {
+                    return true;
+                }
+                continue;
+            }
+
+            if (field.value && field.value.trim()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
     
     // Initialize the table visibility based on checkboxes
     toggleUploadDownload('selfImprovementInitiatives');
@@ -3139,20 +3175,30 @@ document.addEventListener('DOMContentLoaded', function() {
         projectDataCount
     });
     
+    const hasSelfImprovementData =
+        (parseInt(selfImprovementDataCount, 10) || 0) > 0 ||
+        (parseInt(certificationDataCount, 10) || 0) > 0 ||
+        (parseInt(copyrightDataCount, 10) || 0) > 0 ||
+        (parseInt(moocsDataCount, 10) || 0) > 0 ||
+        (parseInt(swayamDataCount, 10) || 0) > 0 ||
+        (parseInt(webinarDataCount, 10) || 0) > 0 ||
+        sectionHasExistingData('selfImprovementTableContainer');
+
     // Show self-improvement section if it has data
-    if (parseInt(selfImprovementDataCount) > 0 || 
-        parseInt(certificationDataCount) > 0 || 
-        parseInt(copyrightDataCount) > 0 ||
-        parseInt(moocsDataCount) > 0 ||
-        parseInt(swayamDataCount) > 0 ||
-        parseInt(webinarDataCount) > 0) {
+    if (hasSelfImprovementData) {
         console.log("Found self-improvement data, showing section");
         document.getElementById('selfImprovementInitiatives').checked = true;
         toggleUploadDownload('selfImprovementInitiatives');
     }
     
+    const hasRepresentingData =
+        (parseInt(resourceDataCount, 10) || 0) > 0 ||
+        (parseInt(committeeDataCount, 10) || 0) > 0 ||
+        (parseInt(projectDataCount, 10) || 0) > 0 ||
+        sectionHasExistingData('representingCollegeTableContainer');
+
     // Show representing college section if it has data
-    if (parseInt(resourceDataCount) > 0 || parseInt(committeeDataCount) > 0 || parseInt(projectDataCount) > 0) {
+    if (hasRepresentingData) {
         console.log("Found representing college data, showing section");
         document.getElementById('representingCollege').checked = true;
         toggleUploadDownload('representingCollege');
