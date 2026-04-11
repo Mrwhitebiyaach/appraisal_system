@@ -277,6 +277,10 @@
         .footer a:hover {
             text-decoration: underline;
         }
+    
+        .table-box h4 { margin-bottom: 0; font-size: 20px; color: #00796b; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .table-box h4 i.fa-chevron-down { transition: transform 0.3s ease; }
+        .table-box h4.collapsed i.fa-chevron-down { transform: rotate(-90deg); }
     </style>
 </head>
 
@@ -316,7 +320,10 @@
     <!-- Container for Self-Improvement Initiatives -->
     <div id="selfImprovementTableContainer" style="display: none;">
     <div class="table-box">
-        <h4>Papers Published in National/International Conference</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_selfImprovementTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Papers Published in National/International Conference <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_selfImprovementTable">
         <table class="table table-bordered" id="selfImprovementTable">
             <thead>
                 <tr>
@@ -384,10 +391,14 @@
         </table>
         <button class="btn btn-success" onclick="addSelfImprovementRow()">+</button>
     </div>
+</div>
 
     <div class="table-box">
         <!-- Copyright table -->
-        <h4>Copyright Published</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_CopyrightTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Copyright Published <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_CopyrightTable">
         <table class="table table-bordered" id="CopyrightTable">
             <thead>
                 <tr>
@@ -513,11 +524,15 @@
         }
         </script>
     </div>
+</div>
     
 
     <div class="table-box">
         <!-- Patent table -->
-        <h4>Patent Published</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_patentTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Patent Published <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_patentTable">
         <table class="table table-bordered" id="patentTable">
             <thead>
                 <tr>
@@ -659,10 +674,14 @@
         }
         </script>
     </div>
+</div>
 
     <div class="table-box">
         <!-- Short-term Training Programs/FDPs -->
-        <h4>Short-term Training Programs/FDPs</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_trainingTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Short-term Training Programs/FDPs <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_trainingTable">
         <table class="table table-bordered" id="trainingTable">
             <thead>
                 <tr>
@@ -734,10 +753,14 @@
         </table>
         <button class="btn btn-success" onclick="addTrainingRow()">+</button>
     </div>
+</div>
 
     <div class="table-box">
         <!-- Table for MOOCS -->
-        <h4>MOOCS</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_moocsTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">MOOCS <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_moocsTable">
         <table class="table table-bordered" id="moocsTable">
             <thead>
                 <tr>
@@ -806,10 +829,14 @@
         </table>
         <button class="btn btn-success" onclick="addMoocsRow()">+</button>
     </div>
+</div>
 
     <div class="table-box">
         <!-- Table for SWAYAM NPTEL -->
-        <h4>SWAYAM NPTEL</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_swayamTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">SWAYAM NPTEL <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_swayamTable">
         <table class="table table-bordered" id="swayamTable">
             <thead>
                 <tr>
@@ -878,10 +905,14 @@
         </table>
         <button class="btn btn-success" onclick="addSwayamRow()">+</button>
     </div>
+</div>
 
     <div class="table-box">
         <!-- Table for Seminars/Webinars -->
-        <h4>Seminars/Webinars</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_seminarTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Seminars/Webinars <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_seminarTable">
         <table class="table table-bordered" id="seminarTable">
             <thead>
                 <tr>
@@ -953,10 +984,14 @@
         </table>
         <button class="btn btn-success" onclick="addSeminarRow()">+</button>
     </div>
+</div>
 
     <div class="table-box">
         <!-- Certification table -->
-        <h4>Global Certification</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_certificationTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Global Certification <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_certificationTable">
         <table class="table table-bordered" id="certificationTable">
             <thead>
                 <tr>
@@ -1004,12 +1039,18 @@
         </table>
         <button class="btn btn-success" onclick="addCertificationRow()">+</button>
     </div>
+</div>
+
+</div>
 
     <!-- Container for Representing College in External Environment -->
     <div id="representingCollegeTableContainer" style="display: none;">
     <div class="table-box">
         <!-- Table for Resource person in STTP/Training course/ Lecture Talks -->
-        <h4>Resource person in STTP/Training course/ Lecture Talks</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_resourcePersonTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Resource person in STTP/Training course/ Lecture Talks <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_resourcePersonTable">
         <table class="table table-bordered" id="resourcePersonTable">
             <thead>
                 <tr>
@@ -1063,10 +1104,14 @@
         </table>
         <button class="btn btn-success" onclick="addResourcePersonRow()">+</button>
     </div>
+</div>
 
     <div class="table-box">
         <!-- Table for Member of University Committee -->
-        <h4>Member of University Committee</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_universityCommitteeTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Member of University Committee <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_universityCommitteeTable">
         <table class="table table-bordered" id="universityCommitteeTable">
             <thead>
                 <tr>
@@ -1115,10 +1160,14 @@
         </table>
         <button class="btn btn-success" onclick="addUniversityCommitteeRow()">+</button>
     </div>
+</div>
 
     <div class="table-box">
         <!-- Table for External Projects -->
-        <h4>External Projects / Task force / Exchange Programs</h4>
+        <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_externalProjectsTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">External Projects / Task force / Exchange Programs <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_externalProjectsTable">
         <table class="table table-bordered" id="externalProjectsTable">
             <thead>
                 <tr>
@@ -1176,10 +1225,14 @@
         </table>
         <button class="btn btn-success" onclick="addExternalProjectsRow()">+</button>
     </div>
+</div>
     </div>
   <!-- Special Mentions Table -->
   <div class="table-box">
-    <h4>Special Mentions</h4>
+    <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_specialMentionsTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Special Mentions <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_specialMentionsTable">
     <table class="table table-bordered" id="specialMentionsTable">
         <thead>
             <tr>
@@ -1222,10 +1275,14 @@
     </table>
     <button class="btn btn-success" onclick="addSpecialMentionRow()">+</button>
 </div>
+</div>
 
 <!-- Member of Conference/Journal Committee Table -->
 <div class="table-box">
-    <h4>Member of Conference/Journal Committee</h4>
+    <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_conferenceCommitteeTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;">Member of Conference/Journal Committee <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_conferenceCommitteeTable">
     <table class="table table-bordered" id="conferenceCommitteeTable">
         <thead>
             <tr>
@@ -1268,10 +1325,14 @@
     </table>
     <button class="btn btn-success" onclick="addConferenceCommitteeRow()">+</button>
 </div>
+</div>
 
  <!-- Custom Table Section -->
  <div class="table-box">
-    <h4><i class="fas fa-cogs"></i>Custom Table</h4>
+    <div class="d-flex justify-content-between align-items-center mb-3" data-toggle="collapse" data-target="#col_customTable" style="cursor: pointer;">
+    <h4 class="mb-0 collapsed" style="color: #00796b; width: 100%; text-align: left;"><i class="fas fa-cogs"></i>Custom Table <i class="fas fa-chevron-down float-right mt-1 text-secondary"></i></h4>
+</div>
+<div class="collapse" id="col_customTable">
     
     <div class="table-controls mb-4">
         <div class="row g-3 align-items-center">
@@ -1400,6 +1461,7 @@
         </table>
     </div>
 </div>
+</div>
 
 
 
@@ -1434,7 +1496,6 @@
 
     
 
-</div>
 </div>
       <!-- Contribution to Society Form -->
 <div class="table-container teaching-process-container">
@@ -3145,6 +3206,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .column-header .column-edit.editing {
             color: #28a745;
         }
+    
+        .table-box h4 { margin-bottom: 0; font-size: 20px; color: #00796b; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .table-box h4 i.fa-chevron-down { transition: transform 0.3s ease; }
+        .table-box h4.collapsed i.fa-chevron-down { transform: rotate(-90deg); }
     </style>
     <div class="text-center my-4">
         <a href="/form2/{{ form_id }}" class="btn btn-secondary">Back to Department activities and institute activities</a>
