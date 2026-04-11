@@ -3143,6 +3143,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return false;
     }
+
+    function openCollapseIfHasData(collapseId) {
+        const collapseEl = document.getElementById(collapseId);
+        if (!collapseEl) return;
+        if (!sectionHasExistingData(collapseId)) return;
+
+        // Keep Bootstrap collapse state and chevron state in sync.
+        collapseEl.classList.add('show');
+
+        const header = document.querySelector(`[data-target="#${collapseId}"] h4`);
+        if (header) {
+            header.classList.remove('collapsed');
+        }
+
+        if (window.jQuery && typeof window.jQuery.fn.collapse === 'function') {
+            window.jQuery(collapseEl).collapse('show');
+        }
+    }
     
     // Initialize the table visibility based on checkboxes
     toggleUploadDownload('selfImprovementInitiatives');
@@ -3203,6 +3221,21 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('representingCollege').checked = true;
         toggleUploadDownload('representingCollege');
     }
+
+    // Auto-open inner panels that already contain saved data.
+    [
+        'col_selfImprovementTable',
+        'col_CopyrightTable',
+        'col_patentTable',
+        'col_trainingTable',
+        'col_moocsTable',
+        'col_swayamTable',
+        'col_seminarTable',
+        'col_certificationTable',
+        'col_resourcePersonTable',
+        'col_universityCommitteeTable',
+        'col_externalProjectsTable'
+    ].forEach(openCollapseIfHasData);
 });
 
         // Enable double-click editing on header text
