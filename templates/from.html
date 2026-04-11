@@ -957,7 +957,8 @@ function calculateFeedbackTotal() {
  
 
     
-function saveFormData() {
+function saveFormData(options = {}) {
+    const silent = options && options.silent === true;
     try {
         let teachingData = [];
         let feedbackData = [];
@@ -1054,7 +1055,7 @@ function saveFormData() {
 
         // --- Handle Save Success Popup ---
         // Attach a handler to show alert after fetch if not already present
-        if (window.saveAcademicFormHandlerAttached !== true) {
+        if (!silent && window.saveAcademicFormHandlerAttached !== true) {
             const saveBtn = document.getElementById('saveButton');
             if (saveBtn) {
                 saveBtn.addEventListener('click', function(event) {
@@ -1067,7 +1068,9 @@ function saveFormData() {
                         .then(response => response.json())
                         .then(data => {
                             if (data.status === 'success') {
-                                alert('Form data saved successfully!');
+                                if (!silent) {
+                                    alert('Form data saved successfully!');
+                                }
                             }
                         });
                     }, 100);
@@ -1079,13 +1082,15 @@ function saveFormData() {
 
         // Show loading message
         const flashMessage = document.getElementById('flashMessage');
-        flashMessage.textContent = 'Saving data...';
-        flashMessage.style.display = 'block';
-        flashMessage.style.backgroundColor = '#d4edda';
-        flashMessage.style.color = '#155724';
+        if (!silent) {
+            flashMessage.textContent = 'Saving data...';
+            flashMessage.style.display = 'block';
+            flashMessage.style.backgroundColor = '#d4edda';
+            flashMessage.style.color = '#155724';
+        }
 
         // Send data to server
-        $.ajax({
+        return $.ajax({
             url: '/save-form-data',
             method: 'POST',
             processData: false,
@@ -1094,7 +1099,9 @@ function saveFormData() {
             success: function(response) {
                 if (response.status === 'success') {
                         console.log('Test save success:', response);
-                        alert('Form data saved successfully!');
+                        if (!silent) {
+                            alert('Form data saved successfully!');
+                        }
                     // Update row IDs with the ones returned from the server
                     response.teaching_ids.forEach((id, index) => {
                         const row = document.querySelectorAll('#classTable tr')[index];
@@ -1122,32 +1129,39 @@ function saveFormData() {
                     }
 
                     // Show success message
-                    flashMessage.textContent = 'Form data saved successfully!';
-                    flashMessage.style.backgroundColor = '#d4edda';
-                    flashMessage.style.color = '#155724';
-                    
-                    setTimeout(() => {
-                        flashMessage.style.display = 'none';
-                    }, 3000);
+                    if (!silent) {
+                        flashMessage.textContent = 'Form data saved successfully!';
+                        flashMessage.style.backgroundColor = '#d4edda';
+                        flashMessage.style.color = '#155724';
+                        
+                        setTimeout(() => {
+                            flashMessage.style.display = 'none';
+                        }, 3000);
+                    }
                 } else {
                     throw new Error(response.message || 'Failed to save data');
                 }
             },
             error: function(xhr, status, error) {
-                flashMessage.textContent = 'Error saving form data: ' + (xhr.responseText || error);
-                flashMessage.style.backgroundColor = '#f8d7da';
-                flashMessage.style.color = '#721c24';
-                
-                setTimeout(() => {
-                    flashMessage.style.display = 'none';
-                }, 5000);
+                if (!silent) {
+                    flashMessage.textContent = 'Error saving form data: ' + (xhr.responseText || error);
+                    flashMessage.style.backgroundColor = '#f8d7da';
+                    flashMessage.style.color = '#721c24';
+                    
+                    setTimeout(() => {
+                        flashMessage.style.display = 'none';
+                    }, 5000);
+                }
                 
                 console.error('Error saving form data:', xhr.responseText || error);
             }
         });
     } catch (error) {
         console.error('Error in saveFormData:', error);
-        alert('Error preparing form data: ' + error.message);
+        if (!silent) {
+            alert('Error preparing form data: ' + error.message);
+        }
+        return Promise.reject(error);
     }
 }
 
@@ -1393,6 +1407,55 @@ function addAcademicReviewRow() {
     tbody.appendChild(newRow);
     calculateAcademicReview();
 }
+
+// Background autosave (debounced) to reduce accidental data loss.
+let form1AutoSaveTimer = null;
+let form1AutoSaveDirty = false;
+let form1AutoSaveInFlight = false;
+const FORM1_AUTOSAVE_DELAY_MS = 4000;
+
+function scheduleForm1AutoSave() {
+    if (form1AutoSaveTimer) {
+        clearTimeout(form1AutoSaveTimer);
+    }
+    form1AutoSaveTimer = setTimeout(runForm1AutoSave, FORM1_AUTOSAVE_DELAY_MS);
+}
+
+function runForm1AutoSave() {
+    if (!form1AutoSaveDirty || form1AutoSaveInFlight) {
+        return;
+    }
+
+    form1AutoSaveDirty = false;
+    form1AutoSaveInFlight = true;
+
+    Promise.resolve(saveFormData({ silent: true }))
+        .catch(() => {
+            // Autosave stays silent by design.
+        })
+        .finally(() => {
+            form1AutoSaveInFlight = false;
+            if (form1AutoSaveDirty) {
+                scheduleForm1AutoSave();
+            }
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('input', function (e) {
+        if (e.target && e.target.closest('input, textarea, select')) {
+            form1AutoSaveDirty = true;
+            scheduleForm1AutoSave();
+        }
+    }, true);
+
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.closest('input, textarea, select')) {
+            form1AutoSaveDirty = true;
+            scheduleForm1AutoSave();
+        }
+    }, true);
+});
 </script>
 
 <br>

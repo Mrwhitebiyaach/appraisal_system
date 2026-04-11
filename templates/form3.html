@@ -2221,7 +2221,8 @@ function calculateTeachingTotal() {
         }
 
        // Fixed JavaScript section for file processing
-function saveFormData() {
+function saveFormData(options = {}) {
+    const silent = options && options.silent === true;
     debugFormData();
     try {
         const formData = new FormData();
@@ -2230,7 +2231,9 @@ function saveFormData() {
         const formId = document.getElementById('formId').value;
         if (!formId) {
             console.error('Form ID is missing');
-            alert('Error: Form ID is missing');
+            if (!silent) {
+                alert('Error: Form ID is missing');
+            }
             return;
         }
         formData.append('formId', formId);
@@ -2243,15 +2246,21 @@ const selfAssessmentInput = document.getElementById('selfAssessmentMarks');
 let selfAssessmentMarks = parseFloat(selfAssessmentInput.value);
 
 if (isNaN(selfAssessmentMarks) || selfAssessmentMarks < 0 || selfAssessmentMarks > 10) {
-    alert("Self-Assessment Marks must be a number between 0 and 10.");
+    if (!silent) {
+        alert("Self-Assessment Marks must be a number between 0 and 10.");
+    }
     selfAssessmentInput.classList.add('is-invalid');
     document.getElementById('selfAssessmentWarning').style.display = 'block';
-    selfAssessmentInput.focus();
-    return; // Block form submission
+    if (!silent) {
+        selfAssessmentInput.focus();
+        return; // Block manual form submission
+    }
+} else {
+    selfAssessmentInput.classList.remove('is-invalid');
+    document.getElementById('selfAssessmentWarning').style.display = 'none';
+    formData.append('selfAssessmentMarks', selfAssessmentMarks);
+    console.log('Self assessment marks:', selfAssessmentMarks);
 }
-
-formData.append('selfAssessmentMarks', selfAssessmentMarks);
-console.log('Self assessment marks:', selfAssessmentMarks);
        
 
         // Process training table specifically (since it has file uploads)
@@ -2938,10 +2947,12 @@ console.log('Self assessment marks:', selfAssessmentMarks);
 
         // Send the form data to the server
         console.log("\nSending form data to server...");
-        document.getElementById("saveButton").disabled = true;
-        document.getElementById("saveButton").textContent = "Saving...";
+        if (!silent) {
+            document.getElementById("saveButton").disabled = true;
+            document.getElementById("saveButton").textContent = "Saving...";
+        }
         
-        fetch('/save-form3-data', {
+        return fetch('/save-form3-data', {
             method: 'POST',
             body: formData,
         })
@@ -2950,27 +2961,40 @@ console.log('Self assessment marks:', selfAssessmentMarks);
             return response.json();
         })
         .then(data => {
-            document.getElementById("saveButton").disabled = false;
-            document.getElementById("saveButton").textContent = "Save";
+            if (!silent) {
+                document.getElementById("saveButton").disabled = false;
+                document.getElementById("saveButton").textContent = "Save";
+            }
             
             if (data.status === 'success') {
-                alert('Form data saved successfully');
+                if (!silent) {
+                    alert('Form data saved successfully');
+                }
                 console.log("Save successful:", data);
             } else {
-                alert('Error: ' + data.message);
+                if (!silent) {
+                    alert('Error: ' + data.message);
+                }
                 console.error("Save error:", data);
             }
         })
         .catch(error => {
-            document.getElementById("saveButton").disabled = false;
-            document.getElementById("saveButton").textContent = "Save";
+            if (!silent) {
+                document.getElementById("saveButton").disabled = false;
+                document.getElementById("saveButton").textContent = "Save";
+            }
             
             console.error('Error:', error);
-            alert('Error saving form data: ' + error);
+            if (!silent) {
+                alert('Error saving form data: ' + error);
+            }
         });
     } catch (error) {
         console.error('Error in saveFormData:', error);
-        alert('Error preparing form data: ' + error.message);
+        if (!silent) {
+            alert('Error preparing form data: ' + error.message);
+        }
+        return Promise.reject(error);
     }
 }
 
@@ -3234,8 +3258,60 @@ document.addEventListener('DOMContentLoaded', function() {
         'col_certificationTable',
         'col_resourcePersonTable',
         'col_universityCommitteeTable',
-        'col_externalProjectsTable'
+        'col_externalProjectsTable',
+        'col_specialMentionsTable',
+        'col_conferenceCommitteeTable',
+        'col_customTable'
     ].forEach(openCollapseIfHasData);
+});
+
+// Background autosave (debounced) to prevent accidental data loss.
+let form3AutoSaveTimer = null;
+let form3AutoSaveDirty = false;
+let form3AutoSaveInFlight = false;
+const FORM3_AUTOSAVE_DELAY_MS = 4000;
+
+function scheduleForm3AutoSave() {
+    if (form3AutoSaveTimer) {
+        clearTimeout(form3AutoSaveTimer);
+    }
+    form3AutoSaveTimer = setTimeout(runForm3AutoSave, FORM3_AUTOSAVE_DELAY_MS);
+}
+
+function runForm3AutoSave() {
+    if (!form3AutoSaveDirty || form3AutoSaveInFlight) {
+        return;
+    }
+
+    form3AutoSaveDirty = false;
+    form3AutoSaveInFlight = true;
+
+    Promise.resolve(saveFormData({ silent: true }))
+        .catch(() => {
+            // Keep autosave silent to avoid interrupting the user.
+        })
+        .finally(() => {
+            form3AutoSaveInFlight = false;
+            if (form3AutoSaveDirty) {
+                scheduleForm3AutoSave();
+            }
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('input', function (e) {
+        if (e.target && e.target.closest('input, textarea, select')) {
+            form3AutoSaveDirty = true;
+            scheduleForm3AutoSave();
+        }
+    }, true);
+
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.closest('input, textarea, select')) {
+            form3AutoSaveDirty = true;
+            scheduleForm3AutoSave();
+        }
+    }, true);
 });
 
         // Enable double-click editing on header text

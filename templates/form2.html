@@ -759,7 +759,8 @@ function uploadDocument(input) {
 
 
 // Update the saveFormData function with better debugging and validation
-function saveFormData() {
+function saveFormData(options = {}) {
+    const silent = options && options.silent === true;
     console.log("Save button clicked");
     const flashMessage = document.getElementById('flashMessage');
     flashMessage.style.display = 'none';
@@ -775,57 +776,59 @@ function saveFormData() {
     
     // We don't need to check if they exceed maximums since they're already capped
     
-    // Validate Department activities
-    document.querySelectorAll('#deptTable tr').forEach(row => {
-        // Validate required fields (excluding file input)
-        const requiredFields = row.querySelectorAll('select, input[type="text"], input[type="number"]');
-        requiredFields.forEach(field => {
-            if (!validateField(field)) {
-                isValid = false;
+    if (!silent) {
+        // Validate Department activities
+        document.querySelectorAll('#deptTable tr').forEach(row => {
+            // Validate required fields (excluding file input)
+            const requiredFields = row.querySelectorAll('select, input[type="text"], input[type="number"]');
+            requiredFields.forEach(field => {
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
+
+            // Add up points
+            const pointsField = row.querySelector('.points');
+            if (pointsField) {
+                totalDeptPoints += parseFloat(pointsField.value) || 0;
+            }
+
+            // Check file size if a file is selected
+            const fileInput = row.querySelector('input[type="file"]');
+            if (fileInput && fileInput.files.length > 0) {
+                totalFileSize += fileInput.files[0].size;
             }
         });
+        
+        // Validate Institute activities
+        document.querySelectorAll('#instituteTable tr').forEach(row => {
+            // Validate required fields (excluding file input)
+            const requiredFields = row.querySelectorAll('select, input[type="text"], input[type="number"]');
+            requiredFields.forEach(field => {
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
 
-        // Add up points
-        const pointsField = row.querySelector('.points');
-        if (pointsField) {
-            totalDeptPoints += parseFloat(pointsField.value) || 0;
-        }
+            // Add up points
+            const pointsField = row.querySelector('.points');
+            if (pointsField) {
+                totalInstitutePoints += parseFloat(pointsField.value) || 0;
+            }
 
-        // Check file size if a file is selected
-        const fileInput = row.querySelector('input[type="file"]');
-        if (fileInput && fileInput.files.length > 0) {
-            totalFileSize += fileInput.files[0].size;
-        }
-    });
-    
-    // Validate Institute activities
-    document.querySelectorAll('#instituteTable tr').forEach(row => {
-        // Validate required fields (excluding file input)
-        const requiredFields = row.querySelectorAll('select, input[type="text"], input[type="number"]');
-        requiredFields.forEach(field => {
-            if (!validateField(field)) {
-                isValid = false;
+            // Check file size if a file is selected
+            const fileInput = row.querySelector('input[type="file"]');
+            if (fileInput && fileInput.files.length > 0) {
+                totalFileSize += fileInput.files[0].size;
             }
         });
-
-        // Add up points
-        const pointsField = row.querySelector('.points');
-        if (pointsField) {
-            totalInstitutePoints += parseFloat(pointsField.value) || 0;
-        }
-
-        // Check file size if a file is selected
-        const fileInput = row.querySelector('input[type="file"]');
-        if (fileInput && fileInput.files.length > 0) {
-            totalFileSize += fileInput.files[0].size;
-        }
-    });
+    }
     
     // Check total points constraints - just cap them, don't block saving
     // Totals are already capped in the display (20 for dept, 10 for institute)
     
     // Check total file size only if files are uploaded
-    if (totalFileSize > 100 * 1024 * 1024) { // 100MB
+    if (!silent && totalFileSize > 100 * 1024 * 1024) { // 100MB
         showError('Total file size exceeds 100MB limit');
         isValid = false;
     }
@@ -901,7 +904,7 @@ function saveFormData() {
     console.log("Sending AJAX request to save form data");
     
     // Send data to server - use a simpler version first to test
-    $.ajax({
+    return $.ajax({
         url: '/save-form2-data',
         method: 'POST',
         processData: false,
@@ -909,12 +912,16 @@ function saveFormData() {
         data: formData,
         beforeSend: function() {
             console.log("AJAX request starting");
-            showError('Saving form data...', true);
+            if (!silent) {
+                showError('Saving form data...', true);
+            }
         },
         success: function(response) {
             console.log("AJAX success:", response);
             // Use standard JavaScript alert instead of modal
-            alert('Form data saved successfully!');
+            if (!silent) {
+                alert('Form data saved successfully!');
+            }
             // Recalculate totals to make sure everything is up-to-date
             calculateTeachingTotal();
             calculateFeedbackTotal();
@@ -925,7 +932,9 @@ function saveFormData() {
             if (error.responseJSON && error.responseJSON.message) {
                 errorMessage = error.responseJSON.message;
             }
-            showError(errorMessage);
+            if (!silent) {
+                showError(errorMessage);
+            }
         }
     });
 }
@@ -1044,6 +1053,55 @@ function resetAll() {
 document.addEventListener('DOMContentLoaded', function() {
     calculateTeachingTotal();
     calculateFeedbackTotal();
+});
+
+// Background autosave (debounced) to reduce accidental data loss.
+let form2AutoSaveTimer = null;
+let form2AutoSaveDirty = false;
+let form2AutoSaveInFlight = false;
+const FORM2_AUTOSAVE_DELAY_MS = 4000;
+
+function scheduleForm2AutoSave() {
+    if (form2AutoSaveTimer) {
+        clearTimeout(form2AutoSaveTimer);
+    }
+    form2AutoSaveTimer = setTimeout(runForm2AutoSave, FORM2_AUTOSAVE_DELAY_MS);
+}
+
+function runForm2AutoSave() {
+    if (!form2AutoSaveDirty || form2AutoSaveInFlight) {
+        return;
+    }
+
+    form2AutoSaveDirty = false;
+    form2AutoSaveInFlight = true;
+
+    Promise.resolve(saveFormData({ silent: true }))
+        .catch(() => {
+            // Autosave must stay silent for uninterrupted UX.
+        })
+        .finally(() => {
+            form2AutoSaveInFlight = false;
+            if (form2AutoSaveDirty) {
+                scheduleForm2AutoSave();
+            }
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('input', function (e) {
+        if (e.target && e.target.closest('input, textarea, select')) {
+            form2AutoSaveDirty = true;
+            scheduleForm2AutoSave();
+        }
+    }, true);
+
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.closest('input, textarea, select')) {
+            form2AutoSaveDirty = true;
+            scheduleForm2AutoSave();
+        }
+    }, true);
 });
 
 // Add the missing updateSerialNumbers function
